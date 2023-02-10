@@ -192,7 +192,8 @@ a:hover div {
     font-weight: 400;
 }
 .polus .Button--sz-l .Button__in {
-    color: var(--polus_text_white)
+    color: var(--polus_text_white);
+    height: 100%;
 }
 
 .polus .vkuiButton--sz-l .vkuiButton__before {
@@ -200,9 +201,11 @@ a:hover div {
     display: flex;
     align-items: center;
 }
-
-.polus .vkuiButton--sz-l .vkuiButton__after, .vkuiButton--sz-l .vkuiButton__content:last-child {
+.polus .fix-forpadding .vkuiButton__content:last-child {
     padding-right: 0px;
+}
+.polus .vkuiButton--sz-l .vkuiButton__after, .vkuiButton--sz-l .vkuiButton__content:last-child {
+    /* padding-right: 0px; */
 }
 
 .polus .Button--sz-m {

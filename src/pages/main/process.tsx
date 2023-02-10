@@ -1,5 +1,10 @@
-import { Icon24Spinner, Icon28CancelCircleFillRed, Icon28CancelCircleOutline, Icon28CheckCircleFill, Icon28CheckCircleOff, Icon28CheckCircleOn, Icon28CheckCircleOutline, Icon28RefreshOutline } from '@vkontakte/icons'
-import { IconButton, SimpleCell, Spinner } from '@vkontakte/vkui'
+import {
+    Icon24Spinner,
+    Icon28CancelCircleOutline,
+    Icon28CheckCircleOff, Icon28CheckCircleOn,
+    Icon28RefreshOutline
+} from '@vkontakte/icons'
+import { IconButton, SimpleCell } from '@vkontakte/vkui'
 import React, { useEffect } from 'react'
 import { useContractRead, useContractWrite, usePrepareContractWrite } from 'wagmi'
 
@@ -16,7 +21,8 @@ interface AllType {
     addressMerchant: string,
     currentAddressToken: string,
     uuid: string,
-    consoleLog: Function
+    consoleLog: Function,
+    setPayed: Function
 }
 
 interface ProcessType {
@@ -32,7 +38,8 @@ interface ProcessType {
     uuid: string,
     currentAddressToken: string,
     consoleLog: Function,
-    reRender: Function
+    reRender: Function,
+    setPayed: Function
 }
 
 const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
@@ -52,7 +59,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
         functionName: 'approve',
         args: [ props.addressPolus, ethers.constants.MaxUint256 ]
     })
-    const { data, isLoading, isSuccess, write, error } = useContractWrite(config)
+    const { data, write, error } = useContractWrite(config)
 
     useEffect(() => {
         if (!firstRender && write && props.position === 0) {
@@ -94,15 +101,10 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
 
     return (
         <SimpleCell
-            disabled
+            disabled={props.positionError !== 1}
+            onClick={() => props.reRender(1)}
             style={props.position !== 0 ? { opacity: 0.5 } : {}}
-            after={
-                props.positionError === 1
-                    ? <IconButton onClick={() => props.reRender()}>
-                        <Icon28RefreshOutline />
-                    </IconButton>
-                    : null
-            }
+            after={props.positionError === 1 ? <Icon28RefreshOutline /> : null}
             before={
                 <div>
                     {props.positionError === 1
@@ -124,6 +126,14 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
 
     const addr: `0x${string}` = `0x${props.addressPolus.replace('0x', '')}`
+    const addrToken: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`
+
+    const balanceUser = useContractRead({
+        address: addrToken,
+        abi: token_abi,
+        functionName: 'balanceOf',
+        args: [ props.address ]
+    })
 
     const configPay = props.tokenAddress === props.currentAddressToken ? usePrepareContractWrite({
         address: addr,
@@ -143,27 +153,17 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             3000 // fee ??
         ]
     })
+
     const trans = useContractWrite(configPay.config)
 
     useEffect(() => {
-        // console.log('inOut.write', inOut)
-        // console.log('singl.write', singl)
         console.log('props.position', props.position)
         if (!firstRender && trans.write && props.position === 1) {
             setFirstRender(true)
 
-            console.log(2)
-
             trans.write()
-
-            if (props.tokenAddress === props.currentAddressToken) {
-                console.log('inOut')
-                // inOut.write()
-            } else {
-                console.log('sign swap')
-                // singl.write()
-            }
         }
+        balanceUser.refetch()
     }, [ trans.write, props.position ])
 
     useEffect(() => {
@@ -171,6 +171,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             console.log('txHash transfer', trans.data)
             trans.data.wait(1).then(() => {
                 props.setPosition(2)
+
+                props.setPayed(true)
             })
         }
     }, [ trans.data ])
@@ -181,7 +183,18 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             props.consoleLog(trans.error?.message ?? 'Unknown error', false)
             props.setPositionError(2)
         }
+        console.log(trans.error)
     }, [ trans.error ])
+
+    useEffect(() => {
+        if (balanceUser.data && props.position === 1) {
+            console.log('balanceOf', balanceUser.data)
+            if (balanceUser.data < props.amount) {
+                props.consoleLog('Amount exceeds', false)
+                props.setPositionError(2)
+            }
+        }
+    }, [ balanceUser.data, balanceUser.fetchStatus ])
 
     useEffect(() => {
         console.log('render')
@@ -227,7 +240,7 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
             style={props.position !== 2 ? { opacity: 0.5, marginBottom: '24px' } : { marginBottom: '24px' }}
             before={
                 <div>
-                    {props.position < 2 ? <Icon28CheckCircleOff style={{ opacity: 0.5 }} /> : null}
+                    {props.position < 2 ? <Icon28CheckCircleOff /> : null}
                     {props.position === 2 ? <Icon28CheckCircleOn fill="var(--button_commerce_background)" /> : null}
                 </div>
             }
@@ -278,6 +291,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
+                setPayed={props.setPayed}
             />
             <ProcessTwo
                 key={twoId}
@@ -294,6 +308,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
+                setPayed={props.setPayed}
             />
             <ProcessTree
                 key={'tree1'}
@@ -310,6 +325,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
+                setPayed={props.setPayed}
             />
         </div>
     )

@@ -1,17 +1,18 @@
 import {
     Button, Div,
-    MiniInfoCell, Panel, PanelHeader, SegmentedControl, Separator, Spinner
+    Panel, PanelHeader, Spinner
 } from '@vkontakte/vkui'
 
 import React, { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import { Web3NetworkSwitch, useWeb3Modal } from '@web3modal/react'
+import { useWeb3Modal } from '@web3modal/react'
 
 import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi'
 import { mainnet, polygon } from 'wagmi/chains'
 import { Icon28ChevronDownOutline, Icon28WarningTriangleOutline } from '@vkontakte/icons'
 
+import moment from 'moment'
 import logo from '../../img/logo.svg'
 import maticLogo from '../../img/matic.svg'
 import otherLogo from '../../img/other.svg'
@@ -20,7 +21,6 @@ import etherLogo from '../../img/weth.svg'
 import btn from '../../img/btn.jpg'
 import wc from '../../img/wc.svg'
 
-import { PolusTokenUtils } from '../../logic'
 import { tokens } from '../../logic/tokens'
 import { Invoice, ListCurrencies, TokenPolus } from '../../logic/types'
 import { PolusApi } from '../../logic/api'
@@ -35,7 +35,6 @@ interface MainProps {
     id: string,
     setActiveModal: Function,
     consoleLog: Function,
-    logOut: Function,
     isDesktop: boolean,
     openPop: Function,
     closePop: Function
@@ -71,6 +70,9 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [ type, setType ] = React.useState<number>(0)
 
     const [ ready, setReady ] = React.useState<boolean>(false)
+    const [ payed, setPayed ] = React.useState<boolean>(false)
+
+    const [ timer, setTimer ] = React.useState<string>('00:00')
 
     const [ tokensFromChain, setTokensFromChain ] = React.useState<TokenPolus[]>(tokens.polygon)
 
@@ -87,13 +89,26 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [ info, setInfo ] = React.useState<Invoice | undefined | false>(undefined)
 
     const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(undefined)
-    const [ uuid, setUuid ] = React.useState<string>('')
 
     const location = useLocation()
     const history = useNavigate()
 
     const polusApi = new PolusApi()
 
+    function startTimer (inf: Invoice) {
+        const eventTime = inf.exp // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
+        const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
+        const diffTime = eventTime - currentTime
+        let duration = moment.duration(diffTime * 1000, 'milliseconds')
+        const interval = 1000
+
+        if (diffTime < 0) return
+
+        const interv = setInterval(() => {
+            duration = moment.duration(Number(duration) - interval, 'milliseconds')
+            setTimer(`${duration.minutes()}:${duration.seconds()}`)
+        }, interval)
+    }
     function changeCoin (coin1: TokenPolus, chainID?: number) {
         setCoin(coin1)
         if (!info || !chain) {
@@ -144,6 +159,22 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             })
             return undefined
         }
+
+        if (data.status === 'completed') {
+            // setErrorObj({
+            //     text: 'Invoice is payed',
+            //     code: 1003
+            // })
+        }
+        if (data.status === 'expired') {
+            setErrorObj({
+                text: 'Invoice is expired',
+                code: 1004
+            })
+        }
+        if (timer === '00:00') {
+            startTimer(data)
+        }
         console.log('info', data)
         setInfo(data)
         return true
@@ -163,6 +194,17 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         // PolusUtils.isApprove()
 
         return true
+    }
+
+    function generatedUrlRedirect (status: string) {
+        if (info) {
+            let url = 'https://'
+            url += info.merchant_object_info.website.replace('https://', '')
+            url += info.merchant_object_info.redirect_url
+            url += `?status=${status}&uuid=${info.uuid}`
+            return url
+        }
+        return '/'
     }
 
     useEffect(() => {
@@ -218,7 +260,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
             const uuid1 = getParameterByName('uuid')
             if (uuid1 && uuid1 !== '') {
-                setUuid(uuid1)
+                // setUuid(uuid1)
                 getInfo(uuid1)
             } else {
                 setErrorObj({
@@ -227,8 +269,6 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 })
                 setInfo(false)
             }
-
-            // getMerchants()
         }
     }, [])
 
@@ -300,6 +340,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         key={key}
                                         size="l"
                                         stretched
+                                        className='fix-forpadding'
                                         onClick={() => changeCoin(token)}
                                         mode={coin.name === token.name ? 'primary' : 'outline'}
                                         before={
@@ -312,6 +353,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         key={key}
                                         size="l"
                                         stretched
+                                        className='fix-forpadding'
                                         onClick={() => changeCoin(token)}
                                         mode={coin.name === token.name ? 'primary' : 'outline'}
                                         before={
@@ -390,7 +432,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
                             </div> */}
 
-                            <span className="timer-block" >The invoice is active in 10:09</span>
+                            <span className="timer-block" >The invoice is active in {timer}</span>
 
                             {/* <Web3Button /> */}
 
@@ -429,16 +471,23 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     uuid={info.uuid_hex}
                                     currentAddressToken={coinMerchant.address}
                                     consoleLog={props.consoleLog}
+                                    setPayed={setPayed}
                                 />
                                 : null }
 
-                            <Button
+                            {payed ? <Button
                                 stretched
                                 size='l'
                                 className="btn-connect fix-padding"
                                 style={{ backgroundImage: `url(${btn})` }}
+                                href={generatedUrlRedirect('success')}
+                            >Back to store</Button> : <Button
+                                stretched
+                                size='l'
+                                className="btn-connect"
+                                style={{ backgroundImage: `url(${btn})` }}
                                 onClick={() => setType(0)}
-                            >Cansel</Button>
+                            >Cansel</Button>}
                         </div> }
 
                     <small className="small-block">
@@ -472,6 +521,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         className="btn-connect"
                         style={{ backgroundImage: `url(${btn})` }}
                         // onClick={() => startPay()}
+                        href={generatedUrlRedirect('error')}
                     >
                     Back to store
                     </Button> : null }

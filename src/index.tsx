@@ -1,5 +1,4 @@
 import React from 'react'
-import eruda from 'eruda'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
@@ -15,7 +14,7 @@ import { Web3Modal } from '@web3modal/react'
 
 import { configureChains, createClient, WagmiConfig } from 'wagmi'
 
-import { arbitrum, mainnet, polygon } from 'wagmi/chains'
+import { mainnet, polygon } from 'wagmi/chains'
 
 import { App } from './App'
 
