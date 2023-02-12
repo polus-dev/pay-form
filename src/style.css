@@ -109,6 +109,10 @@ a:hover div {
     text-decoration: none!important;
 }
 
+a:-webkit-any-link {
+    color: var(--accent)
+}
+
 .polus {
     /* padding-top: var(--panelheader_height_ios)!important; */
     padding-top: 0px;
@@ -565,7 +569,7 @@ font-size: 18px;
     width: 100%;
     text-align: center;
     display: flex;
-    align-items: center;
+    /* align-items: center; */
     justify-content: center;
 }
 .polus .small-block {
@@ -606,7 +610,7 @@ font-size: 18px;
 }
 .polus-header {
     /* height: 104px; */
-    z-index: 1000;
+    z-index: 30;
 }
 .polus-header .PanelHeader__in {
     padding: 0 20vw;
@@ -615,7 +619,7 @@ font-size: 18px;
     width: 159px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 800px) {
     .vkuiModalPage--s .vkuiModalPage__in-wrap {
         width: auto!important;
     }
@@ -650,8 +654,12 @@ font-size: 18px;
     }
     .polus .Button--sz-l {
         height: 45px;
-        padding: 0 12px;
-        font-size: 15px;
+        padding: 0px;
+        font-size: 14px;
+    }
+
+    .polus-header .PanelHeader__in {
+        padding: 0 16px;
     }
 
 }

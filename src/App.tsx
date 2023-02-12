@@ -110,13 +110,16 @@ export const App: React.FC = () => {
                 style={{ justifyContent: 'center' }}
                 modal={modalRoot}
                 popout={popout}
-                header={isDesktop
-                    && <PanelHeader
-                        separator={false}
-                        before={<img src={logo} />}
-                        after={<Web3Button />}
-                        className="polus-header"
-                    />
+                header={ <PanelHeader
+                    separator={false}
+                    before={
+                        <a href="https://poluspay.com" target="_blank">
+                            <img src={logo} />
+                        </a>
+                    }
+                    after={<Web3Button />}
+                    className="polus-header"
+                />
                 }
                 // header={
                 //     <HeaderBlock />

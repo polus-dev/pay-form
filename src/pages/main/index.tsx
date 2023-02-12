@@ -111,12 +111,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     }
     function changeCoin (coin1: TokenPolus, chainID?: number) {
         setCoin(coin1)
-        if (!info || !chain) {
+        const chainIdLocal = chain ? chain.id : chainID
+        if (!info || !chainIdLocal) {
             console.error('changeCoin: info or chain')
             return undefined
         }
         const nameCoin = coin1.name.toLowerCase() as ListCurrencies
-        if (chainID ? chainID === 1 : chain.id === 1) {
+        if (chainIdLocal === 1) {
             setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
             const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
             const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
@@ -124,7 +125,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
             if (tokenUser) setCoin(tokenUser)
         }
-        if (chainID ? chainID === 137 : chain.id === 137) {
+        if (chainIdLocal === 137) {
             setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
 
             const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
@@ -175,6 +176,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         if (timer === '00:00') {
             startTimer(data)
         }
+
+        setDefaultChain(polygon)
         console.log('info', data)
         setInfo(data)
         return true
@@ -250,7 +253,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     useEffect(() => {
         if (info) {
-            changeCoin(tokens.polygon[0])
+            changeCoin(tokens.polygon[0], 137)
         }
     }, [ info ])
 
@@ -335,13 +338,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             <div className="text-one">Choose currency</div>
 
                             <div className="btn-block" >
-                                {chain && chain.id === 137 ? tokens.polygon.map((token, key) => (
+                                {!chain || (chain && chain.id === 137) ? tokens.polygon.map((token, key) => (
                                     <Button
                                         key={key}
                                         size="l"
                                         stretched
                                         className='fix-forpadding'
-                                        onClick={() => changeCoin(token)}
+                                        onClick={() => changeCoin(token, 137)}
                                         mode={coin.name === token.name ? 'primary' : 'outline'}
                                         before={
                                             <img src={token.icon} />
@@ -491,12 +494,16 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         </div> }
 
                     <small className="small-block">
-                    By making a payment, you agree to<br />the Terms of Use and Privacy Policy
+                        By making a payment, you agree to the <a href="" >Terms of Use</a>
+                        <br />and  <a href="" >Privacy Policy</a>
                     </small>
 
+                    
                     <div className="logo-block">
                         <span>Powered by </span>
-                        <img src={logo} />
+                        <a href="https://poluspay.com" target="_blank" >
+                            <img src={logo} />
+                        </a>
                     </div>
                 </Div>
                 : null

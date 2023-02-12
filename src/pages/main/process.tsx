@@ -62,7 +62,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
     const { data, write, error } = useContractWrite(config)
 
     useEffect(() => {
-        if (!firstRender && write && props.position === 0) {
+        if (!firstRender && write && props.position === 0 && contractRead.data) {
             setFirstRender(true)
             console.log('amount isApprove', contractRead.data)
             if (contractRead.data) {
@@ -124,6 +124,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
 
 const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [ firstRender2, setFirstRender2 ] = React.useState<boolean>(false)
 
     const addr: `0x${string}` = `0x${props.addressPolus.replace('0x', '')}`
     const addrToken: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`
@@ -157,7 +158,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const trans = useContractWrite(configPay.config)
 
     useEffect(() => {
-        console.log('props.position', props.position)
+        // console.log('props.position', props.position)
         if (!firstRender && trans.write && props.position === 1) {
             setFirstRender(true)
 
@@ -187,7 +188,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     }, [ trans.error ])
 
     useEffect(() => {
-        if (balanceUser.data && props.position === 1) {
+        if (balanceUser.data && props.position === 1 && !firstRender2) {
+            setFirstRender2(true)
             console.log('balanceOf', balanceUser.data)
             if (balanceUser.data < props.amount) {
                 props.consoleLog('Amount exceeds', false)
