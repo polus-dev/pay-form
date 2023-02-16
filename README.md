@@ -1,3 +1,2 @@
 # Polus
 
-vue govno
