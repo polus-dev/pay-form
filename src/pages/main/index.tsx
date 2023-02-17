@@ -547,7 +547,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             {errorObj
                 ? <Div className="pay-block">
                     <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-                        <Icon28WarningTriangleOutline fill="var(--destructive)" />
+                        <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" />
                         <span style={{ margin: '16px 0' }}>{errorObj.text}</span>
 
                     </div>
