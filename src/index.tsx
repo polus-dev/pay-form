@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 
-import { WebviewType, AdaptivityProvider, ConfigProvider, IOS } from '@vkontakte/vkui'
+import { WebviewType, AdaptivityProvider, ConfigProvider } from '@vkontakte/vkui'
 
 import {
     EthereumClient,
@@ -14,7 +14,7 @@ import { Web3Modal } from '@web3modal/react'
 
 import { configureChains, createClient, WagmiConfig } from 'wagmi'
 
-import { mainnet, polygon } from 'wagmi/chains'
+import { mainnet, polygon, bsc } from 'wagmi/chains'
 
 import { App } from './App'
 
@@ -26,7 +26,7 @@ document.body.appendChild(el)
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [ polygon, mainnet ]
+const chains = [ polygon, mainnet, bsc ]
 
 // Wagmi client
 const { provider } = configureChains(chains, [
@@ -59,7 +59,7 @@ ReactDOM.render(
                 <ConfigProviderFix
                     appearance={'dark'}
                     webviewType={WebviewType.INTERNAL}
-                    platform={IOS}
+                    platform="ios"
                 >
 
                     <AdaptivityProviderFix >

@@ -8,7 +8,7 @@ import { IconButton, SimpleCell } from '@vkontakte/vkui'
 import React, { useEffect } from 'react'
 import { useContractRead, useContractWrite, usePrepareContractWrite } from 'wagmi'
 
-import { ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import polus_abi from '../../polus_abi.json'
 import token_abi from '../../token_abi.json'
 
@@ -108,13 +108,13 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
             before={
                 <div>
                     {props.positionError === 1
-                        ? <Icon28CancelCircleOutline fill="var(--dynamic_red)" /> : null }
+                        ? <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" /> : null }
                     {props.position === 0 && props.positionError !== 1
                         ? <div className="process-spinner">
                             <Icon24Spinner width={28} height={28} />
                         </div> : null}
                     {props.position > 0 && props.positionError !== 1
-                        ? <Icon28CheckCircleOn fill="var(--button_commerce_background)" /> : null}
+                        ? <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" /> : null}
                 </div>
             }
         >
@@ -191,7 +191,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
         if (balanceUser.data && props.position === 1 && !firstRender2) {
             setFirstRender2(true)
             console.log('balanceOf', balanceUser.data)
-            if (balanceUser.data < props.amount) {
+            if (Number(balanceUser.data) < Number(props.amount)) {
                 props.consoleLog('Amount exceeds', false)
                 props.setPositionError(2)
             }
@@ -211,7 +211,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             after={props.positionError === 2 ? <Icon28RefreshOutline /> : null}
             before={
                 <div>
-                    {props.positionError === 2 ? <Icon28CancelCircleOutline fill="var(--dynamic_red)"/> : null }
+                    {props.positionError === 2 ? <Icon28CancelCircleOutline
+                        fill="var(--vkui--color_background_negative)"/> : null }
                     {props.position < 1 && props.positionError !== 2
                         ? <Icon28CheckCircleOff /> : null}
                     {props.position === 1 && props.positionError !== 2
@@ -219,7 +220,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
                             <Icon24Spinner width={28} height={28} />
                         </div> : null}
                     {props.position > 1 && props.positionError !== 2
-                        ? <Icon28CheckCircleOn fill="var(--button_commerce_background)" /> : null}
+                        ? <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" /> : null}
                 </div>
             }
         >

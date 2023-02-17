@@ -28,7 +28,8 @@ import { ProcessAll } from './process'
 
 const addressPolus = {
     polygon: '0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2',
-    mainnet: '0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0'
+    mainnet: '0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0',
+    bsc: '0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0'
 }
 
 interface MainProps {
@@ -117,6 +118,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return undefined
         }
         const nameCoin = coin1.name.toLowerCase() as ListCurrencies
+
         if (chainIdLocal === 1) {
             setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
             const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
@@ -134,18 +136,28 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
             if (tokenUser) setCoin(tokenUser)
         }
+
+        if (chainIdLocal === 56) {
+            setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
+
+            const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
+            setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+
+            const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
+            if (tokenUser) setCoin(tokenUser)
+        }
         // console.log('changeCoin:', info.currencies.polygon[nameCoin])
         return true
     }
 
-    async function swithNet (id: string | undefined | number) {
+    async function swithNet (id: number) {
         props.openPop()
         console.log('swithNet', id)
         if (!switchNetwork || !id) {
             return false
         }
 
-        await switchNetwork(id === 'ethereum' ? mainnet.id : polygon.id)
+        await switchNetwork(id)
         return true
     }
 
@@ -185,7 +197,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     async function startPay () {
         if (!ready) {
-            await swithNet('polygon')
+            await swithNet(137)
         }
 
         setType(1)
@@ -231,7 +243,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         if (!chain) {
             setReady(false)
             console.error('not found network')
-        } else if (chain.id === 1 || chain.id === 137) {
+        } else if (chain.id === 1 || chain.id === 137 || chain.id === 56) {
             setReady(true)
 
             if (chain.id === 1) {
@@ -239,6 +251,10 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             }
 
             if (chain.id === 137) {
+                setTokensFromChain(tokens.polygon)
+            }
+
+            if (chain.id === 56) {
                 setTokensFromChain(tokens.polygon)
             }
 
@@ -358,6 +374,19 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         stretched
                                         className='fix-forpadding'
                                         onClick={() => changeCoin(token)}
+                                        mode={coin.name === token.name ? 'primary' : 'outline'}
+                                        before={
+                                            <img src={token.icon} />
+                                        }>{token.name.toUpperCase()}</Button>
+                                )) : null}
+
+                                {chain && chain.id === 56 ? tokens.polygon.map((token, key) => (
+                                    <Button
+                                        key={key}
+                                        size="l"
+                                        stretched
+                                        className='fix-forpadding'
+                                        onClick={() => changeCoin(token, 56)}
                                         mode={coin.name === token.name ? 'primary' : 'outline'}
                                         before={
                                             <img src={token.icon} />
@@ -498,7 +527,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         <br />and  <a href="" >Privacy Policy</a>
                     </small>
 
-                    
+
                     <div className="logo-block">
                         <span>Powered by </span>
                         <a href="https://poluspay.com" target="_blank" >
