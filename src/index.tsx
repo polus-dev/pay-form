@@ -49,6 +49,7 @@ const ethereumClient = new EthereumClient(wagmiClient, chains)
 const ConfigProviderFix: any = ConfigProvider
 const AdaptivityProviderFix: any = AdaptivityProvider
 
+
 ReactDOM.render(
     <BrowserRouter
         basename='/'
