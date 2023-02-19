@@ -174,10 +174,10 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         }
 
         if (data.status === 'completed') {
-            // setErrorObj({
-            //     text: 'Invoice is payed',
-            //     code: 1003
-            // })
+            setErrorObj({
+                text: 'Invoice is payed',
+                code: 1003
+            })
         }
         if (data.status === 'expired') {
             setErrorObj({

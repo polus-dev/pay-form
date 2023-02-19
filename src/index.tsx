@@ -26,7 +26,7 @@ document.body.appendChild(el)
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [ polygon, mainnet, bsc ]
+const chains = [ polygon, mainnet ]
 
 // Wagmi client
 const { provider } = configureChains(chains, [
