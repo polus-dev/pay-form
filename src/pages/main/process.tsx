@@ -88,6 +88,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
         if (data) {
             console.log('txHash approve', data)
             props.setPosition(1)
+            props.reRender(2)
         }
     }, [ data ])
 
@@ -126,6 +127,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
     const [ firstRender2, setFirstRender2 ] = React.useState<boolean>(false)
 
+    const [ time, setTime ] = React.useState<boolean>(false)
+
     const addr: `0x${string}` = `0x${props.addressPolus.replace('0x', '')}`
     const addrToken: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`
 
@@ -163,6 +166,12 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             setFirstRender(true)
 
             trans.write()
+
+            setTimeout(() => {
+                if (props.position === 1) {
+                    setTime(true)
+                }
+            }, 10 * 1000)
         }
         balanceUser.refetch()
     }, [ trans.write, props.position ])
@@ -204,11 +213,11 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
     return (
         <SimpleCell
-            disabled={props.positionError !== 2}
+            disabled={props.positionError !== 2 && !time}
             onClick={() => props.reRender(2)}
 
             style={props.position !== 1 ? { opacity: 0.5 } : {}}
-            after={props.positionError === 2 ? <Icon28RefreshOutline /> : null}
+            after={props.positionError === 2 || time ? <Icon28RefreshOutline /> : null}
             before={
                 <div>
                     {props.positionError === 2 ? <Icon28CancelCircleOutline

@@ -519,7 +519,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 className="btn-connect"
                                 style={{ backgroundImage: `url(${btn})` }}
                                 onClick={() => setType(0)}
-                            >Cansel</Button>}
+                            >Cancel</Button>}
                         </div> }
 
                     <small className="small-block">
