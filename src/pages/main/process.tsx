@@ -22,7 +22,8 @@ interface AllType {
     currentAddressToken: string,
     uuid: string,
     consoleLog: Function,
-    setPayed: Function
+    setPayed: Function,
+    setProgress: Function
 }
 
 interface ProcessType {
@@ -285,6 +286,18 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
             setFirstRender(true)
         }
     }, [])
+
+    useEffect(() => {
+        if (position === 0) {
+            props.setProgress(50)
+        }
+        if (position === 1) {
+            props.setProgress(75)
+        }
+        if (position === 2) {
+            props.setProgress(100)
+        }
+    }, [ position ])
 
     return (
         <div id={props.id} className="process-block">

@@ -1,6 +1,6 @@
 import {
     Button, Div,
-    Panel, PanelHeader, Spinner
+    Panel, PanelHeader, Progress, Spinner
 } from '@vkontakte/vkui'
 
 import React, { useEffect } from 'react'
@@ -90,6 +90,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [ info, setInfo ] = React.useState<Invoice | undefined | false>(undefined)
 
     const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(undefined)
+
+    const [ progress, setProgress ] = React.useState<number>(0)
 
     const location = useLocation()
     const history = useNavigate()
@@ -274,6 +276,14 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     }, [ info ])
 
     useEffect(() => {
+        if (isConnected) {
+            setProgress(25)
+        } else {
+            setProgress(0)
+        }
+    }, [ isConnected ])
+
+    useEffect(() => {
         if (!firstRender) {
             setFirstRender(true)
 
@@ -297,7 +307,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             <PanelHeader separator={false} />
 
             {!errorObj && info
-                ? <Div className="pay-block">
+                ? <div className="pay-block"><div >
 
                     <div className="domain-block">
                         <div className="domain-amount-block">
@@ -311,6 +321,9 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             {info.description}
                         </span>
                     </div>
+                </div>
+                <Progress aria-labelledby="progresslabel" value={progress} style={{ marginTop: '16px' }} />
+                <div>
 
                     {type === 0
                         ? <div>
@@ -504,6 +517,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     currentAddressToken={coinMerchant.address}
                                     consoleLog={props.consoleLog}
                                     setPayed={setPayed}
+                                    setProgress={setProgress}
                                 />
                                 : null }
 
@@ -527,14 +541,14 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         <br />and  <a href="" >Privacy Policy</a>
                     </small>
 
-
                     <div className="logo-block">
                         <span>Powered by </span>
                         <a href="https://poluspay.com" target="_blank" >
                             <img src={logo} />
                         </a>
                     </div>
-                </Div>
+                </div>
+                </div>
                 : null
             }
             {!errorObj && !info
