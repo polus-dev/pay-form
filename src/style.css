@@ -18,6 +18,7 @@
     --vkui--color_background_accent_themed--hover: var(--accent);
     --vkui--color_background_accent_themed--active: var(--accent);
 
+
     --text_primary: #fff;
     --header_text: #fff;
     --header_text_alternate: #fff;
@@ -41,8 +42,6 @@
     --vkui--size_panel_header_height--regular: 90px;
 
 
-    --background_content: var(--polus_grey_1);
-
     --polus_grey_1:  #131315;
     --polus_black_1: #09080C;
 
@@ -59,6 +58,9 @@
     --polus_orange: #F16B16;
 
     --polus_red: #C85B5B;
+
+    --vkui--color_background_modal: var(--polus_grey_1);
+    --background_content: var(--polus_grey_1);
 
     
 

@@ -12,7 +12,10 @@ import {
     Div,
     Snackbar,
     ScreenSpinner,
-    PanelHeader
+    PanelHeader,
+    CardGrid,
+    Card,
+    SimpleCell
 } from '@vkontakte/vkui'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
@@ -23,6 +26,7 @@ import { Web3Button } from '@web3modal/react'
 import '@vkontakte/vkui/dist/vkui.css'
 import './style.css'
 
+import { tokens } from './logic/tokens'
 import { Main } from './pages/main'
 
 import logo from './img/logo.svg'
@@ -97,6 +101,42 @@ export const App: React.FC = () => {
                 }
             >
                 <Div>
+                </Div>
+            </ModalPage>
+
+            <ModalPage
+                id={'coins'}
+                className="polus"
+                onClose={() => setActiveModal(null)}
+                dynamicContentHeight
+                // settlingHeight={100}
+                header={
+                    <ModalPageHeader
+                        after={
+                            !isDesktop && (
+                                <PanelHeaderButton onClick={() => setActiveModal(null)}>
+                                    <Icon24Dismiss />
+                                </PanelHeaderButton>
+                            )
+                        }
+                    >
+                  Select Token
+                    </ModalPageHeader>
+                }
+            >
+                <Div>
+                    <CardGrid size="l">
+                        {tokens.polygon.map((token, key) => (
+                            <Card key={key}>
+                                <SimpleCell
+                                    before={<img src={token.icon} style={{ marginRight: '12px' }} />}
+                                >
+                                    {token.name.toUpperCase()}
+                                </SimpleCell>
+                            </Card>
+                        ))}
+
+                    </CardGrid>
                 </Div>
             </ModalPage>
 

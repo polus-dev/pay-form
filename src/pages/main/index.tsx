@@ -17,6 +17,7 @@ import logo from '../../img/logo.svg'
 import maticLogo from '../../img/matic.svg'
 import otherLogo from '../../img/other.svg'
 import etherLogo from '../../img/weth.svg'
+import daiLogo from '../../img/dai.svg'
 
 import btn from '../../img/btn.jpg'
 import wc from '../../img/wc.svg'
@@ -408,7 +409,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
                             </div>
 
-                            {/* <div className="btn-block" >
+                            <div className="btn-block" >
 
                                 <Button
                                     size="l"
@@ -416,8 +417,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     onClick={() => null}
                                     mode={'outline'}
                                     before={
-                                        <img src={otherLogo} width={24} />
-                                    }>Other</Button>
+                                        <img src={maticLogo} width={24} />
+                                    }>MATIC</Button>
 
                                 <Button
                                     size="l"
@@ -425,19 +426,19 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     onClick={() => null}
                                     mode={'outline'}
                                     before={
-                                        <img src={otherLogo} width={24} />
-                                    }>Other</Button>
+                                        <img src={daiLogo} width={24} />
+                                    }>DAI</Button>
 
                                 <Button
                                     size="l"
                                     stretched
-                                    onClick={() => null}
+                                    onClick={() => props.setActiveModal('coins')}
                                     mode={'outline'}
                                     before={
                                         <img src={otherLogo} width={24} />
                                     }>Other</Button>
 
-                            </div> */}
+                            </div>
                             {/* <div className="block-tax" style={{ marginTop: '24px' }}>
                                 <MiniInfoCell
                                     before={null}
