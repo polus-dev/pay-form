@@ -25,7 +25,7 @@ import wc from '../../img/wc.svg'
 import { tokens } from '../../logic/tokens'
 import { Invoice, ListCurrencies, TokenPolus } from '../../logic/types'
 import { PolusApi } from '../../logic/api'
-import { ProcessAll } from './process'
+import { ProcessAll } from './processTest'
 
 const addressPolus = {
     polygon: '0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2',
@@ -176,18 +176,19 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return undefined
         }
 
-        if (data.status === 'completed') {
-            setErrorObj({
-                text: 'Invoice is payed',
-                code: 1003
-            })
-        }
-        if (data.status === 'expired') {
-            setErrorObj({
-                text: 'Invoice is expired',
-                code: 1004
-            })
-        }
+
+        // if (data.status === 'completed') {
+        //     setErrorObj({
+        //         text: 'Invoice is payed',
+        //         code: 1003
+        //     })
+        // }
+        // if (data.status === 'expired') {
+        //     setErrorObj({
+        //         text: 'Invoice is expired',
+        //         code: 1004
+        //     })
+        // }
         if (timer === '00:00') {
             startTimer(data)
         }
@@ -512,7 +513,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     address={address}
                                     tokenAddress={coin.address}
                                     addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
-                                    amount={coinInvoice}
+                                    amount={'100000'}
                                     addressMerchant={info.merchant_object_info.address}
                                     uuid={info.uuid_hex}
                                     currentAddressToken={coinMerchant.address}
