@@ -27,6 +27,8 @@ import { Invoice, ListCurrencies, TokenPolus } from '../../logic/types'
 import { PolusApi } from '../../logic/api'
 import { ProcessAll } from './processTest'
 
+import { ProcessAll as Process } from './process'
+
 const addressPolus = {
     polygon: '0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2',
     mainnet: '0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0',
@@ -175,7 +177,6 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             })
             return undefined
         }
-
 
         // if (data.status === 'completed') {
         //     setErrorObj({
@@ -508,19 +509,35 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         </div>
                         : <div className="proccess-block">
                             {address && chain
-                                ? <ProcessAll
-                                    id={'all1'}
-                                    address={address}
-                                    tokenAddress={coin.address}
-                                    addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
-                                    amount={'100000'}
-                                    addressMerchant={info.merchant_object_info.address}
-                                    uuid={info.uuid_hex}
-                                    currentAddressToken={coinMerchant.address}
-                                    consoleLog={props.consoleLog}
-                                    setPayed={setPayed}
-                                    setProgress={setProgress}
-                                />
+                                ? <div> {coin.address === coinMerchant.address
+                                    ? <Process
+                                        id={'all1'}
+                                        address={address}
+                                        tokenAddress={coin.address}
+                                        addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
+                                        amount={coinInvoice}
+                                        addressMerchant={info.merchant_object_info.address}
+                                        uuid={info.uuid_hex}
+                                        currentAddressToken={coinMerchant.address}
+                                        consoleLog={props.consoleLog}
+                                        setPayed={setPayed}
+                                        setProgress={setProgress}
+                                    />
+                                    : <ProcessAll
+                                        id={'all1'}
+                                        address={address}
+                                        tokenAddress={coin.address}
+                                        addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
+                                        amount={coinInvoice}
+                                        amountOut={info.amount.toString()}
+                                        addressMerchant={info.merchant_object_info.address}
+                                        uuid={info.uuid_hex}
+                                        currentAddressToken={coinMerchant.address}
+                                        consoleLog={props.consoleLog}
+                                        setPayed={setPayed}
+                                        setProgress={setProgress}
+                                        chainId={chain.id}
+                                    />}</div>
                                 : null }
 
                             {payed ? <Button

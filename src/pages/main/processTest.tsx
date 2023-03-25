@@ -4,22 +4,21 @@ import {
     Icon28CheckCircleOff, Icon28CheckCircleOn,
     Icon28RefreshOutline
 } from '@vkontakte/icons'
-import { IconButton, SimpleCell } from '@vkontakte/vkui'
+import { SimpleCell } from '@vkontakte/vkui'
 import React, { useEffect } from 'react'
-import { UseContractWriteConfig, UsePrepareContractWriteConfig, useContractRead, useContractWrite, usePrepareContractWrite, usePrepareSendTransaction, useSendTransaction, useSignTypedData } from 'wagmi'
-
-import { JsonRpcProvider as Provider } from '@ethersproject/providers'
-import JSBI from 'jsbi'
+import { useContractRead, useContractWrite, usePrepareContractWrite, usePrepareSendTransaction, useSendTransaction } from 'wagmi'
 
 import { BigNumber, ethers } from 'ethers'
-import { AlphaRouter, CurrencyAmount } from '@uniswap/smart-order-router'
-import { Token, BigintIsh, TradeType } from '@uniswap/sdk-core'
-import polus_abi from '../../polus_abi.json'
+import { Percent } from '@uniswap/sdk-core'
+import { SwapRouter } from '@uniswap/universal-router-sdk'
 import token_abi from '../../token_abi.json'
-import router_abi from '../../router_abi.json'
 import { CustomRouter } from '../../logic/router'
-import { Address, Uint } from '../../logic/uwm/types'
-import { UniversalRouter } from '../../logic/uwm/router'
+
+import permit2 from '../../permit.json'
+import { tokens } from '../../logic/tokens'
+
+const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3'
+const UNIVERSAL_ROUTER = '0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5'
 
 interface AllType {
     id: string,
@@ -32,7 +31,9 @@ interface AllType {
     uuid: string,
     consoleLog: Function,
     setPayed: Function,
-    setProgress: Function
+    setProgress: Function,
+    chainId: number,
+    amountOut: string
 }
 
 interface ProcessType {
@@ -52,53 +53,10 @@ interface ProcessType {
     setPayed: Function,
     universalRouter: string,
     setDataTr: Function,
-    dataTr: string | undefined
-}
-
-const token0 = {
-    chainId: 137,
-    decimals: 18,
-    symbol: 'ELON',
-    name: 'elon',
-    isNative: false,
-    isToken: true,
-    address: '0xE0339c80fFDE91F3e20494Df88d4206D86024cdF'
-}
-
-const token1 = {
-    chainId: 137,
-    decimals: 18,
-    symbol: 'DAI',
-    name: 'dai',
-    isNative: false,
-    isToken: true,
-    address: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'
-}
-
-function pack (
-    address: string,
-    amount: string,
-    expiration: string,
-    nonce: string,
-    spender: string,
-    sigDeadline: string) {
-    const string = address.replace('0x', '')
-    + amount.replace('0x', '')
-    + expiration.replace('0x', '')
-    + nonce.replace('0x', '')
-    + spender.replace('0x', '')
-    + sigDeadline.replace('0x', '')
-    return string
-}
-
-function toToken (address: string) {
-    return new Token(
-        137,
-        address,
-        18,
-        'test',
-        'test'
-    )
+    dataTr: string | undefined,
+    chainId: number,
+    amountOut: string,
+    feeData: ethers.providers.FeeData | undefined
 }
 
 const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
@@ -125,7 +83,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
             setFirstRender(true)
             console.log('amount isApprove', contractRead.data)
             if (contractRead.data) {
-                if (Number(contractRead.data) < 1000000000) { // TODO
+                if (BigInt(contractRead.data.toString()) < BigInt(props.amount)) { // TODO
                     try {
                         write()
                     } catch (errorTry) {
@@ -147,8 +105,13 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
     useEffect(() => {
         if (data) {
             console.log('txHash approve', data)
-            props.setPosition(1)
-            props.reRender(2)
+            // data.wait(1).then(() => {
+            setTimeout(() => {
+                props.setPosition(1)
+                props.reRender(2)
+            }, 1000)
+
+            // })
         }
     }, [ data ])
 
@@ -186,6 +149,8 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
 const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
 
+    const [ firstRender2, setFirstRender2 ] = React.useState<boolean>(false)
+
     // const dataForSign = router.packPermitSingleData(
     //     new Address(props.tokenAddress),
     //     new Uint(ethers.constants.MaxUint256.toBigInt()),
@@ -196,96 +161,215 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     //         BigInt(~~(Date.now() / 1000) + 60 * 30)
     //     )
     // )
+    const { config } = usePrepareContractWrite({
+        address: PERMIT2_ADDRESS,
+        abi: permit2,
+        functionName: 'approve',
+        args: [
+            props.tokenAddress,
+            props.universalRouter,
+            (2n ** 160n - 1n).toString(),
+            BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
+        ],
+        overrides: props.feeData ? {
+            maxFeePerGas: BigNumber.from(
+                (
+                    props.feeData.maxFeePerGas ? (props.feeData.maxFeePerGas.toNumber() * 1.01) : 0
+                ).toFixed(0)
+            ),
+            maxPriorityFeePerGas: BigNumber.from(
+                (
+                    props.feeData.maxPriorityFeePerGas ? (props.feeData.maxPriorityFeePerGas.toNumber() * 40) : 0
+                ).toFixed(0)
+            )
+            // gasPrice: BigNumber.from(
+            //     (
+            //         props.feeData.gasPrice ? (props.feeData.gasPrice.toNumber() * 1.1) : 0
+            //     ).toFixed(0)
+            // )
+        } : undefined
+    })
+    const { data, write, error } = useContractWrite(config)
 
-    const router = new CustomRouter()
+    const router = new CustomRouter(props.chainId)
 
     const tokenA = router.addressToToken(props.tokenAddress, 0)
     const tokenB = router.addressToToken(props.currentAddressToken, 0)
 
-    const dataForSign = CustomRouter.packToWagmi(
-        props.tokenAddress,
-        (2n ** 160n - 1n).toString(),
-        (2n ** 48n - 1n).toString(),
-        (0).toString(),
-        props.universalRouter,
-        BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
-    )
+    // const dataForSign = CustomRouter.packToWagmi(
+    //     props.tokenAddress,
+    //     (2n ** 160n - 1n).toString(),
+    //     BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString(),
+    //     (0).toString(),
+    //     props.universalRouter,
+    //     BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
+    // )
 
     // console.log(dataForSign)
 
-    const sign = useSignTypedData({
-        domain: {},
-        types: dataForSign.types,
-        value: dataForSign.value
-    })
+    // const valuesAny: PermitSingle = dataForSign.value
+
+    // const { domain, types, values } = AllowanceTransfer.getPermitData(valuesAny, PERMIT2_ADDRESS, 137)
+
+    // console.log('domain', domain)
+    // console.log('types', types)
+    // console.log('values', values)
+
+    // const dd: any = domain
+    // const tt: any = types
+    // const vv: any = values
+
+    // const sign = useSignTypedData({
+    //     domain: dd,
+    //     types: tt,
+    //     value: vv
+    // })
 
     useEffect(() => {
-        if (!firstRender && props.position === 1 && sign) {
-            console.log('start sign')
+        if (!firstRender && props.position === 1 && write) {
+            // console.log('start sign')
             setFirstRender(true)
-            sign.signTypedData()
+            // sign.signTypedData()
+
+            write()
         }
-    }, [ props.position, sign ])
+    }, [ props.position, write ])
 
     useEffect(() => {
-        console.log(sign.data)
-        console.log(sign.variables)
-        if (sign.data) {
-            router.packSignToWagmi(
-                props.tokenAddress,
-                props.universalRouter,
-                sign.data
-            )
+        // console.log('sign.data', sign.data)
+        // console.log('sign.variables', sign.variables)
+        // if (sign.data && data) {
+        // router.packSignToWagmi2(
+        //     dataForSign.value,
+        //     sign.data
+        // )
 
-            router.getRouter(props.amount, tokenA, tokenB).then((path) => {
+        // const isv = verifyTypedData(
+        //     {},
+        //     dataForSign.types,
+        //     valuesAny,
+        //     sign.data
+        // )
+
+        // console.log(isv)
+
+        let curentTokenDecimals = 8
+
+        if (props.chainId === 137) {
+            curentTokenDecimals = tokens.polygon.filter(t => t.address === tokenB.address)[0].nano
+        } else {
+            curentTokenDecimals = tokens.mainnet.filter(t => t.address === tokenB.address)[0].nano
+        }
+        tokens
+
+        const amountOut = ethers.utils.parseUnits(props.amountOut, curentTokenDecimals)
+        console.log('amountOut', amountOut)
+
+        if (!firstRender2 && firstRender) {
+            console.log('start pa')
+            setFirstRender2(true)
+            // data.wait(1).then(() => {
+            router.getRouter(amountOut, tokenA, tokenB).then((path) => {
                 if (path) {
-                    console.log(path)
+                    console.log('path', path)
 
-                    const encodedPath = CustomRouter.encodePath(path)
+                    // const encodedPath = CustomRouter.encodePath(path)
 
-                    console.log(encodedPath)
+                    // console.log()
 
-                    router.packSwapWagmi(
-                        '0xb7a9A25D776200cE9dF88117b573d198Dc46b92B',
-                        BigInt(props.amount),
-                        2n ** 10n - 1n,
-                        encodedPath
-                    )
+                    // const { pools } = path.trade.swaps[0].route
 
-                    const ser = router.builder.serialize()
-                    console.log(ser)
+                    // const pool = pools[0] as Pool
+
+                    // const curr1 = path.trade.swaps[0].inputAmount.currency
+
+                    // const curr2 = path.trade.swaps[0].outputAmount.currency
+
+                    // const ss = new Route([ pool ],
+                    //     curr1,
+                    //     curr2)
+
+                    // const encodedP = encodeRouteToPath(ss, true)
+
+                    // console.log('encodedP', encodedP)
+
+                    // router.packSwapWagmi(
+                    //     '0x0F652b340596e702912eAAccD1093871aFDB49c7',
+                    //     BigInt(amountOut),
+                    //     (1n * 10n ** 18n) + (1n * 10n ** 15n),
+                    //     encodedP
+                    // )
 
                     const deadline = ~~(Date.now() / 1000) + 60 * 32
 
-                    const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+                    // const valuesSign: any = values
+                    // valuesSign.signature = sign.data
 
-                    console.log('datatr', datatr)
+                    // const permit2permit: Permit2Permit = valuesSign
 
-                    props.setDataTr(datatr)
+                    const { calldata: data2, value } = SwapRouter.swapERC20CallParameters(path.trade, {
+                        slippageTolerance: new Percent('90', '100'),
+                        deadlineOrPreviousBlockhash: deadline.toString(),
+                        recipient: props.addressMerchant
+                        // inputTokenPermit: permit2permit
+                    })
+
+                    // const ser = router.builder.serialize()
+                    // console.log(ser)
+
+                    console.log('deadline', deadline)
+
+                    console.log('value', value)
+
+                    // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+
+                    // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+
+                    console.log('datatr', data2)
+
+                    props.setDataTr(data2)
 
                     props.setPosition(2)
+
+                    props.reRender(3)
+                } else {
+                    props.consoleLog('Error path', false)
+                    props.setPositionError(1)
                 }
             }).catch((err) => {
-                console.error(err)
+                if (error) {
+                    console.log('error: ', error)
+                    props.consoleLog(err ?? 'Unknown error', false)
+                    props.setPositionError(1)
+                }
             })
-
-            // [0x0000000000000000000000008f3cf7ad23cd3cadbd9735aff958023239c6a063000000000000000000000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000ffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000004c60051384bd2d3c01bfc845cf5f4b44bcbe9de500000000000000000000000000000000000000000000000000000000640bbe7c00000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000041c75201e37e37f2e28e6a1d721c567c6be3fc5d87c6a4dd7a7dcd3bf9aa6b025c6a6f07e991e2b26f915a160e4e01c89957b8f03ed177bd0ca17e32fcd5cb1e3a1c00000000000000000000000000000000000000000000000000000000000000,0x000000000000000000000000b7a9a25d776200ce9df88117b573d198dc46b92b00000000000000000000000000000000000000000000000000000000000185e000000000000000000000000000000000000000000000000000000000000003ff00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000042e0339c80ffde91f3e20494df88d4206d86024cdf0027100d500b1d8e8ef31e21c99d1db9a6444d3adf1270000bb88f3cf7ad23cd3cadbd9735aff958023239c6a063000000000000000000000000000000000000000000000000000000000000]
-            // router.packSwapWagmi(
-
-            // )
+            // })
         }
-    }, [ sign.data ])
+
+        // )
+        // }
+    }, [ data, props.position ])
+
+    useEffect(() => {
+        if (error) {
+            console.log('error: ', error)
+            props.consoleLog(error?.message ?? 'Unknown error', false)
+            props.setPositionError(2)
+        }
+    }, [ error ])
 
     return (
         <SimpleCell
             disabled={props.positionError !== 2}
-            onClick={() => props.reRender(1)}
+            onClick={() => props.reRender(2)}
             style={props.position !== 1 ? { opacity: 0.5 } : {}}
             after={props.positionError === 2 ? <Icon28RefreshOutline /> : null}
             before={
                 <div>
                     {props.positionError === 2
                         ? <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" /> : null }
+                    {props.position < 1 && props.positionError !== 2
+                        ? <Icon28CheckCircleOff /> : null}
                     {props.position === 1 && props.positionError !== 2
                         ? <div className="process-spinner">
                             <Icon24Spinner width={28} height={28} />
@@ -309,19 +393,23 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
             value: BigNumber.from('0')
         }
     })
-    const { data, isLoading, isSuccess, sendTransaction } = useSendTransaction(config)
+    const { data, isLoading, isSuccess, sendTransaction, error } = useSendTransaction(config)
 
     useEffect(() => {
+        // console.log('start tr', props.position, props.dataTr, sendTransaction)
         if (!firstRender && props.position === 2 && sendTransaction && props.dataTr) {
             setFirstRender(true)
 
             console.log('props.dataTr', props.dataTr)
-            sendTransaction()
+            setTimeout(() => {
+                sendTransaction()
+            }, 1000)
         }
-    }, [ props.position, props.dataTr ])
+    }, [ props.position, props.dataTr, sendTransaction ])
 
     useEffect(() => {
         if (props.dataTr) {
+            console.log('props.dataTr 2', props.dataTr)
             props.reRender(3)
         }
     }, [ props.dataTr ])
@@ -338,9 +426,20 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
         if (data) {
             console.log('txHash transfer', data)
             data.wait(1).then(() => {
+                props.setPosition(3)
+
+                props.setPayed(true)
             })
         }
     }, [ data ])
+
+    useEffect(() => {
+        if (error) {
+            console.log('error: ', error)
+            props.consoleLog(error?.message ?? 'Unknown error', false)
+            props.setPositionError(3)
+        }
+    }, [ error ])
 
     return (
         <SimpleCell
@@ -380,12 +479,17 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 
     const [ dataTr, setDataTr ] = React.useState<string | undefined>(undefined)
 
-    const tokenAddressFrom = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-    const tokenAddressTo = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
+    const [ feeData, setFeeData ] = React.useState<ethers.providers.FeeData | undefined>(undefined)
 
-    const universalRouter = '0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B'
+    // const tokenAddressFrom = '0xE0339c80fFDE91F3e20494Df88d4206D86024cdF'
+    // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'
 
-    const addressPermit = '0x000000000022d473030f116ddee9f6b43ac78ba3'
+    // const tokenAddressFrom = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // dai
+    // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063' // usdc
+
+    const universalRouter = UNIVERSAL_ROUTER
+
+    const addressPermit = PERMIT2_ADDRESS
 
     function reRender (id: number) {
         if (id === 1) {
@@ -400,9 +504,17 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         setPositionError(0)
     }
 
+    const provider = new ethers.providers.JsonRpcProvider(
+        props.chainId === 137 ? 'https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba'
+            : 'https://bitter-empty-energy.quiknode.pro/e49a9bbc66c87c52f9d677d0f96e667f0c2bc300/')
+
     useEffect(() => {
         if (!firstRender) {
             setFirstRender(true)
+
+            provider.getFeeData().then((value) => {
+                setFeeData(value)
+            })
         }
     }, [])
 
@@ -424,7 +536,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 key={oneId}
                 address={props.address}
                 addressPolus={addressPermit}
-                tokenAddress={tokenAddressFrom}
+                tokenAddress={props.tokenAddress}
                 setPosition={setPosition}
                 position={position}
                 positionError={positionError}
@@ -432,19 +544,22 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 amount={props.amount}
                 addressMerchant={props.addressMerchant}
                 uuid={props.uuid}
-                currentAddressToken={tokenAddressTo}
+                currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
                 setPayed={props.setPayed}
                 universalRouter={universalRouter}
                 setDataTr={setDataTr}
                 dataTr={dataTr}
+                chainId={props.chainId}
+                amountOut={props.amountOut}
+                feeData={feeData}
             />
             <ProcessTwo
                 key={twoId}
                 address={props.address}
                 addressPolus={addressPermit}
-                tokenAddress={tokenAddressFrom}
+                tokenAddress={props.tokenAddress}
                 setPosition={setPosition}
                 position={position}
                 positionError={positionError}
@@ -452,19 +567,22 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 amount={props.amount}
                 addressMerchant={props.addressMerchant}
                 uuid={props.uuid}
-                currentAddressToken={tokenAddressTo}
+                currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
                 setPayed={props.setPayed}
                 universalRouter={universalRouter}
                 setDataTr={setDataTr}
                 dataTr={dataTr}
+                chainId={props.chainId}
+                amountOut={props.amountOut}
+                feeData={feeData}
             />
             <ProcessThree
                 key={treId}
                 address={props.address}
                 addressPolus={addressPermit}
-                tokenAddress={tokenAddressFrom}
+                tokenAddress={props.tokenAddress}
                 setPosition={setPosition}
                 position={position}
                 positionError={positionError}
@@ -472,13 +590,16 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 amount={props.amount}
                 addressMerchant={props.addressMerchant}
                 uuid={props.uuid}
-                currentAddressToken={tokenAddressTo}
+                currentAddressToken={props.currentAddressToken}
                 consoleLog={props.consoleLog}
                 reRender={reRender}
                 setPayed={props.setPayed}
                 universalRouter={universalRouter}
                 setDataTr={setDataTr}
                 dataTr={dataTr}
+                chainId={props.chainId}
+                amountOut={props.amountOut}
+                feeData={feeData}
             />
 
         </div>

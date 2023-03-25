@@ -15,6 +15,17 @@ interface IPool {
     fee: number
 }
 
+interface valuesSign {
+    details: {
+        token: string,
+        amount: string,
+        expiration: string,
+        nonce: string
+    },
+    spender: string,
+    sigDeadline: string
+}
+
 export class CustomRouter {
     private _router: AlphaRouter
 
@@ -26,10 +37,10 @@ export class CustomRouter {
 
     private _builder: Builder
 
-    constructor (chainId: number = 1) {
+    constructor (chainId: number = 137) {
         this._provider = new Provider(
-            // 'https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba',
-            'https://bitter-empty-energy.quiknode.pro/e49a9bbc66c87c52f9d677d0f96e667f0c2bc300/',
+            chainId === 137 ? 'https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba'
+                : 'https://bitter-empty-energy.quiknode.pro/e49a9bbc66c87c52f9d677d0f96e667f0c2bc300/',
             chainId
         )
         this._router = new AlphaRouter({ chainId, provider: this._provider })
@@ -41,38 +52,75 @@ export class CustomRouter {
     }
 
     public packSignToWagmi (token: string, spender: string, signature: string): Builder {
+        const signature2 = new Byts(Buffer.from(signature.replace('0x', ''), 'hex'))
+        console.log('signature2', signature2)
         this._builder.put({
             cmd: Command.PERMIT2_PERMIT,
             input: {
                 PermitSingle: {
                     details: {
                         token: new Address(token),
-                        amount: new Uint(2n ** 160n - 1n),
-                        expiration: new Uint(2n ** 48n - 1n),
-                        nonce: new Uint(0n)
+                        amount: new Uint(2n ** 10n - 1n),
+                        expiration: new Uint(2n ** 40n - 1n),
+                        nonce: new Uint(1n)
                     },
                     spender: new Address(spender), // universalRouter
                     sigDeadline: new Uint(
                         BigInt(~~(Date.now() / 1000) + 60 * 30)
                     )
                 },
-                signature: new Byts(Buffer.from(signature.replace('0x', ''), 'hex'))
+                signature: signature2
             }
         })
 
         return this._builder
     }
 
+    public packSignToWagmi2 (value: valuesSign, signature: string): Builder {
+        const signature2 = new Byts(Buffer.from(signature.replace('0x', ''), 'hex'))
+        console.log('signature2', signature2)
+
+        const data = {
+            PermitSingle: {
+                details: {
+                    token: new Address(value.details.token),
+                    amount: new Uint(BigInt(value.details.amount)),
+                    expiration: new Uint(BigInt(value.details.expiration)),
+                    nonce: new Uint(BigInt(value.details.nonce))
+                },
+                spender: new Address(value.spender), // universalRouter
+                sigDeadline: new Uint(
+                    BigInt(value.sigDeadline)
+                )
+            },
+            signature: signature2
+        }
+
+        console.log('PermitSingle', data)
+
+        this._builder.put({
+            cmd: Command.PERMIT2_PERMIT,
+            input: data
+        })
+
+        return this._builder
+    }
+
     public packSwapWagmi (recipt: string, amountOut: bigint, maxInput: bigint, encodedPath: string): Builder {
+        const patch = Buffer.from(encodedPath.replace('0x', ''), 'hex')
+
+        const inputs = {
+            recipt: new Address(recipt),
+            output: new Uint(amountOut), // 0.001 DAI
+            maxspt: new Uint(maxInput),
+            uepath: new Byts(patch),
+            permit: new Bool(true)
+        }
+
+        console.log('inputs', inputs)
         this._builder.put({
             cmd: Command.V3_SWAP_EXACT_OUT,
-            input: {
-                recipt: new Address(recipt),
-                output: new Uint(amountOut), // 0.001 DAI
-                maxspt: new Uint(maxInput),
-                uepath: new Byts(Buffer.from(encodedPath, 'hex')),
-                permit: new Bool(true)
-            }
+            input: inputs
         })
 
         return this._builder
@@ -85,7 +133,7 @@ export class CustomRouter {
         nonce: string,
         spender: string,
         sigDeadline: string
-    ): any {
+    ): { types: any, value: valuesSign } {
         const types = {
             PermitDetails: [
                 { name: 'token', type: 'address' },
@@ -194,13 +242,19 @@ export class CustomRouter {
 
     public async getRouter
     (amountOut: string | number | BigNumber | BigInt, tokenFrom: Token, tokenTo: Token):
-    Promise<undefined | (string | number)[]> {
+    Promise<SwapRoute | null | undefined>
+    // Promise<undefined | (string | number)[]>
+    {
         const currencyAmount = CustomRouter.amountToCurrencyAmount(amountOut, tokenTo)
+
+        console.log('start get route')
         const resp = await this._router.route(
             currencyAmount,
             tokenFrom,
             TradeType.EXACT_OUTPUT
         )
+
+        console.log('route found')
 
         if (!resp) {
             console.error('resp not found')
@@ -222,37 +276,39 @@ export class CustomRouter {
             return undefined
         }
 
-        const poolsraw = resp?.trade.swaps[0].route.pools
-        const pools: IPool[] = poolsraw.map(p => ({
-            t0: p.token0.address,
-            t1: p.token1.address,
-            fee: <number>(<any>p).fee
-        }))
+        return resp
 
-        const findPool = (a: string, b: string): IPool => {
-            for (const p of pools) {
-                if ((p.t0 === a || p.t0 === b) && (p.t1 === a || p.t1 === b)) {
-                    return p
-                }
-            }
+        // const poolsraw = resp?.trade.swaps[0].route.pools
+        // const pools: IPool[] = poolsraw.map(p => ({
+        //     t0: p.token0.address,
+        //     t1: p.token1.address,
+        //     fee: <number>(<any>p).fee
+        // }))
 
-            throw new Error('pool not found in path range')
-        }
+        // const findPool = (a: string, b: string): IPool => {
+        //     for (const p of pools) {
+        //         if ((p.t0 === a || p.t0 === b) && (p.t1 === a || p.t1 === b)) {
+        //             return p
+        //         }
+        //     }
 
-        const patharr: PathArray = []
+        //     throw new Error('pool not found in path range')
+        // }
 
-        for (let i = 0; i < path.length; i++) {
-            if (i + 1 >= path.length) break
+        // const patharr: PathArray = []
 
-            const poolForPath = findPool(path[i].address, path[i + 1].address)
+        // for (let i = 0; i < path.length; i++) {
+        //     if (i + 1 >= path.length) break
 
-            if (i === 0) patharr.push(path[i].address)
+        //     const poolForPath = findPool(path[i].address, path[i + 1].address)
 
-            patharr.push(poolForPath.fee)
-            patharr.push(path[i + 1].address)
-        }
+        //     if (i === 0) patharr.push(path[i].address)
 
-        return patharr.reverse()
+        //     patharr.push(poolForPath.fee)
+        //     patharr.push(path[i + 1].address)
+        // }
+
+        // return patharr.reverse()
     }
 
     public async getTransFromData () {

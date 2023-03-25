@@ -20,8 +20,10 @@
     },
     "dependencies": {
         "@ethersproject/providers": "^5.7.2",
+        "@uniswap/permit2-sdk": "^1.2.0",
         "@uniswap/sdk-core": "^3.1.1",
         "@uniswap/smart-order-router": "^3.5.0",
+        "@uniswap/universal-router-sdk": "^1.4.3",
         "@uniswap/v3-sdk": "^3.9.0",
         "@vkontakte/icons": "^2.16.0",
         "@vkontakte/vk-bridge": "^2.7.0",
