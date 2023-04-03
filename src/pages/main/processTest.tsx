@@ -276,6 +276,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
                     // const encodedPath = CustomRouter.encodePath(path)
 
                     // console.log()
+                    
 
                     // const { pools } = path.trade.swaps[0].route
 
