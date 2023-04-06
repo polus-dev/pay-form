@@ -6,16 +6,20 @@ import {
 } from '@vkontakte/icons'
 import { SimpleCell } from '@vkontakte/vkui'
 import React, { useEffect } from 'react'
-import { useContractRead, useContractWrite, usePrepareContractWrite, usePrepareSendTransaction, useSendTransaction } from 'wagmi'
+import { useContractRead, useContractWrite, usePrepareContractWrite, usePrepareSendTransaction, useSendTransaction, useSignTypedData } from 'wagmi'
 
 import { BigNumber, ethers } from 'ethers'
 import { Percent } from '@uniswap/sdk-core'
 import { SwapRouter } from '@uniswap/universal-router-sdk'
+import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk'
+import { verifyTypedData } from 'ethers/lib/utils.js'
 import token_abi from '../../token_abi.json'
 import { CustomRouter } from '../../logic/router'
 
 import permit2 from '../../permit.json'
 import { tokens } from '../../logic/tokens'
+import { Permit2Permit } from '@uniswap/universal-router-sdk/dist/utils/permit2'
+
 
 const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3'
 const UNIVERSAL_ROUTER = '0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5'
@@ -56,7 +60,9 @@ interface ProcessType {
     dataTr: string | undefined,
     chainId: number,
     amountOut: string,
-    feeData: ethers.providers.FeeData | undefined
+    feeData: ethers.providers.FeeData | undefined,
+    timeEx: string | undefined,
+    timeEx2: string | undefined
 }
 
 const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
@@ -196,160 +202,165 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     const tokenA = router.addressToToken(props.tokenAddress, 0)
     const tokenB = router.addressToToken(props.currentAddressToken, 0)
 
-    // const dataForSign = CustomRouter.packToWagmi(
-    //     props.tokenAddress,
-    //     (2n ** 160n - 1n).toString(),
-    //     BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString(),
-    //     (0).toString(),
-    //     props.universalRouter,
-    //     BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
-    // )
+    const dataForSign = CustomRouter.packToWagmi(
+        props.tokenAddress,
+        (2n ** 160n - 1n).toString(),
+        props.timeEx2 ?? '1',
+        (0).toString(),
+        props.universalRouter,
+        props.timeEx ?? '1'
+    )
 
     // console.log(dataForSign)
 
-    // const valuesAny: PermitSingle = dataForSign.value
+    const valuesAny: PermitSingle = dataForSign.value
 
-    // const { domain, types, values } = AllowanceTransfer.getPermitData(valuesAny, PERMIT2_ADDRESS, 137)
+    const { domain, types, values } = AllowanceTransfer.getPermitData(valuesAny, PERMIT2_ADDRESS, 137)
 
     // console.log('domain', domain)
     // console.log('types', types)
     // console.log('values', values)
 
-    // const dd: any = domain
-    // const tt: any = types
-    // const vv: any = values
+    const dd: any = domain
+    const tt: any = types
+    const vv: any = values
 
-    // const sign = useSignTypedData({
-    //     domain: dd,
-    //     types: tt,
-    //     value: vv
-    // })
+    const sign = useSignTypedData({
+        domain: dd,
+        types: tt,
+        value: vv
+    })
 
     useEffect(() => {
-        if (!firstRender && props.position === 1 && write) {
-            // console.log('start sign')
+        if (!firstRender && props.position === 1 && sign && props.timeEx2 && props.timeEx) {
+            console.log('start sign')
+            console.log('dataForSign', dataForSign)
             setFirstRender(true)
-            // sign.signTypedData()
+            sign.signTypedData()
 
-            write()
+            // write()
         }
-    }, [ props.position, write ])
+    }, [ props.position, sign, props.timeEx2, props.timeEx ])
 
     useEffect(() => {
-        // console.log('sign.data', sign.data)
+        console.log('sign.data', sign.data)
         // console.log('sign.variables', sign.variables)
-        // if (sign.data && data) {
+        if (sign.data) {
         // router.packSignToWagmi2(
         //     dataForSign.value,
         //     sign.data
         // )
 
-        // const isv = verifyTypedData(
-        //     {},
-        //     dataForSign.types,
-        //     valuesAny,
-        //     sign.data
-        // )
+            const isv = verifyTypedData(
+                domain,
+                types,
+                values,
+                sign.data
+            )
 
-        // console.log(isv)
+            console.log('dataForSign 2', dataForSign)
 
-        let curentTokenDecimals = 8
+            console.log('sign.data', sign.data)
 
-        if (props.chainId === 137) {
-            curentTokenDecimals = tokens.polygon.filter(t => t.address === tokenB.address)[0].nano
-        } else {
-            curentTokenDecimals = tokens.mainnet.filter(t => t.address === tokenB.address)[0].nano
-        }
-        tokens
+            console.log(isv)
 
-        const amountOut = ethers.utils.parseUnits(props.amountOut, curentTokenDecimals)
-        console.log('amountOut', amountOut)
+            let curentTokenDecimals = 8
 
-        if (!firstRender2 && firstRender) {
-            console.log('start pa')
-            setFirstRender2(true)
-            // data.wait(1).then(() => {
-            router.getRouter(amountOut, tokenA, tokenB).then((path) => {
-                if (path) {
-                    console.log('path', path)
+            if (props.chainId === 137) {
+                curentTokenDecimals = tokens.polygon.filter(t => t.address === tokenB.address)[0].nano
+            } else {
+                curentTokenDecimals = tokens.mainnet.filter(t => t.address === tokenB.address)[0].nano
+            }
 
-                    // const encodedPath = CustomRouter.encodePath(path)
+            const amountOut = ethers.utils.parseUnits(props.amountOut, curentTokenDecimals)
+            console.log('amountOut', amountOut)
 
-                    // console.log()
-                    
+            if (!firstRender2 && firstRender) {
+                console.log('start pa')
+                setFirstRender2(true)
+                // data.wait(1).then(() => {
+                router.getRouter(amountOut, tokenA, tokenB).then((path) => {
+                    if (path) {
+                        console.log('path 22', path)
 
-                    // const { pools } = path.trade.swaps[0].route
+                        // const encodedPath = CustomRouter.encodePath(path)
 
-                    // const pool = pools[0] as Pool
+                        // console.log()
 
-                    // const curr1 = path.trade.swaps[0].inputAmount.currency
+                        // const { pools } = path.trade.swaps[0].route
 
-                    // const curr2 = path.trade.swaps[0].outputAmount.currency
+                        // const pool = pools[0] as Pool
 
-                    // const ss = new Route([ pool ],
-                    //     curr1,
-                    //     curr2)
+                        // const curr1 = path.trade.swaps[0].inputAmount.currency
 
-                    // const encodedP = encodeRouteToPath(ss, true)
+                        // const curr2 = path.trade.swaps[0].outputAmount.currency
 
-                    // console.log('encodedP', encodedP)
+                        // const ss = new Route([ pool ],
+                        //     curr1,
+                        //     curr2)
 
-                    // router.packSwapWagmi(
-                    //     '0x0F652b340596e702912eAAccD1093871aFDB49c7',
-                    //     BigInt(amountOut),
-                    //     (1n * 10n ** 18n) + (1n * 10n ** 15n),
-                    //     encodedP
-                    // )
+                        // const encodedP = encodeRouteToPath(ss, true)
 
-                    const deadline = ~~(Date.now() / 1000) + 60 * 32
+                        // console.log('encodedP', encodedP)
 
-                    // const valuesSign: any = values
-                    // valuesSign.signature = sign.data
+                        // router.packSwapWagmi(
+                        //     '0x0F652b340596e702912eAAccD1093871aFDB49c7',
+                        //     BigInt(amountOut),
+                        //     (1n * 10n ** 18n) + (1n * 10n ** 15n),
+                        //     encodedP
+                        // )
 
-                    // const permit2permit: Permit2Permit = valuesSign
+                        const deadline = ~~(Date.now() / 1000) + 60 * 32
 
-                    const { calldata: data2, value } = SwapRouter.swapERC20CallParameters(path.trade, {
-                        slippageTolerance: new Percent('90', '100'),
-                        deadlineOrPreviousBlockhash: deadline.toString(),
-                        recipient: props.addressMerchant
-                        // inputTokenPermit: permit2permit
-                    })
+                        const valuesSign: any = values
+                        valuesSign.signature = sign.data
 
-                    // const ser = router.builder.serialize()
-                    // console.log(ser)
+                        const permit2permit: Permit2Permit = valuesSign
 
-                    console.log('deadline', deadline)
+                        console.log('start build params', permit2permit)
 
-                    console.log('value', value)
+                        const { calldata: data2, value } = SwapRouter.swapERC20CallParameters(path.trade, {
+                            slippageTolerance: new Percent('90', '100'),
+                            deadlineOrPreviousBlockhash: deadline.toString(),
+                            recipient: props.addressMerchant,
+                            inputTokenPermit: permit2permit
+                        })
 
-                    // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+                        // const ser = router.builder.serialize()
+                        // console.log(ser)
 
-                    // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+                        console.log('deadline', deadline)
 
-                    console.log('datatr', data2)
+                        console.log('value', value)
 
-                    props.setDataTr(data2)
+                        // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-                    props.setPosition(2)
+                        // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-                    props.reRender(3)
-                } else {
-                    props.consoleLog('Error path', false)
-                    props.setPositionError(1)
-                }
-            }).catch((err) => {
-                if (error) {
-                    console.log('error: ', error)
-                    props.consoleLog(err ?? 'Unknown error', false)
-                    props.setPositionError(1)
-                }
-            })
+                        console.log('datatr', data2)
+
+                        props.setDataTr(data2)
+
+                        props.setPosition(2)
+
+                        props.reRender(3)
+                    } else {
+                        props.consoleLog('Error path', false)
+                        props.setPositionError(1)
+                    }
+                }).catch((err) => {
+                    if (error) {
+                        console.log('error: ', error)
+                        props.consoleLog(err ?? 'Unknown error', false)
+                        props.setPositionError(1)
+                    }
+                })
             // })
-        }
+            }
 
         // )
-        // }
-    }, [ data, props.position ])
+        }
+    }, [ data, props.position, sign.data ])
 
     useEffect(() => {
         if (error) {
@@ -482,11 +493,17 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 
     const [ feeData, setFeeData ] = React.useState<ethers.providers.FeeData | undefined>(undefined)
 
+    const [ timeEx, setTimeEx ] = React.useState<string | undefined>(undefined)
+    const [ timeEx2, setTimeEx2 ] = React.useState<string | undefined>(undefined)
+
     // const tokenAddressFrom = '0xE0339c80fFDE91F3e20494Df88d4206D86024cdF'
     // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'
 
     // const tokenAddressFrom = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // dai
     // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063' // usdc
+
+    // const timeEx = BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
+    // const timeEx2 = BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
 
     const universalRouter = UNIVERSAL_ROUTER
 
@@ -516,6 +533,9 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
             provider.getFeeData().then((value) => {
                 setFeeData(value)
             })
+
+            setTimeEx(BigInt(~~(Date.now() / 1000) + 60 * 30).toString())
+            setTimeEx2(BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString())
         }
     }, [])
 
@@ -555,6 +575,8 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 chainId={props.chainId}
                 amountOut={props.amountOut}
                 feeData={feeData}
+                timeEx={timeEx}
+                timeEx2={timeEx2}
             />
             <ProcessTwo
                 key={twoId}
@@ -578,6 +600,8 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 chainId={props.chainId}
                 amountOut={props.amountOut}
                 feeData={feeData}
+                timeEx={timeEx}
+                timeEx2={timeEx2}
             />
             <ProcessThree
                 key={treId}
@@ -601,6 +625,8 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
                 chainId={props.chainId}
                 amountOut={props.amountOut}
                 feeData={feeData}
+                timeEx={timeEx}
+                timeEx2={timeEx2}
             />
 
         </div>
