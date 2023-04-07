@@ -157,8 +157,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
   const [firstRender2, setFirstRender2] = React.useState<boolean>(false)
 
-  // const [data, setData] = useState<any>();
-  // const [error, setError] = useState<any>();
+  const [readyToSign, setReadyToSign] = React.useState(false)
+
 
   type Permit2AllowanceType = {
     amount: bigint,
@@ -222,7 +222,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
       // )
     } : undefined
   })
-  const { data, write, error } = useContractWrite(config)
+  const { data, write, error, isSuccess: approvePermit2IsSuccess } = useContractWrite(config)
 
   const router = new CustomRouter(props.chainId)
 
@@ -233,7 +233,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     props.tokenAddress,
     (2n ** 160n - 1n).toString(),
     props.timeEx2 ?? '1',
-    (0).toString(),
+    (permit2allowance ? permit2allowance.nonce : 0).toString(),
     props.universalRouter,
     props.timeEx ?? '1'
   )
@@ -259,18 +259,44 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   })
 
   useEffect(() => {
-    if (!firstRender && props.position === 1 && sign && props.timeEx2 && props.timeEx) {
+    if (!firstRender && props.position === 1 && sign && props.timeEx2 && props.timeEx && write && permit2allowance) {
       console.log('start sign')
       console.log('dataForSign', dataForSign)
       setFirstRender(true)
-      sign.signTypedData()
 
-      const needToApprove = permit2allowance && !(permit2allowance.amount < BigInt(props.amount) || permit2allowance.expiration < Date.now() / 1000);
+      const needToApprove = permit2allowance.amount < BigInt(props.amount) || permit2allowance.expiration < Date.now() / 1000;
 
-      write?.()
-      debugger
+      if (!needToApprove)
+        setReadyToSign(true)
+      else
+        write();
+
+
     }
   }, [props.position, sign, props.timeEx2, props.timeEx, write])
+
+
+  // sign error handler 
+
+  useEffect(() => {
+    if (sign.isError) {
+      props.setPositionError(2)
+    }
+  }, [sign.isError])
+
+
+  useEffect(() => {
+    if (approvePermit2IsSuccess && !readyToSign)
+      setReadyToSign(true)
+  }, [approvePermit2IsSuccess])
+
+
+  useEffect(() => {
+    if (readyToSign)
+      sign.signTypedData()
+
+  }, [readyToSign])
+
 
   useEffect(() => {
     console.log('sign.data', sign.data)
