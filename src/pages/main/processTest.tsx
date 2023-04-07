@@ -266,10 +266,10 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
       const needToApprove = permit2allowance.amount < BigInt(props.amount) || permit2allowance.expiration < Date.now() / 1000;
 
-      if (!needToApprove)
-        setReadyToSign(true)
-      else
+      if (needToApprove)
         write();
+      else
+        setReadyToSign(true)
 
 
     }
