@@ -19,6 +19,7 @@ import { CustomRouter } from '../../logic/router'
 import permit2 from '../../permit_abi.json'
 import { tokens } from '../../logic/tokens'
 import { Permit2Permit } from '@uniswap/universal-router-sdk/dist/utils/permit2'
+import { encodePay } from '../../utils/customEncode'
 
 
 const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3'
@@ -238,6 +239,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     props.timeEx ?? '1'
   )
 
+  // NOTE: make optional sign
+
   // console.log(dataForSign)
 
   const valuesAny: PermitSingle = dataForSign.value
@@ -375,12 +378,13 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
             console.log('start build params', permit2permit)
 
-            const { calldata: data2, value } = SwapRouter.swapERC20CallParameters(path.trade, {
+            const { calldata, value } = SwapRouter.swapERC20CallParameters(path.trade, {
               slippageTolerance: new Percent('90', '100'),
               deadlineOrPreviousBlockhash: deadline.toString(),
-              recipient: props.addressMerchant,
-              inputTokenPermit: permit2permit
+              recipient: UNIVERSAL_ROUTER,
+              inputTokenPermit: permit2permit,
             })
+
 
             // const ser = router.builder.serialize()
             // console.log(ser)
@@ -393,9 +397,9 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
             // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-            console.log('datatr', data2)
+            console.log('datatr', calldata)
 
-            props.setDataTr(data2)
+            props.setDataTr(encodePay(calldata))
 
             props.setPosition(2)
 
@@ -456,7 +460,8 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 
   const { config } = usePrepareSendTransaction({
     request: {
-      to: props.universalRouter,
+      to: props.universalRouter,  // NOTE: custom_contract
+      // to: '0xC1dE05611B3C8cA7a8C6CC265fAA97DD12F14ABf',
       data: props.dataTr,
       value: BigNumber.from('0')
     }
