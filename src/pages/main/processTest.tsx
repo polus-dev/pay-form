@@ -1,134 +1,142 @@
 import {
   Icon24Spinner,
   Icon28CancelCircleOutline,
-  Icon28CheckCircleOff, Icon28CheckCircleOn,
-  Icon28RefreshOutline
-} from '@vkontakte/icons'
-import { SimpleCell } from '@vkontakte/vkui'
-import React, { useEffect, useState } from 'react'
-import { useContractRead, useContractWrite, usePrepareContractWrite, usePrepareSendTransaction, useSendTransaction, useSignTypedData } from 'wagmi'
+  Icon28CheckCircleOff,
+  Icon28CheckCircleOn,
+  Icon28RefreshOutline,
+} from '@vkontakte/icons';
+import { SimpleCell } from '@vkontakte/vkui';
+import React, { useEffect, useState } from 'react';
+import {
+  useContractRead,
+  useContractWrite,
+  usePrepareContractWrite,
+  usePrepareSendTransaction,
+  useSendTransaction,
+  useSignTypedData,
+} from 'wagmi';
 
-import { BigNumber, ethers } from 'ethers'
-import { Percent } from '@uniswap/sdk-core'
-import { SwapRouter } from '@uniswap/universal-router-sdk'
-import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk'
-import { verifyTypedData } from 'ethers/lib/utils.js'
-import token_abi from '../../token_abi.json'
-import { CustomRouter } from '../../logic/router'
+import { BigNumber, ethers } from 'ethers';
+import { Percent } from '@uniswap/sdk-core';
+import { SwapOptions, SwapRouter } from '@uniswap/universal-router-sdk';
+import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
+import { verifyTypedData } from 'ethers/lib/utils.js';
+import token_abi from '../../token_abi.json';
+import { CustomRouter } from '../../logic/router';
 
-import permit2 from '../../permit_abi.json'
-import { tokens } from '../../logic/tokens'
-import { Permit2Permit } from '@uniswap/universal-router-sdk/dist/utils/permit2'
-import { encodePay } from '../../utils/customEncode'
+import permit2 from '../../permit_abi.json';
+import { tokens } from '../../logic/tokens';
+import { Permit2Permit } from '@uniswap/universal-router-sdk/dist/utils/permit2';
+import { encodePay } from '../../utils/customEncode';
 
-
-const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3'
-const UNIVERSAL_ROUTER = '0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5'
+const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3';
+const UNIVERSAL_ROUTER = '0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5';
 
 interface AllType {
-  id: string,
-  tokenAddress: string,
-  addressPolus: string,
-  address: `0x${string}`,
-  amount: string,
-  addressMerchant: string,
-  currentAddressToken: string,
-  uuid: string,
-  consoleLog: Function,
-  setPayed: Function,
-  setProgress: Function,
-  chainId: number,
-  amountOut: string
+  id: string;
+  tokenAddress: string;
+  addressPolus: string;
+  address: `0x${string}`;
+  amount: string;
+  addressMerchant: string;
+  currentAddressToken: string;
+  uuid: string;
+  consoleLog: Function;
+  setPayed: Function;
+  setProgress: Function;
+  chainId: number;
+  amountOut: string;
 }
 
 interface ProcessType {
-  address: `0x${string}`,
-  tokenAddress: string,
-  addressPolus: string,
-  position: number,
-  setPosition: Function,
-  positionError: number,
-  setPositionError: Function,
-  amount: string,
-  addressMerchant: string,
-  uuid: string,
-  currentAddressToken: string,
-  consoleLog: Function,
-  reRender: Function,
-  setPayed: Function,
-  universalRouter: string,
-  setDataTr: Function,
-  dataTr: string | undefined,
-  chainId: number,
-  amountOut: string,
-  feeData: ethers.providers.FeeData | undefined,
-  timeEx: string | undefined,
-  timeEx2: string | undefined
+  address: `0x${string}`;
+  tokenAddress: string;
+  addressPolus: string;
+  position: number;
+  setPosition: Function;
+  positionError: number;
+  setPositionError: Function;
+  amount: string;
+  addressMerchant: string;
+  uuid: string;
+  currentAddressToken: string;
+  consoleLog: Function;
+  reRender: Function;
+  setPayed: Function;
+  universalRouter: string;
+  setDataTr: Function;
+  dataTr: string | undefined;
+  chainId: number;
+  amountOut: string;
+  feeData: ethers.providers.FeeData | undefined;
+  timeEx: string | undefined;
+  timeEx2: string | undefined;
 }
 
-const ProcessOne: React.FC<ProcessType> = props => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false)
+const ProcessOne: React.FC<ProcessType> = (props) => {
+  const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-  const addr: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`
+  const addr: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`;
   const contractRead = useContractRead({
     address: addr,
     abi: token_abi,
     functionName: 'allowance',
-    args: [props.address, props.addressPolus]
-  })
+    args: [props.address, props.addressPolus],
+  });
 
   const { config } = usePrepareContractWrite({
     address: addr,
     abi: token_abi,
     functionName: 'approve',
-    args: [props.addressPolus, ethers.constants.MaxUint256]
-  })
-  const { data, write, error } = useContractWrite(config)
+    args: [props.addressPolus, ethers.constants.MaxUint256],
+  });
+  const { data, write, error } = useContractWrite(config);
 
   useEffect(() => {
     if (!firstRender && write && props.position === 0 && contractRead.data) {
-      setFirstRender(true)
-      console.log('amount isApprove', contractRead.data)
+      setFirstRender(true);
+      console.log('amount isApprove', contractRead.data);
       if (contractRead.data) {
-        if (BigInt(contractRead.data.toString()) < BigInt(props.amount)) { // TODO
+        if (BigInt(contractRead.data.toString()) < BigInt(props.amount)) {
+          // TODO
           try {
-            write()
+            write();
           } catch (errorTry) {
-            props.consoleLog(errorTry ?? 'Unknown error', false)
-            props.setPositionError(1)
+            props.consoleLog(errorTry ?? 'Unknown error', false);
+            props.setPositionError(1);
           }
         } else {
-          console.log('next')
-          props.setPosition(1)
+          console.log('next');
+          props.setPosition(1);
         }
       } else {
-        console.log('addr', addr)
-        console.log('props.address', props.address)
-        console.log('props.addressPolus', props.addressPolus)
+        console.log('addr', addr);
+        console.log('props.address', props.address);
+        console.log('props.addressPolus', props.addressPolus);
       }
     }
-  }, [contractRead.data, write])
+  }, [contractRead.data, write]);
 
   useEffect(() => {
     if (data) {
-      console.log('txHash approve', data)
+      console.log('txHash approve', data);
       // data.wait(1).then(() => {
       setTimeout(() => {
-        props.setPosition(1)
-        props.reRender(2)
-      }, 1000)
+        props.setPosition(1);
+        props.reRender(2);
+      }, 1000);
 
       // })
     }
-  }, [data])
+  }, [data]);
 
   useEffect(() => {
     if (error) {
-      console.log('error: ', error)
-      props.consoleLog(error?.message ?? 'Unknown error', false)
-      props.setPositionError(1)
+      console.log('error: ', error);
+      props.consoleLog(error?.message ?? 'Unknown error', false);
+      props.setPositionError(1);
     }
-  }, [error])
+  }, [error]);
 
   return (
     <SimpleCell
@@ -138,46 +146,46 @@ const ProcessOne: React.FC<ProcessType> = props => {
       after={props.positionError === 1 ? <Icon28RefreshOutline /> : null}
       before={
         <div>
-          {props.positionError === 1
-            ? <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" /> : null}
-          {props.position === 0 && props.positionError !== 1
-            ? <div className="process-spinner">
+          {props.positionError === 1 ? (
+            <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" />
+          ) : null}
+          {props.position === 0 && props.positionError !== 1 ? (
+            <div className="process-spinner">
               <Icon24Spinner width={28} height={28} />
-            </div> : null}
-          {props.position > 0 && props.positionError !== 1
-            ? <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" /> : null}
+            </div>
+          ) : null}
+          {props.position > 0 && props.positionError !== 1 ? (
+            <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" />
+          ) : null}
         </div>
       }
     >
-      Approve your tokens</SimpleCell>
-  )
-}
+      Approve your tokens
+    </SimpleCell>
+  );
+};
 
 const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false)
+  const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-  const [firstRender2, setFirstRender2] = React.useState<boolean>(false)
+  const [firstRender2, setFirstRender2] = React.useState<boolean>(false);
 
-  const [readyToSign, setReadyToSign] = React.useState(false)
+  const [needToPermit, setNeedToPermit] = React.useState(false);
 
+  const [readyToSend, setReadyToSend] = React.useState(false);
 
   type Permit2AllowanceType = {
-    amount: bigint,
-    expiration: number,
-    nonce: number,
-  }
+    amount: bigint;
+    expiration: number;
+    nonce: number;
+  };
 
   const { data: permit2allowance } = useContractRead({
     address: PERMIT2_ADDRESS,
     abi: permit2,
     functionName: 'allowance',
-    args: [
-      props.address,
-      props.tokenAddress,
-      props.universalRouter,
-    ]
-  }) as { data: Permit2AllowanceType | undefined }
-
+    args: [props.address, props.tokenAddress, props.universalRouter],
+  }) as { data: Permit2AllowanceType | undefined };
 
   // const dataForSign = router.packPermitSingleData(
   //     new Address(props.tokenAddress),
@@ -190,45 +198,10 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   //     )
   // )
 
+  const router = new CustomRouter(props.chainId);
 
-
-
-
-
-  const { config } = usePrepareContractWrite({
-    address: PERMIT2_ADDRESS,
-    abi: permit2,
-    functionName: 'approve',
-    args: [
-      props.tokenAddress,
-      props.universalRouter,
-      (2n ** 160n - 1n).toString(),
-      BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
-    ],
-    overrides: props.feeData ? {
-      maxFeePerGas: BigNumber.from(
-        (
-          props.feeData.maxFeePerGas ? (props.feeData.maxFeePerGas.toNumber() * 1.01) : 0
-        ).toFixed(0)
-      ),
-      maxPriorityFeePerGas: BigNumber.from(
-        (
-          props.feeData.maxPriorityFeePerGas ? (props.feeData.maxPriorityFeePerGas.toNumber() * 40) : 0
-        ).toFixed(0)
-      )
-      // gasPrice: BigNumber.from(
-      //     (
-      //         props.feeData.gasPrice ? (props.feeData.gasPrice.toNumber() * 1.1) : 0
-      //     ).toFixed(0)
-      // )
-    } : undefined
-  })
-  const { data, write, error, isSuccess: approvePermit2IsSuccess } = useContractWrite(config)
-
-  const router = new CustomRouter(props.chainId)
-
-  const tokenA = router.addressToToken(props.tokenAddress, 0)
-  const tokenB = router.addressToToken(props.currentAddressToken, 0)
+  const tokenA = router.addressToToken(props.tokenAddress, 0);
+  const tokenB = router.addressToToken(props.currentAddressToken, 0);
 
   const dataForSign = CustomRouter.packToWagmi(
     props.tokenAddress,
@@ -237,110 +210,111 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     (permit2allowance ? permit2allowance.nonce : 0).toString(),
     props.universalRouter,
     props.timeEx ?? '1'
-  )
+  );
 
   // NOTE: make optional sign
 
   // console.log(dataForSign)
 
-  const valuesAny: PermitSingle = dataForSign.value
+  const valuesAny: PermitSingle = dataForSign.value;
 
-  const { domain, types, values } = AllowanceTransfer.getPermitData(valuesAny, PERMIT2_ADDRESS, 137)
+  const { domain, types, values } = AllowanceTransfer.getPermitData(
+    valuesAny,
+    PERMIT2_ADDRESS,
+    137
+  );
 
   // console.log('domain', domain)
   // console.log('types', types)
   // console.log('values', values)
 
-  const dd: any = domain
-  const tt: any = types
-  const vv: any = values
+  const dd: any = domain;
+  const tt: any = types;
+  const vv: any = values;
 
   const sign = useSignTypedData({
     domain: dd,
     types: tt,
-    value: vv
-  })
+    value: vv,
+  });
 
   useEffect(() => {
-    if (!firstRender && props.position === 1 && sign && props.timeEx2 && props.timeEx && write && permit2allowance) {
-      console.log('start sign')
-      console.log('dataForSign', dataForSign)
-      setFirstRender(true)
+    if (
+      !firstRender &&
+      props.position === 1 &&
+      sign &&
+      props.timeEx2 &&
+      props.timeEx &&
+      permit2allowance
+    ) {
+      console.log('start sign');
+      console.log('dataForSign', dataForSign);
+      setFirstRender(true);
 
-      const needToApprove = permit2allowance.amount < BigInt(props.amount) || permit2allowance.expiration < Date.now() / 1000;
-
-      if (needToApprove)
-        write();
-      else
-        setReadyToSign(true)
-
-
+      const needToPermit =
+        permit2allowance.amount < BigInt(props.amount) ||
+        permit2allowance.expiration < Date.now() / 1000;
+      if (needToPermit) setNeedToPermit(true);
+      else setReadyToSend(true);
     }
-  }, [props.position, sign, props.timeEx2, props.timeEx, write])
+  }, [props.position, sign, props.timeEx2, props.timeEx]);
 
-
-  // sign error handler 
+  // sign error handler
 
   useEffect(() => {
     if (sign.isError) {
-      props.setPositionError(2)
+      props.setPositionError(2);
     }
-  }, [sign.isError])
-
-
-  useEffect(() => {
-    if (approvePermit2IsSuccess && !readyToSign)
-      setReadyToSign(true)
-  }, [approvePermit2IsSuccess])
-
+  }, [sign.isError]);
 
   useEffect(() => {
-    if (readyToSign)
-      sign.signTypedData()
-
-  }, [readyToSign])
-
+    if (needToPermit) sign.signTypedData();
+  }, [needToPermit]);
 
   useEffect(() => {
-    console.log('sign.data', sign.data)
+    console.log('sign.data', sign.data);
     // console.log('sign.variables', sign.variables)
-    if (sign.data) {
+    if (sign.data || readyToSend) {
       // router.packSignToWagmi2(
       //     dataForSign.value,
       //     sign.data
       // )
+      if (sign.data) {
+        const isv = verifyTypedData(domain, types, values, sign.data);
 
-      const isv = verifyTypedData(
-        domain,
-        types,
-        values,
-        sign.data
-      )
+        console.log('dataForSign 2', dataForSign);
 
-      console.log('dataForSign 2', dataForSign)
+        console.log('sign.data', sign.data);
 
-      console.log('sign.data', sign.data)
-
-      console.log(isv)
-
-      let curentTokenDecimals = 8
-
-      if (props.chainId === 137) {
-        curentTokenDecimals = tokens.polygon.filter(t => t.address === tokenB.address)[0].nano
-      } else {
-        curentTokenDecimals = tokens.mainnet.filter(t => t.address === tokenB.address)[0].nano
+        console.log(isv);
       }
 
-      const amountOut = ethers.utils.parseUnits(props.amountOut, curentTokenDecimals)
-      console.log('amountOut', amountOut)
+      let curentTokenDecimals = 8;
+
+      if (props.chainId === 137) {
+        curentTokenDecimals = tokens.polygon.filter(
+          (t) => t.address === tokenB.address
+        )[0].nano;
+      } else {
+        curentTokenDecimals = tokens.mainnet.filter(
+          (t) => t.address === tokenB.address
+        )[0].nano;
+      }
+
+      const amountOut = ethers.utils.parseUnits(
+        props.amountOut,
+        curentTokenDecimals
+      );
+      debugger;
+      console.log('amountOut', amountOut);
 
       if (!firstRender2 && firstRender) {
-        console.log('start pa')
-        setFirstRender2(true)
+        console.log('start pa');
+        setFirstRender2(true);
         // data.wait(1).then(() => {
         router.getRouter(amountOut, tokenA, tokenB).then((path) => {
           if (path) {
-            console.log('path 22', path)
+            console.log('path 22', path);
 
             // const encodedPath = CustomRouter.encodePath(path)
 
@@ -369,66 +343,58 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             //     encodedP
             // )
 
-            const deadline = ~~(Date.now() / 1000) + 60 * 32
+            const deadline = ~~(Date.now() / 1000) + 60 * 32;
 
-            const valuesSign: any = values
-            valuesSign.signature = sign.data
+            const valuesSign: any = values;
+            valuesSign.signature = sign.data;
 
-            const permit2permit: Permit2Permit = valuesSign
+            const permit2permit: Permit2Permit = valuesSign;
 
-            console.log('start build params', permit2permit)
+            console.log('start build params', permit2permit);
 
-            const { calldata, value } = SwapRouter.swapERC20CallParameters(path.trade, {
+            const swapOptions: SwapOptions = {
               slippageTolerance: new Percent('90', '100'),
               deadlineOrPreviousBlockhash: deadline.toString(),
               recipient: UNIVERSAL_ROUTER,
-              inputTokenPermit: permit2permit,
-            })
+            };
+            if (needToPermit) swapOptions.inputTokenPermit = permit2permit;
 
+            const { calldata, value } = SwapRouter.swapERC20CallParameters(
+              path.trade,
+              swapOptions
+            );
 
             // const ser = router.builder.serialize()
             // console.log(ser)
 
-            console.log('deadline', deadline)
+            console.log('deadline', deadline);
 
-            console.log('value', value)
-
-            // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
+            console.log('value', value);
 
             // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-            console.log('datatr', calldata)
+            // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-            props.setDataTr(encodePay(calldata))
+            console.log('datatr', calldata);
+            debugger;
+            const encoded = encodePay(calldata, +props.amount);
 
-            props.setPosition(2)
+            props.setDataTr(encoded);
 
-            props.reRender(3)
+            props.setPosition(2);
+
+            props.reRender(3);
           } else {
-            props.consoleLog('Error path', false)
-            props.setPositionError(1)
+            props.consoleLog('Error path', false);
+            props.setPositionError(1);
           }
-        }).catch((err) => {
-          if (error) {
-            console.log('error: ', error)
-            props.consoleLog(err ?? 'Unknown error', false)
-            props.setPositionError(1)
-          }
-        })
+        });
         // })
       }
 
       // )
     }
-  }, [data, props.position, sign.data])
-
-  useEffect(() => {
-    if (error) {
-      console.log('error: ', error)
-      props.consoleLog(error?.message ?? 'Unknown error', false)
-      props.setPositionError(2)
-    }
-  }, [error])
+  }, [props.position, sign.data, readyToSend]);
 
   return (
     <SimpleCell
@@ -438,54 +404,65 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
       after={props.positionError === 2 ? <Icon28RefreshOutline /> : null}
       before={
         <div>
-          {props.positionError === 2
-            ? <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" /> : null}
-          {props.position < 1 && props.positionError !== 2
-            ? <Icon28CheckCircleOff /> : null}
-          {props.position === 1 && props.positionError !== 2
-            ? <div className="process-spinner">
+          {props.positionError === 2 ? (
+            <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" />
+          ) : null}
+          {props.position < 1 && props.positionError !== 2 ? (
+            <Icon28CheckCircleOff />
+          ) : null}
+          {props.position === 1 && props.positionError !== 2 ? (
+            <div className="process-spinner">
               <Icon24Spinner width={28} height={28} />
-            </div> : null}
-          {props.position > 1 && props.positionError !== 2
-            ? <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" /> : null}
+            </div>
+          ) : null}
+          {props.position > 1 && props.positionError !== 2 ? (
+            <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" />
+          ) : null}
         </div>
       }
     >
-      Sign your tokens</SimpleCell>
-  )
-}
+      Sign your tokens
+    </SimpleCell>
+  );
+};
 
 const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false)
+  const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
   const { config } = usePrepareSendTransaction({
     request: {
-      to: props.universalRouter,  // NOTE: custom_contract
+      to: props.universalRouter, // NOTE: custom_contract
       // to: '0xC1dE05611B3C8cA7a8C6CC265fAA97DD12F14ABf',
       data: props.dataTr,
-      value: BigNumber.from('0')
-    }
-  })
-  const { data, isLoading, isSuccess, sendTransaction, error } = useSendTransaction(config)
+      value: BigNumber.from('0'),
+    },
+  });
+  const { data, isLoading, isSuccess, sendTransaction, error } =
+    useSendTransaction(config);
 
   useEffect(() => {
     // console.log('start tr', props.position, props.dataTr, sendTransaction)
-    if (!firstRender && props.position === 2 && sendTransaction && props.dataTr) {
-      setFirstRender(true)
+    if (
+      !firstRender &&
+      props.position === 2 &&
+      sendTransaction &&
+      props.dataTr
+    ) {
+      setFirstRender(true);
 
-      console.log('props.dataTr', props.dataTr)
+      console.log('props.dataTr', props.dataTr);
       setTimeout(() => {
-        sendTransaction()
-      }, 1000)
+        sendTransaction();
+      }, 1000);
     }
-  }, [props.position, props.dataTr, sendTransaction])
+  }, [props.position, props.dataTr, sendTransaction]);
 
   useEffect(() => {
     if (props.dataTr) {
-      console.log('props.dataTr 2', props.dataTr)
-      props.reRender(3)
+      console.log('props.dataTr 2', props.dataTr);
+      props.reRender(3);
     }
-  }, [props.dataTr])
+  }, [props.dataTr]);
 
   // useEffect(() => {
   //     if (path && trans.write && !firstRender2) {
@@ -497,65 +474,71 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 
   useEffect(() => {
     if (data) {
-      console.log('txHash transfer', data)
+      console.log('txHash transfer', data);
       data.wait(1).then(() => {
-        props.setPosition(3)
+        props.setPosition(3);
 
-        props.setPayed(true)
-      })
+        props.setPayed(true);
+      });
     }
-  }, [data])
+  }, [data]);
 
   useEffect(() => {
     if (error) {
-      console.log('error: ', error)
-      props.consoleLog(error?.message ?? 'Unknown error', false)
-      props.setPositionError(3)
+      console.log('error: ', error);
+      props.consoleLog(error?.message ?? 'Unknown error', false);
+      props.setPositionError(3);
     }
-  }, [error])
+  }, [error]);
 
   return (
     <SimpleCell
       disabled={props.positionError !== 2}
       onClick={() => props.reRender(2)}
-
       style={props.position !== 2 ? { opacity: 0.5 } : {}}
       after={props.positionError === 3 ? <Icon28RefreshOutline /> : null}
       before={
         <div>
-          {props.positionError === 3 ? <Icon28CancelCircleOutline
-            fill="var(--vkui--color_background_negative)" /> : null}
-          {props.position < 2 && props.positionError !== 3
-            ? <Icon28CheckCircleOff /> : null}
-          {props.position === 2 && props.positionError !== 3
-            ? <div className="process-spinner">
+          {props.positionError === 3 ? (
+            <Icon28CancelCircleOutline fill="var(--vkui--color_background_negative)" />
+          ) : null}
+          {props.position < 2 && props.positionError !== 3 ? (
+            <Icon28CheckCircleOff />
+          ) : null}
+          {props.position === 2 && props.positionError !== 3 ? (
+            <div className="process-spinner">
               <Icon24Spinner width={28} height={28} />
-            </div> : null}
-          {props.position > 2 && props.positionError !== 3
-            ? <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" /> : null}
+            </div>
+          ) : null}
+          {props.position > 2 && props.positionError !== 3 ? (
+            <Icon28CheckCircleOn fill="var(--vkui--color_background_positive--active)" />
+          ) : null}
         </div>
       }
     >
-      Sign transaction</SimpleCell>
-  )
-}
+      Sign transaction
+    </SimpleCell>
+  );
+};
 
 export const ProcessAll: React.FC<AllType> = (props: AllType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false)
+  const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-  const [position, setPosition] = React.useState<number>(0)
-  const [positionError, setPositionError] = React.useState<number>(0)
+  const [position, setPosition] = React.useState<number>(0);
+  const [positionError, setPositionError] = React.useState<number>(0);
 
-  const [oneId, setOneId] = React.useState<string>('100')
-  const [twoId, setTwoId] = React.useState<string>('200')
-  const [treId, setTreId] = React.useState<string>('300')
+  const [oneId, setOneId] = React.useState<string>('100');
+  const [twoId, setTwoId] = React.useState<string>('200');
+  const [treId, setTreId] = React.useState<string>('300');
 
-  const [dataTr, setDataTr] = React.useState<string | undefined>(undefined)
+  const [dataTr, setDataTr] = React.useState<string | undefined>(undefined);
 
-  const [feeData, setFeeData] = React.useState<ethers.providers.FeeData | undefined>(undefined)
+  const [feeData, setFeeData] = React.useState<
+    ethers.providers.FeeData | undefined
+  >(undefined);
 
-  const [timeEx, setTimeEx] = React.useState<string | undefined>(undefined)
-  const [timeEx2, setTimeEx2] = React.useState<string | undefined>(undefined)
+  const [timeEx, setTimeEx] = React.useState<string | undefined>(undefined);
+  const [timeEx2, setTimeEx2] = React.useState<string | undefined>(undefined);
 
   // const tokenAddressFrom = '0xE0339c80fFDE91F3e20494Df88d4206D86024cdF'
   // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'
@@ -566,51 +549,53 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
   // const timeEx = BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
   // const timeEx2 = BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
 
-  const universalRouter = UNIVERSAL_ROUTER
+  const universalRouter = UNIVERSAL_ROUTER;
 
-  const addressPermit = PERMIT2_ADDRESS
+  const addressPermit = PERMIT2_ADDRESS;
 
   function reRender(id: number) {
     if (id === 1) {
-      setOneId(`${Number(oneId) + 1}`)
+      setOneId(`${Number(oneId) + 1}`);
     }
     if (id === 2) {
-      setTwoId(`${Number(twoId) + 1}`)
+      setTwoId(`${Number(twoId) + 1}`);
     }
     if (id === 3) {
-      setTreId(`${Number(twoId) + 1}`)
+      setTreId(`${Number(twoId) + 1}`);
     }
-    setPositionError(0)
+    setPositionError(0);
   }
 
   const provider = new ethers.providers.JsonRpcProvider(
-    props.chainId === 137 ? 'https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba'
-      : 'https://bitter-empty-energy.quiknode.pro/e49a9bbc66c87c52f9d677d0f96e667f0c2bc300/')
+    props.chainId === 137
+      ? 'https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba'
+      : 'https://bitter-empty-energy.quiknode.pro/e49a9bbc66c87c52f9d677d0f96e667f0c2bc300/'
+  );
 
   useEffect(() => {
     if (!firstRender) {
-      setFirstRender(true)
+      setFirstRender(true);
 
       provider.getFeeData().then((value) => {
-        setFeeData(value)
-      })
+        setFeeData(value);
+      });
 
-      setTimeEx(BigInt(~~(Date.now() / 1000) + 60 * 30).toString())
-      setTimeEx2(BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString())
+      setTimeEx(BigInt(~~(Date.now() / 1000) + 60 * 30).toString());
+      setTimeEx2(BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString());
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (position === 0) {
-      props.setProgress(50)
+      props.setProgress(50);
     }
     if (position === 1) {
-      props.setProgress(75)
+      props.setProgress(75);
     }
     if (position === 2) {
-      props.setProgress(100)
+      props.setProgress(100);
     }
-  }, [position])
+  }, [position]);
 
   return (
     <div id={props.id} className="process-block">
@@ -689,7 +674,6 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         timeEx={timeEx}
         timeEx2={timeEx2}
       />
-
     </div>
-  )
-}
+  );
+};
