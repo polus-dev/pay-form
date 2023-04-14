@@ -6,7 +6,7 @@ import {
   Icon28RefreshOutline,
 } from '@vkontakte/icons';
 import { SimpleCell } from '@vkontakte/vkui';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   useContractRead,
   useContractWrite,
@@ -74,7 +74,7 @@ interface ProcessType {
 }
 
 const ProcessOne: React.FC<ProcessType> = (props) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const [firstRender, setFirstRender] = useState(false);
 
   const addr: `0x${string}` = `0x${props.tokenAddress.replace('0x', '')}`;
   const contractRead = useContractRead({
@@ -104,6 +104,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
   useEffect(() => {
     if (!firstRender && write && props.position === 0 && contractRead.data && balanceOf.data) {
       setFirstRender(true);
+
       const curentTokenDecimals = 10 ** 6;
       //TODO: make token decimals dynamic
       // maybe use enum with decimals all tokens
@@ -114,7 +115,6 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
         return
       }
 
-      console.log('amount isApprove', contractRead.data);
       if (contractRead.data) {
         if (BigInt(contractRead.data.toString()) < BigInt(props.amount)) {
           try {
@@ -124,20 +124,15 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
             props.setPositionError(1);
           }
         } else {
-          console.log('next');
           props.setPosition(1);
         }
       } else {
-        console.log('addr', addr);
-        console.log('props.address', props.address);
-        console.log('props.addressPolus', props.addressPolus);
       }
     }
   }, [contractRead.data, balanceOf.data, write]);
 
   useEffect(() => {
     if (data) {
-      console.log('txHash approve', data);
       // data.wait(1).then(() => {
       setTimeout(() => {
         props.setPosition(1);
@@ -184,13 +179,13 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 };
 
 const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const [firstRender, setFirstRender] = useState(false);
 
-  const [firstRender2, setFirstRender2] = React.useState<boolean>(false);
+  const [firstRender2, setFirstRender2] = useState(false);
 
-  const [needToPermit, setNeedToPermit] = React.useState(false);
+  const [needToPermit, setNeedToPermit] = useState(false);
 
-  const [readyToSend, setReadyToSend] = React.useState(false);
+  const [readyToSend, setReadyToSend] = useState(false);
 
   type Permit2AllowanceType = {
     amount: bigint;
@@ -205,16 +200,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     args: [props.address, props.tokenAddress, props.universalRouter],
   }) as { data: Permit2AllowanceType | undefined };
 
-  // const dataForSign = router.packPermitSingleData(
-  //     new Address(props.tokenAddress),
-  //     new Uint(ethers.constants.MaxUint256.toBigInt()),
-  //     new Uint(2n ** 48n - 1n),
-  //     new Uint(0n),
-  //     new Address(props.universalRouter),
-  //     new Uint(
-  //         BigInt(~~(Date.now() / 1000) + 60 * 30)
-  //     )
-  // )
 
   const router = new CustomRouter(props.chainId);
 
@@ -230,9 +215,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     props.timeEx ?? '1'
   );
 
-  // NOTE: make optional sign
-
-  // console.log(dataForSign)
 
   const valuesAny: PermitSingle = dataForSign.value;
 
@@ -242,18 +224,12 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     137
   );
 
-  // console.log('domain', domain)
-  // console.log('types', types)
-  // console.log('values', values)
 
-  const dd: any = domain;
-  const tt: any = types;
-  const vv: any = values;
 
   const sign = useSignTypedData({
-    domain: dd,
-    types: tt,
-    value: vv,
+    domain: domain as any,
+    types: types as any,
+    value: values as any,
   });
 
   useEffect(() => {
@@ -265,8 +241,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
       props.timeEx &&
       permit2allowance
     ) {
-      console.log('start sign');
-      console.log('dataForSign', dataForSign);
       setFirstRender(true);
 
       const needToPermit =
@@ -280,9 +254,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   // sign error handler
 
   useEffect(() => {
-    if (sign.isError) {
-      props.setPositionError(2);
-    }
+    if (sign.isError) props.setPositionError(2);
   }, [sign.isError]);
 
   useEffect(() => {
@@ -290,21 +262,10 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   }, [needToPermit]);
 
   useEffect(() => {
-    console.log('sign.data', sign.data);
-    // console.log('sign.variables', sign.variables)
     if (sign.data || readyToSend) {
-      // router.packSignToWagmi2(
-      //     dataForSign.value,
-      //     sign.data
-      // )
       if (sign.data) {
         const isv = verifyTypedData(domain, types, values, sign.data);
-
-        console.log('dataForSign 2', dataForSign);
-
-        console.log('sign.data', sign.data);
-
-        console.log(isv);
+        // TODO: write error throw if signature invalid
       }
 
       let curentTokenDecimals: number;
@@ -323,43 +284,12 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
         props.amountOut,
         curentTokenDecimals
       );
-      console.log('amountOut', amountOut);
 
       if (!firstRender2 && firstRender) {
-        console.log('start pa');
         setFirstRender2(true);
         // data.wait(1).then(() => {
-        router.getRouter(amountOut, tokenA, tokenB).then((path) => {
+        router.getRouter(amountOut, tokenA, tokenB).then(path => {
           if (path) {
-            console.log('path 22', path);
-
-            // const encodedPath = CustomRouter.encodePath(path)
-
-            // console.log()
-
-            // const { pools } = path.trade.swaps[0].route
-
-            // const pool = pools[0] as Pool
-
-            // const curr1 = path.trade.swaps[0].inputAmount.currency
-
-            // const curr2 = path.trade.swaps[0].outputAmount.currency
-
-            // const ss = new Route([ pool ],
-            //     curr1,
-            //     curr2)
-
-            // const encodedP = encodeRouteToPath(ss, true)
-
-            // console.log('encodedP', encodedP)
-
-            // router.packSwapWagmi(
-            //     '0x0F652b340596e702912eAAccD1093871aFDB49c7',
-            //     BigInt(amountOut),
-            //     (1n * 10n ** 18n) + (1n * 10n ** 15n),
-            //     encodedP
-            // )
-
             const deadline = ~~(Date.now() / 1000) + 60 * 32;
 
             const valuesSign: any = values;
@@ -367,13 +297,13 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
             const permit2permit: Permit2Permit = valuesSign;
 
-            console.log('start build params', permit2permit);
 
             const swapOptions: SwapOptions = {
               slippageTolerance: new Percent('90', '100'),
               deadlineOrPreviousBlockhash: deadline.toString(),
               recipient: UNIVERSAL_ROUTER,
             };
+
             if (needToPermit) swapOptions.inputTokenPermit = permit2permit;
 
             const { calldata, value } = SwapRouter.swapERC20CallParameters(
@@ -381,21 +311,10 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
               swapOptions
             );
 
-            // const ser = router.builder.serialize()
-            // console.log(ser)
 
-            console.log('deadline', deadline);
+            const encodedTx = encodePay(calldata, +amountOut, curentTokenDecimals, props.uuid);
 
-            console.log('value', value);
-
-            // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
-
-            // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
-
-            console.log('datatr', calldata);
-            const encoded = encodePay(calldata, +amountOut, curentTokenDecimals, props.uuid);
-
-            props.setDataTr(encoded);
+            props.setDataTr(encodedTx);
 
             props.setPosition(2);
 
@@ -443,7 +362,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 };
 
 const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const [firstRender, setFirstRender] = useState<boolean>(false);
 
   const { config } = usePrepareSendTransaction({
     request: {
@@ -453,11 +372,10 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
       value: BigNumber.from('0'),
     },
   });
-  const { data, isLoading, isSuccess, sendTransaction, error } =
+  const { data, sendTransaction, error } =
     useSendTransaction(config);
 
   useEffect(() => {
-    // console.log('start tr', props.position, props.dataTr, sendTransaction)
     if (
       !firstRender &&
       props.position === 2 &&
@@ -480,13 +398,6 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
     }
   }, [props.dataTr]);
 
-  // useEffect(() => {
-  //     if (path && trans.write && !firstRender2) {
-  //         setFirstRender2(true)
-  //         console.log('write')
-  //         trans.write()
-  //     }
-  // }, [ path, trans.write ])
 
   useEffect(() => {
     if (data) {
@@ -538,32 +449,23 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 };
 
 export const ProcessAll: React.FC<AllType> = (props: AllType) => {
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const [firstRender, setFirstRender] = useState<boolean>(false);
 
-  const [position, setPosition] = React.useState<number>(0);
-  const [positionError, setPositionError] = React.useState<number>(0);
+  const [position, setPosition] = useState<number>(0);
+  const [positionError, setPositionError] = useState<number>(0);
 
-  const [oneId, setOneId] = React.useState<string>('100');
-  const [twoId, setTwoId] = React.useState<string>('200');
-  const [treId, setTreId] = React.useState<string>('300');
+  const [oneId, setOneId] = useState<string>('100');
+  const [twoId, setTwoId] = useState<string>('200');
+  const [treId, setTreId] = useState<string>('300');
 
-  const [dataTr, setDataTr] = React.useState<string | undefined>(undefined);
+  const [dataTr, setDataTr] = useState<string | undefined>(undefined);
 
-  const [feeData, setFeeData] = React.useState<
+  const [feeData, setFeeData] = useState<
     ethers.providers.FeeData | undefined
   >(undefined);
 
-  const [timeEx, setTimeEx] = React.useState<string | undefined>(undefined);
-  const [timeEx2, setTimeEx2] = React.useState<string | undefined>(undefined);
-
-  // const tokenAddressFrom = '0xE0339c80fFDE91F3e20494Df88d4206D86024cdF'
-  // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'
-
-  // const tokenAddressFrom = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // dai
-  // const tokenAddressTo = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063' // usdc
-
-  // const timeEx = BigInt(~~(Date.now() / 1000) + 60 * 30).toString()
-  // const timeEx2 = BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
+  const [timeEx, setTimeEx] = useState<string | undefined>(undefined);
+  const [timeEx2, setTimeEx2] = useState<string | undefined>(undefined);
 
   const universalRouter = UNIVERSAL_ROUTER;
 
