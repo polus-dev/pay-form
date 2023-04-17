@@ -4,8 +4,7 @@ const coder = new ethers.utils.AbiCoder();
 
 const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 const EXECUTE_SELECTOR = '0x3593564c';
-const RECIPIENT = '0xba0d95449b5e901cfb938fa6b6601281cef679a4';
-const RECIPIENT2 = '0xba0d95449b5e901cfb938fa6b6601281cef679a4';
+const COMMISION_RECIPIENT = '0xba0d95449b5e901cfb938fa6b6601281cef679a4';
 const COMMISION = 0.5;
 const TRANSFER_OPCODE = '05';
 const FAKE_OPCODE = '90';
@@ -53,22 +52,22 @@ export function encodePay({ uiid, amount, txData, recipient, tokenAddress }: IEn
   const commision = calculateCommision(amount);
 
 
-  const transfer = encodeTransfer(
+  const merchantTransfer = encodeTransfer(
     tokenAddress,
     recipient,
     amount - commision
   );
 
 
-  const transfer2 = encodeTransfer(
+  const commisionTransfer = encodeTransfer(
     tokenAddress,
-    recipient, // TODO: change to commision address
+    COMMISION_RECIPIENT,
     commision
   );
 
   const uiid_encoded = coder.encode(['uint256', 'bytes'], ['0x' + uiid, '0x00']);
 
-  inputs.push(...[transfer, transfer2, uiid_encoded]);
+  inputs.push(...[merchantTransfer, commisionTransfer, uiid_encoded]);
   const out = coder.encode(types, [commands, inputs, deadline]).replace('0x', '');
   return EXECUTE_SELECTOR + out;
 }

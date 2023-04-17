@@ -312,8 +312,15 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             );
 
 
-            const encodedTx = encodePay(calldata, +amountOut, curentTokenDecimals, props.uuid);
+            // const encodedTx = encodePay(calldata, +amountOut, curentTokenDecimals, props.uuid);
 
+            const encodedTx = encodePay({
+              amount: amountOut.toString(),
+              recipient: props.addressMerchant,
+              tokenAddress: props.tokenAddress,
+              txData: calldata,
+              uiid: props.uuid
+            });
             props.setDataTr(encodedTx);
 
             props.setPosition(2);
