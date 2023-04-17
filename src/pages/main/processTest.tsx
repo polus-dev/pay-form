@@ -392,8 +392,13 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
             // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-            console.log('datatr', calldata);
-            const encoded = encodePay(calldata, +amountOut, curentTokenDecimals, props.uuid);
+            const encoded = encodePay({
+              amount: amountOut.toString(),
+              recipient: props.addressMerchant,
+              tokenAddress: tokenB.address,
+              txData: calldata,
+              uiid: props.uuid
+            });
 
             props.setDataTr(encoded);
 
