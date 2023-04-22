@@ -1,2 +1,1 @@
-export type TokenType = 'native' | 'erc20';
-
+export type TokenType = "native" | "erc20";

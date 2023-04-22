@@ -1,7 +1,7 @@
-import { ethers as eth } from 'ethers'
+import { ethers as eth } from "ethers";
 
-const EXECUTE_SELECTOR_0 = '0x3593564c'
-const EXECUTE_SELECTOR_1 = '0x24856bc3'
+const EXECUTE_SELECTOR_0 = "0x3593564c";
+const EXECUTE_SELECTOR_1 = "0x24856bc3";
 
 // ----------------------------------------------------------------
 // import { keccak256, toUtf8Bytes, BytesLike } from 'ethers'
@@ -16,31 +16,31 @@ const EXECUTE_SELECTOR_1 = '0x24856bc3'
 // console.log('EXECUTE_SELECTOR_1', EXECUTE_SELECTOR_1_.slice(0, 10))
 // ----------------------------------------------------------------
 
-const ABI_CODER = new eth.utils.AbiCoder()
+const ABI_CODER = new eth.utils.AbiCoder();
 
 export class UniversalRouter {
-    public static encodeExecute (
-        commands: string,
-        inputs: string[],
-        deadline?: number
-    ): string {
-        let result = ''
-        const withdead = deadline !== undefined
+  public static encodeExecute(
+    commands: string,
+    inputs: string[],
+    deadline?: number
+  ): string {
+    let result = "";
+    const withdead = deadline !== undefined;
 
-        const types: string[] = [ 'bytes', 'bytes[] calldata' ]
-        const value: any[] = [ commands, inputs ]
+    const types: string[] = ["bytes", "bytes[] calldata"];
+    const value: any[] = [commands, inputs];
 
-        if (withdead) {
-            types.push('uint256')
-            value.push(deadline)
-        }
-
-        // console.log('types', types)
-        // console.log('value', value)
-
-        result += withdead ? EXECUTE_SELECTOR_0 : EXECUTE_SELECTOR_1
-        result += ABI_CODER.encode(types, value).slice(2)
-
-        return result
+    if (withdead) {
+      types.push("uint256");
+      value.push(deadline);
     }
+
+    // console.log('types', types)
+    // console.log('value', value)
+
+    result += withdead ? EXECUTE_SELECTOR_0 : EXECUTE_SELECTOR_1;
+    result += ABI_CODER.encode(types, value).slice(2);
+
+    return result;
+  }
 }
