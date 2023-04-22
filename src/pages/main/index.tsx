@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useWeb3Modal } from '@web3modal/react'
 
 import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi'
-import { mainnet, polygon } from 'wagmi/chains'
+import { polygon } from 'wagmi/chains'
 import { Icon28ChevronDownOutline, Icon28WarningTriangleOutline } from '@vkontakte/icons'
 
 import moment from 'moment'
@@ -22,12 +22,15 @@ import daiLogo from '../../img/dai.svg'
 import btn from '../../img/btn.jpg'
 import wc from '../../img/wc.svg'
 
-import { tokens } from '../../logic/tokens'
-import { Invoice, ListCurrencies, TokenPolus } from '../../logic/types'
-import { PolusApi } from '../../logic/api'
+import { fullListTokens } from '../../logic/tokens'
+import { Invoice } from '../../logic/types'
+import { Info, InvoiceType, PolusApi } from '../../logic/api'
 import { ProcessAll } from './processTest'
 
 import { ProcessAll as Process } from './process'
+import { ListToken, ListTokens, Payment } from '../../logic/payment'
+import { NtoStr, getParameterByName } from '../../logic/utils'
+import { Tron } from './tron'
 
 const addressPolus = {
     polygon: '0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2',
@@ -41,21 +44,14 @@ interface MainProps {
     consoleLog: Function,
     isDesktop: boolean,
     openPop: Function,
-    closePop: Function
+    closePop: Function,
+    setTron: Function,
+    tron: boolean
 }
 
 interface ErrorType {
     text: string,
     code: number
-}
-
-function getParameterByName (name: string, url = window.location.href) {
-    const name1 = name.replace(/[\[\]]/g, '\\$&')
-    const regex = new RegExp(`[?&]${name1}(=([^&#]*)|&|#|$)`)
-    const results = regex.exec(url)
-    if (!results) return null
-    if (!results[2]) return ''
-    return decodeURIComponent(results[2].replace(/\+/g, ' '))
 }
 
 function fixAmount (nanoAmount: number, type: boolean, nano?: number) {
@@ -78,11 +74,11 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     const [ timer, setTimer ] = React.useState<string>('00:00')
 
-    const [ tokensFromChain, setTokensFromChain ] = React.useState<TokenPolus[]>(tokens.polygon)
+    const [ reRender, setRerender ] = React.useState<boolean>(false)
 
-    const [ coin, setCoin ] = React.useState<TokenPolus>(tokens.polygon[0])
+    const [ coin, setCoin ] = React.useState<ListToken>(fullListTokens[0])
     const [ coinInvoice, setCoinInvoice ] = React.useState<string>('0')
-    const [ coinMerchant, setCoinMerchant ] = React.useState<TokenPolus>(tokens.polygon[0])
+    const [ coinMerchant, setCoinMerchant ] = React.useState<ListToken>(fullListTokens[0])
 
     const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
     const { address, isConnected } = useAccount()
@@ -90,19 +86,21 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const { chain } = useNetwork()
     const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
 
-    const [ info, setInfo ] = React.useState<Invoice | undefined | false>(undefined)
+    const [ info, setInfo ] = React.useState<Info | undefined | false>(undefined)
 
     const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(undefined)
 
     const [ progress, setProgress ] = React.useState<number>(0)
+
+    const [ fullListTokensUp, setFullListTokensUp ] = React.useState<ListTokens>(fullListTokens)
 
     const location = useLocation()
     const history = useNavigate()
 
     const polusApi = new PolusApi()
 
-    function startTimer (inf: Invoice) {
-        const eventTime = inf.exp // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
+    function startTimer (inf: InvoiceType) {
+        const eventTime = Number(inf.expires_at) // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
         const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
         const diffTime = eventTime - currentTime
         let duration = moment.duration(diffTime * 1000, 'milliseconds')
@@ -115,44 +113,56 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             setTimer(`${duration.minutes()}:${duration.seconds()}`)
         }, interval)
     }
-    function changeCoin (coin1: TokenPolus, chainID?: number) {
-        setCoin(coin1)
-        const chainIdLocal = chain ? chain.id : chainID
-        if (!info || !chainIdLocal) {
-            console.error('changeCoin: info or chain')
-            return undefined
+    // function changeCoin (coin1: TokenPolus, chainID?: number) {
+    //     setCoin(coin1)
+    //     const chainIdLocal = chain ? chain.id : chainID
+    //     if (!info || !chainIdLocal) {
+    //         console.error('changeCoin: info or chain')
+    //         return undefined
+    //     }
+    //     const nameCoin = coin1.name.toLowerCase() as ListCurrencies
+
+    //     if (chainIdLocal === 1) {
+    //         setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
+    //         const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
+    //         const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
+    //         setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
+
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+    //     if (chainIdLocal === 137) {
+    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
+
+    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
+    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+
+    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+
+    //     if (chainIdLocal === 56) {
+    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
+
+    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
+    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+
+    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+    //     // console.log('changeCoin:', info.currencies.polygon[nameCoin])
+    //     return true
+    // }
+
+    function chCoinNew (token: ListToken) {
+        setCoin(token)
+        if (info) {
+            const merchantToken = fullListTokensUp.filter(
+                t => t.name.toLowerCase() === info.invoice.asset.toLowerCase()
+            )[0]
+            setCoinMerchant(merchantToken)
+            console.log('Select merchant', merchantToken)
         }
-        const nameCoin = coin1.name.toLowerCase() as ListCurrencies
-
-        if (chainIdLocal === 1) {
-            setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
-            const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
-            const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
-            setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
-
-            if (tokenUser) setCoin(tokenUser)
-        }
-        if (chainIdLocal === 137) {
-            setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-            const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-            setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-            const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-            if (tokenUser) setCoin(tokenUser)
-        }
-
-        if (chainIdLocal === 56) {
-            setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-            const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-            setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-            const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-            if (tokenUser) setCoin(tokenUser)
-        }
-        // console.log('changeCoin:', info.currencies.polygon[nameCoin])
-        return true
+        console.log('Select coin', token)
     }
 
     async function swithNet (id: number) {
@@ -167,7 +177,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     }
 
     async function getInfo (uuid1: string) {
-        const data = await polusApi.getPaymentInfo(uuid1)
+        // const data = await polusApi.getPaymentInfo(uuid1)
+        const data = await polusApi.getInfo(uuid1)
         if (!data) {
             props.consoleLog('Error load info', false)
             setInfo(false)
@@ -191,12 +202,23 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         //     })
         // }
         if (timer === '00:00') {
-            startTimer(data)
+            startTimer(data.invoice)
         }
 
         setDefaultChain(polygon)
         console.log('info', data)
         setInfo(data)
+
+        const currentT = fullListTokens.filter(t => t.name.toLowerCase() === data.invoice.asset.toLowerCase())[0]
+
+        const fullList = await Payment.getAllAmountIn(data.invoice.asset_amount.toString(), currentT)
+
+        setFullListTokensUp(fullList)
+
+        chCoinNew(fullList.filter(t => t.namePrice === coin.namePrice)[0]) // update amountIn
+
+        setRerender(!reRender)
+
         return true
     }
 
@@ -218,13 +240,12 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     function generatedUrlRedirect (status: string) {
         if (info) {
-            let url = 'https://'
-            url += info.merchant_object_info.website.replace('https://', '')
-            url += info.merchant_object_info.redirect_url
-            url += `?status=${status}&uuid=${info.uuid}`
-            return url
+            if (status === 'sucess') {
+                return info.merchant?.success_redirect_url ?? undefined
+            }
+            return info.merchant?.fail_redirect_url ?? undefined
         }
-        return '/'
+        return undefined
     }
 
     useEffect(() => {
@@ -251,30 +272,20 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         } else if (chain.id === 1 || chain.id === 137 || chain.id === 56) {
             setReady(true)
 
-            if (chain.id === 1) {
-                setTokensFromChain(tokens.mainnet)
-            }
-
-            if (chain.id === 137) {
-                setTokensFromChain(tokens.polygon)
-            }
-
-            if (chain.id === 56) {
-                setTokensFromChain(tokens.polygon)
-            }
-
-            changeCoin(coin, chain.id)
+            // changeCoin(coin, chain.id)
         } else {
             setReady(false)
             // swithNet('polygon')
         }
         props.closePop(false)
+        props.setActiveModal(null)
         close()
     }, [ chain ])
 
     useEffect(() => {
         if (info) {
-            changeCoin(tokens.polygon[0], 137)
+            chCoinNew(fullListTokensUp[0])
+            // changeCoin(tokens.polygon[0], 137)
         }
     }, [ info ])
 
@@ -304,8 +315,24 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         }
     }, [])
 
+    useEffect(() => {
+        if (type === 0) {
+            props.setTron(false)
+        }
+    }, [ type ])
+
+    useEffect(() => {
+        if (info) {
+            if (info.invoice.tron_withdraw_address === null && props.tron) {
+                setType(0)
+            } else if (info.invoice.tron_withdraw_address && props.tron) {
+                setType(1)
+            }
+        }
+    }, [ info, props.tron ])
+
     return (
-        <Panel id={props.id}>
+        <Panel id={reRender ? props.id : 'render'}>
 
             <PanelHeader separator={false} />
 
@@ -314,14 +341,14 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
                     <div className="domain-block">
                         <div className="domain-amount-block">
-                            <span>{info.merchant_object_info.website.replace('https://', '')}</span>
+                            <span>{info.merchant?.domain.replace('https://', '')}</span>
                             <div className="amount-block">
-                                {fixAmount(Number(coinInvoice), true, coin.nano)}
+                                {NtoStr(coin.amountIn)}
                                 <span>{coin.name.toUpperCase()}</span>
                             </div>
                         </div>
                         <span className="opacity-block" style={{ marginTop: '10px', display: 'block' }}>
-                            {info.description}
+                            {info.invoice.description}
                         </span>
                     </div>
                 </div>
@@ -351,7 +378,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
                             <div className="text-one">Choose network</div>
 
-                            <div className="selector" onClick={() => open({ route: 'SelectNetwork' })}>
+                            <div className="selector" onClick={() => {
+                                if (isConnected) {
+                                    props.setActiveModal('network')
+                                } else {
+                                    open()
+                                }
+                            }}>
                                 {chain
                                     ? <div className="selector-right">
                                         {chain.id === 1 ? <img src={etherLogo} /> : null }
@@ -370,45 +403,18 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             <div className="text-one">Choose currency</div>
 
                             <div className="btn-block" >
-                                {!chain || (chain && chain.id === 137) ? tokens.polygon.map((token, key) => (
+                                {fullListTokensUp.map((token, key) => (
                                     <Button
                                         key={key}
                                         size="l"
                                         stretched
                                         className='fix-forpadding'
-                                        onClick={() => changeCoin(token, 137)}
+                                        onClick={() => chCoinNew(token)}
                                         mode={coin.name === token.name ? 'primary' : 'outline'}
                                         before={
                                             <img src={token.icon} />
                                         }>{token.name.toUpperCase()}</Button>
-                                )) : null}
-
-                                {chain && chain.id === 1 ? tokens.mainnet.map((token, key) => (
-                                    <Button
-                                        key={key}
-                                        size="l"
-                                        stretched
-                                        className='fix-forpadding'
-                                        onClick={() => changeCoin(token)}
-                                        mode={coin.name === token.name ? 'primary' : 'outline'}
-                                        before={
-                                            <img src={token.icon} />
-                                        }>{token.name.toUpperCase()}</Button>
-                                )) : null}
-
-                                {chain && chain.id === 56 ? tokens.polygon.map((token, key) => (
-                                    <Button
-                                        key={key}
-                                        size="l"
-                                        stretched
-                                        className='fix-forpadding'
-                                        onClick={() => changeCoin(token, 56)}
-                                        mode={coin.name === token.name ? 'primary' : 'outline'}
-                                        before={
-                                            <img src={token.icon} />
-                                        }>{token.name.toUpperCase()}</Button>
-                                )) : null}
-
+                                ))}
                             </div>
 
                             <div className="btn-block" >
@@ -492,7 +498,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     style={{ backgroundImage: `url(${btn})` }}
                                     onClick={() => startPay()}
                                 >
-                    Pay {fixAmount(Number(coinInvoice), true, coin.nano)} {coin.name.toUpperCase()}
+                    Pay {NtoStr(coin.amountIn)} {coin.name.toUpperCase()}
                                 </Button>
                                 : <Button
                                     stretched
@@ -509,16 +515,16 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         </div>
                         : <div className="proccess-block">
                             {address && chain
-                                ? <div> {coin.address === coinMerchant.address
+                                ? <div> {coin.namePrice === coinMerchant.namePrice
                                     ? <Process
                                         id={'all1'}
                                         address={address}
-                                        tokenAddress={coin.address}
+                                        tokenAddress={coin.address[137]}
                                         addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
                                         amount={coinInvoice}
-                                        addressMerchant={info.merchant_object_info.address}
-                                        uuid={info.uuid_hex}
-                                        currentAddressToken={coinMerchant.address}
+                                        addressMerchant={info.invoice.evm_withdraw_address}
+                                        uuid={info.invoice.id.replaceAll('-', '')}
+                                        currentAddressToken={coinMerchant.address[137]}
                                         consoleLog={props.consoleLog}
                                         setPayed={setPayed}
                                         setProgress={setProgress}
@@ -526,19 +532,25 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     : <ProcessAll
                                         id={'all1'}
                                         address={address}
-                                        tokenAddress={coin.address}
-                                        addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
-                                        amount={coinInvoice}
-                                        amountOut={info.amount.toString()}
-                                        addressMerchant={info.merchant_object_info.address}
-                                        uuid={info.uuid_hex}
-                                        currentAddressToken={coinMerchant.address}
+                                        uuid={info.invoice.id.replaceAll('-', '')}
                                         consoleLog={props.consoleLog}
                                         setPayed={setPayed}
                                         setProgress={setProgress}
                                         chainId={chain.id}
+                                        addressMerchant={info.invoice.evm_withdraw_address}
+                                        amountOut={info.invoice.asset_amount}
+
+                                        tokenA={coin}
+                                        tokenB={coinMerchant}
+                                        fullListTokensUp={fullListTokensUp}
                                     />}</div>
                                 : null }
+
+                            {props.tron
+                                ? <Tron
+                                    id="tron1"
+                                    address={info.invoice.tron_withdraw_address ?? ''}
+                                /> : null}
 
                             {payed ? <Button
                                 stretched

@@ -26,7 +26,7 @@ document.body.appendChild(el)
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [ polygon, mainnet ]
+const chains = [ polygon, mainnet, bsc ]
 
 // Wagmi client
 const { provider } = configureChains(chains, [
@@ -48,7 +48,6 @@ const ethereumClient = new EthereumClient(wagmiClient, chains)
 
 const ConfigProviderFix: any = ConfigProvider
 const AdaptivityProviderFix: any = AdaptivityProvider
-
 
 ReactDOM.render(
     <BrowserRouter

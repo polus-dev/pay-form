@@ -17,16 +17,17 @@ import {
     Card,
     SimpleCell
 } from '@vkontakte/vkui'
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 
-import { Icon24Dismiss, Icon28CancelCircleFillRed, Icon28CheckCircleFill } from '@vkontakte/icons'
+import { Icon24Dismiss, Icon28CancelCircleFillRed, Icon28CheckCircleFill, Icon28DoneOutline } from '@vkontakte/icons'
 
+import { useNetwork, useSwitchNetwork, useDisconnect } from 'wagmi'
 import { Web3Button } from '@web3modal/react'
 
 import '@vkontakte/vkui/dist/vkui.css'
 import './style.css'
 
-import { tokens } from './logic/tokens'
+import { fullListTokens } from './logic/tokens'
 import { Main } from './pages/main'
 
 import logo from './img/logo.svg'
@@ -37,8 +38,16 @@ export const App: React.FC = () => {
     const [ snackbar, setSnackbar ] = React.useState<any>(null)
 
     const [ popout, setPopout ] = React.useState<any>(null)
+    const { chain } = useNetwork()
 
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+
+    // const { chain } = useNetwork()
+    const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
+
+    const [ tron, setTron ] = React.useState<boolean>(false)
+
+    const { disconnect } = useDisconnect()
 
     const isDesktop = window.innerWidth >= 800
 
@@ -78,6 +87,12 @@ export const App: React.FC = () => {
         }
     }, [])
 
+    useEffect(() => {
+        if (tron) {
+            disconnect()
+        }
+    }, [ tron ])
+
     const modalRoot = (
         <ModalRoot activeModal={activeModal} >
             <ModalPage
@@ -101,6 +116,32 @@ export const App: React.FC = () => {
                 }
             >
                 <Div>
+                    <CardGrid size="l">
+                        {chains.map((chainLocal, key) => (
+                            <Card key={key}>
+                                <SimpleCell
+                                    after={
+                                        chain?.id === chainLocal.id ? <Icon28DoneOutline /> : null
+                                    }
+                                    onClick={() => {
+                                        if (switchNetwork) switchNetwork(chainLocal.id)
+                                    }}
+                                >
+                                    {chainLocal.name}
+                                </SimpleCell>
+                            </Card>
+                        ))}
+                        <Card>
+                            <SimpleCell
+                                after={
+                                    tron ? <Icon28DoneOutline /> : null
+                                }
+
+                                onClick={() => setTron(true)}>
+                            Tron
+                            </SimpleCell>
+                        </Card>
+                    </CardGrid>
                 </Div>
             </ModalPage>
 
@@ -126,7 +167,7 @@ export const App: React.FC = () => {
             >
                 <Div>
                     <CardGrid size="l">
-                        {tokens.polygon.map((token, key) => (
+                        {fullListTokens.map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     before={<img src={token.icon} style={{ marginRight: '12px' }} />}
@@ -184,6 +225,8 @@ export const App: React.FC = () => {
                                         isDesktop={isDesktop}
                                         openPop={openPop}
                                         closePop={closePop}
+                                        setTron={setTron}
+                                        tron={tron}
                                     />
                                 </View>
                             } />
