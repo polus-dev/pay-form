@@ -256,10 +256,7 @@ export class CustomRouter {
     amountOut: string | number | BigNumber | BigInt,
     tokenFrom: Token,
     tokenTo: Token
-  ): Promise<
-    SwapRoute | null | undefined
-  > // Promise<undefined | (string | number)[]>
-  {
+  ): Promise<SwapRoute | null | undefined> { // Promise<undefined | (string | number)[]>
     const currencyAmount = CustomRouter.amountToCurrencyAmount(
       amountOut,
       tokenTo

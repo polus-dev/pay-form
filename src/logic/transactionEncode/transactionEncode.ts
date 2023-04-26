@@ -1,19 +1,13 @@
 import { ethers } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
+import { PolusContractAbi } from "./types/polusContractAbi";
 import { WrapStatus } from "./types/WrapStatus";
 
 const coder = new ethers.utils.AbiCoder();
 
-const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 const EXECUTE_SELECTOR = "0x3593564c";
-const COMMISION_RECIPIENT = "0xba0d95449b5e901cfb938fa6b6601281cef679a4";
-const COMMISION = 0.5;
-
-function calculateCommision(amount: number) {
-  const commision = (amount * COMMISION) / 100;
-  return Math.round(commision);
-}
+const FEE_RECIPIENT = "0xba0d95449b5e901cfb938fa6b6601281cef679a4";
 
 function encodeTransfer(
   token: string,
@@ -38,14 +32,16 @@ function wrapper(address: string, amount: string | number): string {
 }
 
 export function encodePay({
-  uiid,
-  amount,
+  uiid: uuid,
   txData,
-  recipient,
+  recipient: merchant,
   tokenAddress = "Constants.ETH",
   context,
+  merchantAmount,
+  fee,
 }: IEncodeTransfer): string {
-  assertAmount(amount);
+  // assertAmount(amount);
+  debugger;
   const data = txData.slice(10);
   const types = ["bytes", "bytes[]", "uint256"];
   const decoded = coder.decode(types, Buffer.from(data, "hex"));
@@ -68,41 +64,56 @@ export function encodePay({
       Command.TRANSFER +
       Command.FAKE;
     wrapStatus = WrapStatus.UNWRAP;
-  } else if (context.from === "erc20" && context.to === "erc20")
+  } else {
+    const polusContract = new ethers.utils.Interface(PolusContractAbi);
+    if (context.throughPolusContract.erc20) {
+      return polusContract.encodeFunctionData("DoERC20Payment", [
+        uuid,
+        tokenAddress,
+        FEE_RECIPIENT,
+        fee,
+        merchant,
+        merchantAmount,
+      ]);
+    } else if (context.throughPolusContract.native) {
+      return polusContract.encodeFunctionData("DoETHPayment", [
+        uuid,
+        FEE_RECIPIENT,
+        fee,
+        merchant,
+        merchantAmount,
+      ]);
+    }
     commands = decoded[0] + Command.TRANSFER + Command.TRANSFER + Command.FAKE;
-  else throw new Error(" native to native context");
+  }
 
   const inputs = structuredClone<string[]>(decoded[1]);
 
   if (wrapStatus === WrapStatus.WRAP) {
-    const wrap = wrapper(tokenAddress, amount);
+    const wrap = wrapper(tokenAddress, merchantAmount);
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
-    const wrap = wrapper(tokenAddress, amount);
+    const wrap = wrapper(tokenAddress, merchantAmount);
     inputs.push(wrap);
   }
 
   const deadline = decoded[2] as number;
-  const commision = calculateCommision(amount);
 
   const merchantTransfer = encodeTransfer(
     tokenAddress,
-    recipient,
-    amount - commision
+    merchant,
+    merchantAmount
   );
 
-  const commisionTransfer = encodeTransfer(
-    tokenAddress,
-    COMMISION_RECIPIENT,
-    commision
-  );
+  const commisionTransfer = encodeTransfer(tokenAddress, FEE_RECIPIENT, fee);
 
   const uiid_encoded = coder.encode(
     ["uint256", "bytes"],
-    ["0x" + uiid, "0x00"]
+    ["0x" + uuid, "0x00"]
   );
 
   inputs.push(...[merchantTransfer, commisionTransfer, uiid_encoded]);
+
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");

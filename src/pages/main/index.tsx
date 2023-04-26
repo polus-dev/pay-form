@@ -451,25 +451,25 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 </div>
 
                 <div className="btn-block">
-                  <Button
-                    size="l"
-                    stretched
-                    onClick={() => null}
-                    mode={"outline"}
-                    before={<img src={maticLogo} width={24} />}
-                  >
-                    MATIC
-                  </Button>
+                  {/* <Button */}
+                  {/*   size="l" */}
+                  {/*   stretched */}
+                  {/*   onClick={() => null} */}
+                  {/*   mode={"outline"} */}
+                  {/*   before={<img src={maticLogo} width={24} />} */}
+                  {/* > */}
+                  {/*   MATIC */}
+                  {/* </Button> */}
 
-                  <Button
-                    size="l"
-                    stretched
-                    onClick={() => null}
-                    mode={"outline"}
-                    before={<img src={daiLogo} width={24} />}
-                  >
-                    DAI
-                  </Button>
+                  {/* <Button */}
+                  {/*   size="l" */}
+                  {/*   stretched */}
+                  {/*   onClick={() => null} */}
+                  {/*   mode={"outline"} */}
+                  {/*   before={<img src={daiLogo} width={24} />} */}
+                  {/* > */}
+                  {/*   DAI */}
+                  {/* </Button> */}
 
                   <Button
                     size="l"
@@ -554,7 +554,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 {address && chain ? (
                   <div>
                     {" "}
-                    {coin.namePrice === coinMerchant.namePrice ? (
+                    {/* {coin.namePrice === coinMerchant.namePrice ? (
                       <Process
                         id={"all1"}
                         address={address}
@@ -572,22 +572,28 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         setPayed={setPayed}
                         setProgress={setProgress}
                       />
-                    ) : (
-                      <ProcessAll
-                        id={"all1"}
-                        address={address}
-                        uuid={info.invoice.id.replaceAll("-", "")}
-                        consoleLog={props.consoleLog}
-                        setPayed={setPayed}
-                        setProgress={setProgress}
-                        chainId={chain.id}
-                        addressMerchant={info.invoice.evm_withdraw_address}
-                        amountOut={info.invoice.asset_amount}
-                        tokenA={coin}
-                        tokenB={coinMerchant}
-                        fullListTokensUp={fullListTokensUp}
-                      />
-                    )}
+                    ) : ( */}
+                    <ProcessAll
+                      id={"all1"}
+                      address={address}
+                      uuid={info.invoice.id.replaceAll("-", "")}
+                      consoleLog={props.consoleLog}
+                      setPayed={setPayed}
+                      setProgress={setProgress}
+                        // @ts-ignore 
+                        // NOTE: chainId must be a restriction of the supported chains
+                      chainId={chain.id}
+                      addressMerchant={info.invoice.evm_withdraw_address}
+                      amountOut={info.invoice.asset_amount}
+                      tokenA={coin}
+                      tokenB={coinMerchant}
+                      fullListTokensUp={fullListTokensUp}
+                      fee={info.invoice.fee!}
+                      asset_amount_decimals_without_fee={
+                        info.invoice.asset_amount_decimals_without_fee!
+                      }
+                    />
+                    {/* )} */}
                   </div>
                 ) : null}
 

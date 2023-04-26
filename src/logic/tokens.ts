@@ -2,6 +2,7 @@ import usdtLogo from "../img/usdt.svg";
 import usdcLogo from "../img/usdc.svg";
 import wethLogo from "../img/weth.svg";
 import daiLogo from "../img/dai.svg";
+import maticLogo from "../img/matic.svg";
 import { TokenPolus } from "./types";
 import { ListTokens } from "./payment";
 
@@ -52,6 +53,19 @@ export const fullListTokens: ListTokens = [
     } as AddressType,
     decimals: 18,
     icon: daiLogo,
+    price: 1,
+    namePrice: "dai",
+    amountIn: 0,
+  },
+  {
+    name: "matic",
+    address: {
+      1: "NULL",
+      56: "NULL",
+      137: "NULL",
+    } as AddressType,
+    decimals: 18,
+    icon: maticLogo,
     price: 1,
     namePrice: "dai",
     amountIn: 0,

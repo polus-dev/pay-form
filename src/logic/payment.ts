@@ -51,6 +51,7 @@ export interface ListToken {
     137: string;
   };
   price: number;
+  native?: boolean;
   namePrice: string;
   amountIn: number;
 }
@@ -235,7 +236,6 @@ export class Payment {
     if (token === "B") {
       contr = this._tokenB.contract;
     }
-
     const toRouter =
       type === "router" ? this._addressRouter : this._addressPolusContract;
 

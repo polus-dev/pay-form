@@ -37,8 +37,7 @@ export type Info = {
 };
 
 class PolusApi {
-  // private _url: string = 'https://pay.polus.fi/'
-  private _url: string = "https://api.enotondefi.net/";
+  private _url: string = "https://api.poluspay.com/";
 
   constructor(url?: string) {
     if (url) this._url = url;

@@ -22,7 +22,6 @@ import { verifyTypedData } from "ethers/lib/utils.js";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { CustomRouter } from "../../logic/router";
 
-import { encodePay } from "../../utils/customEncode";
 import {
   ConfigPayment,
   ListToken,
@@ -31,7 +30,10 @@ import {
   Permit2AllowanceType,
 } from "../../logic/payment";
 import { ETHToWei, weiToEthNum } from "../../logic/utils";
-
+import { encodePay } from "../../logic/transactionEncode/transactionEncode";
+import { Info } from "../../logic/api";
+import { throws } from "assert";
+import { PolusContractAddress } from "../../logic/transactionEncode/types/polusContractAbi";
 const UNIVERSAL_ROUTER = "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5";
 
 interface AllType {
@@ -44,12 +46,18 @@ interface AllType {
   tokenA: ListToken;
   tokenB: ListToken;
   fullListTokensUp: ListTokens;
-  chainId: number;
+  chainId: keyof ListToken["address"];
   addressMerchant: string;
   amountOut: string | number;
+  asset_amount_decimals_without_fee: string;
+  fee: string;
 }
 
-interface ProcessType {
+interface ProcessType
+  extends Pick<
+    AllType,
+    "asset_amount_decimals_without_fee" | "fee" | "chainId"
+  > {
   address: `0x${string}`;
   position: number;
   setPosition: Function;
@@ -60,6 +68,10 @@ interface ProcessType {
   reRender: Function;
   setPayed: Function;
   setDataTr: Function;
+  setTxValue?: Function;
+  setTxTo?: Function;
+  txValue?: string | null;
+  txTo?: string | null;
   dataTr: string | undefined;
   feeData: ethers.providers.FeeData | undefined;
   payClass: Payment;
@@ -88,6 +100,24 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
           props.setPositionError(1);
           return;
         }
+
+        // FIX: remove double logic
+
+        const isContextToPolusContract = {
+          native:
+            props.tokenA.native &&
+            props.tokenA.address === props.tokenB.address,
+          erc20:
+            !props.tokenA.native &&
+            props.tokenA.address === props.tokenB.address,
+        };
+
+        if (isContextToPolusContract.erc20) {
+          payClass.Approve(PolusContractAddress[props.chainId]);
+        } else if (isContextToPolusContract.native) {
+          return;
+        }
+
         payClass.checkAllowance("A", "permit").then((amount) => {
           if (
             weiToEthNum(amount, payClass.tokenA.info.decimals) <
@@ -158,7 +188,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
   );
 };
 
-const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
+const ProcessTwo: React.FC<ProcessType> = (props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
   const [firstRender2, setFirstRender2] = React.useState<boolean>(false);
@@ -287,15 +317,41 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
               // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
-              const encoded = encodePay({
-                amount: amountOut.toString(),
-                recipient: payClass.addressMerchant,
-                tokenAddress: props.payClass.tokenB.contract.address,
-                txData: calldata,
+              const isContextFromNative = props.tokenA.native === true;
+              const isContextToPolusContract = {
+                native:
+                  Boolean(props.tokenA.native) &&
+                  props.tokenA.address === props.tokenB.address,
+                erc20:
+                  !props.tokenA.native &&
+                  props.tokenA.address === props.tokenB.address,
+              };
+              const encodePayParams: Parameters<typeof encodePay>[0] = {
                 uiid: props.uuid,
-              });
+                fee: props.fee,
+                merchantAmount: props.asset_amount_decimals_without_fee,
+                tokenAddress: props.tokenB.address[props.chainId],
+                recipient: props.payClass.addressRouter,
+                txData: calldata,
+                context: {
+                  from: isContextFromNative ? "native" : "erc20",
+                  to: props.tokenB.native === true ? "native" : "erc20",
+                  throughPolusContract: isContextToPolusContract,
+                },
+              };
+
+              const encoded = encodePay(encodePayParams);
 
               props.setDataTr(encoded);
+
+              if (isContextFromNative || isContextToPolusContract.native)
+                props.setTxValue?.(props.asset_amount_decimals_without_fee);
+
+              if (
+                isContextToPolusContract.native ||
+                isContextToPolusContract.erc20
+              )
+                props.setTxTo?.(PolusContractAddress[props.chainId]);
 
               props.setPosition(2);
 
@@ -347,10 +403,11 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 
   const { config } = usePrepareSendTransaction({
     request: {
-      to: props.payClass.addressRouter, // NOTE: custom_contract
-      // to: '0xC1dE05611B3C8cA7a8C6CC265fAA97DD12F14ABf',
+      to: props.txTo ? props.txTo : props.payClass.addressRouter,
       data: props.dataTr,
-      value: BigNumber.from("0"),
+      value: props.txValue
+        ? BigNumber.from(props.txValue)
+        : BigNumber.from("0"),
     },
   });
   const { data, isLoading, isSuccess, sendTransaction, error } =
@@ -440,6 +497,8 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
   const [treId, setTreId] = React.useState<string>("300");
 
   const [dataTr, setDataTr] = React.useState<string | undefined>(undefined);
+  const [txValue, setTxValue] = React.useState<string | null>();
+  const [txTo, setTxTo] = React.useState<string | null>();
 
   const [feeData, setFeeData] = React.useState<
     ethers.providers.FeeData | undefined
@@ -512,6 +571,11 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         tokenA={props.tokenA}
         tokenB={props.tokenB}
         fullListTokensUp={props.fullListTokensUp}
+        asset_amount_decimals_without_fee={
+          props.asset_amount_decimals_without_fee
+        }
+        fee={props.fee}
+        chainId={props.chainId}
       />
       <ProcessTwo
         key={twoId}
@@ -531,6 +595,11 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         tokenA={props.tokenA}
         tokenB={props.tokenB}
         fullListTokensUp={props.fullListTokensUp}
+        asset_amount_decimals_without_fee={
+          props.asset_amount_decimals_without_fee
+        }
+        fee={props.fee}
+        chainId={props.chainId}
       />
       <ProcessThree
         key={treId}
@@ -550,6 +619,15 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         tokenA={props.tokenA}
         tokenB={props.tokenB}
         fullListTokensUp={props.fullListTokensUp}
+        asset_amount_decimals_without_fee={
+          props.asset_amount_decimals_without_fee
+        }
+        fee={props.fee}
+        chainId={props.chainId}
+        txTo={txTo}
+        txValue={txValue}
+        setTxTo={setTxTo}
+        setTxValue={setTxValue}
       />
     </div>
   );
