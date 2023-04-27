@@ -3,8 +3,8 @@ import { TokenType } from "./TokenType";
 export interface IEncodeTransfer {
   txData: string;
   tokenAddress?: string;
-  recipient: string;
-  uiid: string;
+  merchant: string;
+  uuid: string;
   merchantAmount: string;
   fee: string;
   context: {

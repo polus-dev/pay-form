@@ -31,8 +31,6 @@ import {
 } from "../../logic/payment";
 import { ETHToWei, weiToEthNum } from "../../logic/utils";
 import { encodePay } from "../../logic/transactionEncode/transactionEncode";
-import { Info } from "../../logic/api";
-import { throws } from "assert";
 import { PolusContractAddress } from "../../logic/transactionEncode/types/polusContractAbi";
 const UNIVERSAL_ROUTER = "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5";
 
@@ -46,12 +44,15 @@ interface AllType {
   tokenA: ListToken;
   tokenB: ListToken;
   fullListTokensUp: ListTokens;
-  chainId: keyof ListToken["address"];
+  chainId: PolusChainId;
   addressMerchant: string;
   amountOut: string | number;
   asset_amount_decimals_without_fee: string;
   fee: string;
 }
+
+export type PolusChainId =  keyof ListToken["address"];
+
 
 interface ProcessType
   extends Pick<
@@ -327,11 +328,11 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
                   props.tokenA.address === props.tokenB.address,
               };
               const encodePayParams: Parameters<typeof encodePay>[0] = {
-                uiid: props.uuid,
+                uuid: props.uuid,
                 fee: props.fee,
                 merchantAmount: props.asset_amount_decimals_without_fee,
                 tokenAddress: props.tokenB.address[props.chainId],
-                recipient: props.payClass.addressRouter,
+                merchant: props.payClass.addressRouter,
                 txData: calldata,
                 context: {
                   from: isContextFromNative ? "native" : "erc20",

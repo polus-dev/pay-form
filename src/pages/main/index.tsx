@@ -32,7 +32,7 @@ import wc from "../../img/wc.svg";
 import { fullListTokens } from "../../logic/tokens";
 import { Invoice } from "../../logic/types";
 import { Info, InvoiceType, PolusApi } from "../../logic/api";
-import { ProcessAll } from "./processTest";
+import { PolusChainId, ProcessAll } from "./processTest";
 
 import { ProcessAll as Process } from "./process";
 import { ListToken, ListTokens, Payment } from "../../logic/payment";
@@ -553,12 +553,14 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
               <div className="proccess-block">
                 {address && chain ? (
                   <div>
-                    {" "}
-                    {/* {coin.namePrice === coinMerchant.namePrice ? (
+                    {/* FIX: fix type   */}
+                    {(coin.native && coin.native === coinMerchant.native) ||
+                    coin.address[chain.id as PolusChainId] ===
+                      coinMerchant.address[chain.id as PolusChainId] ? (
                       <Process
                         id={"all1"}
                         address={address}
-                        tokenAddress={coin.address[137]}
+                        tokenAddress={coin.address[chain.id as PolusChainId]}
                         addressPolus={
                           chain.id === 1
                             ? addressPolus.mainnet
@@ -567,33 +569,34 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         amount={coinInvoice}
                         addressMerchant={info.invoice.evm_withdraw_address}
                         uuid={info.invoice.id.replaceAll("-", "")}
-                        currentAddressToken={coinMerchant.address[137]}
+                        currentAddressToken={
+                          coinMerchant.address[chain.id as PolusChainId]
+                        }
                         consoleLog={props.consoleLog}
                         setPayed={setPayed}
                         setProgress={setProgress}
                       />
-                    ) : ( */}
-                    <ProcessAll
-                      id={"all1"}
-                      address={address}
-                      uuid={info.invoice.id.replaceAll("-", "")}
-                      consoleLog={props.consoleLog}
-                      setPayed={setPayed}
-                      setProgress={setProgress}
-                        // @ts-ignore 
+                    ) : (
+                      <ProcessAll
+                        id={"all1"}
+                        address={address}
+                        uuid={info.invoice.id.replaceAll("-", "")}
+                        consoleLog={props.consoleLog}
+                        setPayed={setPayed}
+                        setProgress={setProgress}
                         // NOTE: chainId must be a restriction of the supported chains
-                      chainId={chain.id}
-                      addressMerchant={info.invoice.evm_withdraw_address}
-                      amountOut={info.invoice.asset_amount}
-                      tokenA={coin}
-                      tokenB={coinMerchant}
-                      fullListTokensUp={fullListTokensUp}
-                      fee={info.invoice.fee!}
-                      asset_amount_decimals_without_fee={
-                        info.invoice.asset_amount_decimals_without_fee!
-                      }
-                    />
-                    {/* )} */}
+                        chainId={chain.id as PolusChainId}
+                        addressMerchant={info.invoice.evm_withdraw_address}
+                        amountOut={info.invoice.asset_amount}
+                        tokenA={coin}
+                        tokenB={coinMerchant}
+                        fullListTokensUp={fullListTokensUp}
+                        fee={info.invoice.fee!}
+                        asset_amount_decimals_without_fee={
+                          info.invoice.asset_amount_decimals_without_fee!
+                        }
+                      />
+                    )}
                   </div>
                 ) : null}
 

@@ -1,0 +1,1 @@
+export const FEE_RECIPIENT = "0xba0d95449b5e901cfb938fa6b6601281cef679a4";

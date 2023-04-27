@@ -37,8 +37,9 @@ interface DataSign {
 
 interface TokenClass {
   info: ListToken;
-  contract: ethers.Contract;
+  contract: ethers.Contract | undefined;
   erc20: Token;
+  isNative: boolean;
 }
 
 export interface ListToken {
@@ -157,11 +158,15 @@ export class Payment {
 
     this._tokenA = {
       info: config.tokenA,
-      contract: new ethers.Contract(
-        config.tokenA.address[idNetw],
-        token_abi,
-        this._provider
-      ),
+
+      contract: !config.tokenB.native
+        ? new ethers.Contract(
+            config.tokenA.address[idNetw],
+            token_abi,
+            this._provider
+          )
+        : undefined,
+      isNative: Boolean(config.tokenA.native),
       erc20: new Token(
         this._networkId,
         config.tokenA.address[idNetw],
@@ -172,11 +177,14 @@ export class Payment {
     };
     this._tokenB = {
       info: config.tokenB,
-      contract: new ethers.Contract(
-        config.tokenB.address[idNetw],
-        token_abi,
-        this._provider
-      ),
+      contract: !config.tokenB.native
+        ? new ethers.Contract(
+            config.tokenB.address[idNetw],
+            token_abi,
+            this._provider
+          )
+        : undefined,
+      isNative: Boolean(config.tokenA.native),
       erc20: new Token(
         this._networkId,
         config.tokenB.address[idNetw],
@@ -209,6 +217,8 @@ export class Payment {
       contr = this._tokenB.contract;
     }
 
+    if (!contr) throw new Error("checkAllowance:contract is undefined");
+
     const toPermit =
       type === "permit" ? this._addressPermit : this._addressPolusContract;
 
@@ -236,6 +246,8 @@ export class Payment {
     if (token === "B") {
       contr = this._tokenB.contract;
     }
+
+    if (!contr) throw new Error("AllowancePermit:contract is undefined");
     const toRouter =
       type === "router" ? this._addressRouter : this._addressPolusContract;
 
@@ -263,6 +275,12 @@ export class Payment {
     }
 
     try {
+      if (this.tokenA.isNative) {
+        return this._provider.getBalance(this._addressUser);
+      }
+
+      if (!contr) throw new Error("getBalance:contract is undefined");
+
       const balance: BigNumber = await contr.balanceOf(this._addressUser);
 
       console.log("getBalance:balance", balance);
@@ -309,6 +327,8 @@ export class Payment {
     functionName: string;
     args: any[];
   } {
+    if (!this._tokenA.contract)
+      throw new Error("ApproveSyncPermit:contract is undefined");
     return {
       address: this._tokenA.contract.address as `0x${string}`,
       abi: token_abi,
@@ -322,6 +342,8 @@ export class Payment {
     type: 0 | 1 = 1
   ): Promise<ethers.providers.TransactionRequest | any> {
     if (type === 0) {
+      if (!this._tokenA.contract)
+        throw new Error("Approve:contract is undefined");
       const data = this._tokenA.contract.interface.encodeFunctionData(
         "approve",
         [
@@ -344,6 +366,9 @@ export class Payment {
       return tr;
     }
 
+    if (!this._tokenA.contract)
+      throw new Error("Approve:contract is undefined");
+
     return {
       address: this._tokenA.contract.address,
       abi: token_abi,
@@ -356,6 +381,9 @@ export class Payment {
   }
 
   public dataForSign(nonce: number): DataSign {
+    if (!this._tokenA.contract)
+      throw new Error("checkAllowance:contract is undefined");
+
     const dataForSign = CustomRouter.packToWagmi(
       this._tokenA.contract.address,
       (2n ** 160n - 1n).toString(),

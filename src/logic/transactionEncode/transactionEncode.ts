@@ -1,3 +1,4 @@
+import { FEE_RECIPIENT } from "../../constants";
 import { ethers } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
@@ -7,7 +8,6 @@ import { WrapStatus } from "./types/WrapStatus";
 const coder = new ethers.utils.AbiCoder();
 
 const EXECUTE_SELECTOR = "0x3593564c";
-const FEE_RECIPIENT = "0xba0d95449b5e901cfb938fa6b6601281cef679a4";
 
 function encodeTransfer(
   token: string,
@@ -32,9 +32,9 @@ function wrapper(address: string, amount: string | number): string {
 }
 
 export function encodePay({
-  uiid: uuid,
+  uuid: uuid,
   txData,
-  recipient: merchant,
+  merchant: merchant,
   tokenAddress = "Constants.ETH",
   context,
   merchantAmount,

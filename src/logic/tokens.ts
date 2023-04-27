@@ -60,11 +60,12 @@ export const fullListTokens: ListTokens = [
   {
     name: "matic",
     address: {
-      1: "NULL",
-      56: "NULL",
-      137: "NULL",
+      1: "0",
+      56: "0",
+      137: "1",
     } as AddressType,
     decimals: 18,
+    native: true,
     icon: maticLogo,
     price: 1,
     namePrice: "dai",
