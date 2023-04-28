@@ -85,7 +85,7 @@ class PolusApi {
         merchant_id: uuid,
       });
 
-      const resData: MerchantType = res.data.result;
+      const resData: MerchantType = res.data;
       return resData;
     } catch (err) {
       console.error(err);
