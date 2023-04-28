@@ -26,8 +26,9 @@ import {
   Icon28DoneOutline,
 } from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork, useDisconnect } from "wagmi";
-import { Web3Button } from "@web3modal/react";
+import { useNetwork, useSwitchNetwork, useDisconnect, mainnet } from "wagmi";
+import { Web3Button, useWeb3Modal } from "@web3modal/react";
+import { polygon, bsc } from "wagmi/chains";
 
 import "@vkontakte/vkui/dist/vkui.css";
 import "./style.css";
@@ -36,6 +37,7 @@ import { fullListTokens } from "./logic/tokens";
 import { Main } from "./pages/main";
 
 import logo from "./img/logo.svg";
+import { ListToken } from "./logic/payment";
 
 export const App: React.FC = () => {
   const [activeModal, setActiveModal] = React.useState<any>(null);
@@ -47,6 +49,8 @@ export const App: React.FC = () => {
 
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
+  const chainsA = [polygon, mainnet, bsc];
+
   // const { chain } = useNetwork()
   const { chains, error, isLoading, pendingChainId, switchNetwork } =
     useSwitchNetwork();
@@ -54,6 +58,16 @@ export const App: React.FC = () => {
   const [tron, setTron] = React.useState<boolean>(false);
 
   const { disconnect } = useDisconnect();
+
+  const [callback, setCallback] = React.useState<Function | undefined>(
+    undefined
+  );
+
+  const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
+    undefined
+  );
+
+  const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
 
   const isDesktop = window.innerWidth >= 800;
 
@@ -123,14 +137,20 @@ export const App: React.FC = () => {
       >
         <Div>
           <CardGrid size="l">
-            {chains.map((chainLocal, key) => (
+            {chainsA.map((chainLocal, key) => (
               <Card key={key}>
                 <SimpleCell
                   after={
                     chain?.id === chainLocal.id ? <Icon28DoneOutline /> : null
                   }
                   onClick={() => {
-                    if (switchNetwork) switchNetwork(chainLocal.id);
+                    if (switchNetwork) {
+                      switchNetwork(chainLocal.id);
+                    } else {
+                      setDefaultChain(chainLocal);
+                      open();
+                    }
+                    setActiveModal(null);
                   }}
                 >
                   {chainLocal.name}
@@ -140,7 +160,10 @@ export const App: React.FC = () => {
             <Card>
               <SimpleCell
                 after={tron ? <Icon28DoneOutline /> : null}
-                onClick={() => setTron(true)}
+                onClick={() => {
+                  setTron(true);
+                  setActiveModal(null);
+                }}
               >
                 Tron
               </SimpleCell>
@@ -174,6 +197,15 @@ export const App: React.FC = () => {
             {fullListTokens.map((token, key) => (
               <Card key={key}>
                 <SimpleCell
+                  onClick={() => {
+                    setSelectToken(token);
+                    setActiveModal(null);
+                  }}
+                  after={
+                    seletcToken?.name === token.name ? (
+                      <Icon28DoneOutline />
+                    ) : null
+                  }
                   before={
                     <img src={token.icon} style={{ marginRight: "12px" }} />
                   }
@@ -207,9 +239,9 @@ export const App: React.FC = () => {
             className="polus-header"
           />
         }
-      // header={
-      //     <HeaderBlock />
-      // }
+        // header={
+        //     <HeaderBlock />
+        // }
       >
         <SplitCol
           animate={false}
@@ -232,6 +264,7 @@ export const App: React.FC = () => {
                       closePop={closePop}
                       setTron={setTron}
                       tron={tron}
+                      seletcToken={seletcToken}
                     />
                   </View>
                 }
