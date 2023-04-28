@@ -62,13 +62,13 @@ export const fullListTokens: ListTokens = [
     address: {
       1: "0",
       56: "0",
-      137: "1",
+      137: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", //  WMATIC
     } as AddressType,
     decimals: 18,
     native: true,
     icon: maticLogo,
     price: 1,
-    namePrice: "dai",
+    namePrice: "matic-network",
     amountIn: 0,
   },
 ];

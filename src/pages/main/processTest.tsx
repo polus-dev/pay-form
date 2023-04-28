@@ -51,7 +51,7 @@ interface AllType {
   fee: string;
 }
 
-export type PolusChainId =  keyof ListToken["address"];
+export type PolusChainId = keyof ListToken["address"];
 
 
 interface ProcessType
@@ -85,6 +85,15 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
   const { payClass } = props;
+
+  if (payClass.tokenA.isNative) {
+    return null;
+
+  }
+
+
+
+
 
   const { config } = usePrepareContractWrite(payClass?.ApproveSyncPermit());
   const { data, write, error } = useContractWrite(config);
@@ -202,6 +211,10 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
   const { payClass } = props;
 
+  if (props.payClass.tokenA.isNative) {
+    return null;
+  }
+
   const router = new CustomRouter(payClass?.networkId);
   // sign permit
   const dataFS = payClass.dataForSign(noncePermit);
@@ -228,7 +241,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
           if (
             weiToEthNum(allowance.amount, payClass.tokenA.info.decimals) <
-              payClass.tokenA.info.amountIn ||
+            payClass.tokenA.info.amountIn ||
             allowance.expiration < Date.now() / 1000
           ) {
             setNeedToPermit(true);
@@ -279,8 +292,8 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
         router
           .getRouter(
             amountOut,
-            props.payClass.tokenA.erc20,
-            props.payClass.tokenB.erc20
+            props.payClass.tokenA.erc20!,
+            props.payClass.tokenB.erc20!
           )
           .then((path) => {
             if (path) {
@@ -332,7 +345,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
                 fee: props.fee,
                 merchantAmount: props.asset_amount_decimals_without_fee,
                 tokenAddress: props.tokenB.address[props.chainId],
-                merchant: props.payClass.addressRouter,
+                merchant: props.payClass.addressMerchant,
                 txData: calldata,
                 context: {
                   from: isContextFromNative ? "native" : "erc20",

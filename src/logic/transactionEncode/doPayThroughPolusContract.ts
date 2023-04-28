@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 import { PolusContractAbi } from "./types/polusContractAbi";
 import { FEE_RECIPIENT } from "../../constants";
 interface IPayThroughPolusContract
-  extends Omit<IEncodeTransfer, "context" | "txData"> {}
+  extends Omit<IEncodeTransfer, "context" | "txData"> { }
 
 export function doPayThroughPolusContract({
   fee,
@@ -16,7 +16,7 @@ export function doPayThroughPolusContract({
   const polusContract = new ethers.utils.Interface(PolusContractAbi);
   if (tokenAddress) {
     return polusContract.encodeFunctionData("DoERC20Payment", [
-      uuid,
+      '0x' + uuid,
       tokenAddress,
       FEE_RECIPIENT,
       fee,
@@ -25,7 +25,7 @@ export function doPayThroughPolusContract({
     ]);
   } else {
     return polusContract.encodeFunctionData("DoETHPayment", [
-      uuid,
+      '0x' + uuid,
       FEE_RECIPIENT,
       fee,
       merchant,

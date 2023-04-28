@@ -38,7 +38,7 @@ interface DataSign {
 interface TokenClass {
   info: ListToken;
   contract: ethers.Contract | undefined;
-  erc20: Token;
+  erc20: Token | undefined;
   isNative: boolean;
 }
 
@@ -159,15 +159,17 @@ export class Payment {
     this._tokenA = {
       info: config.tokenA,
 
-      contract: !config.tokenB.native
+      contract: (!config.tokenA.native)
         ? new ethers.Contract(
-            config.tokenA.address[idNetw],
-            token_abi,
-            this._provider
-          )
+          config.tokenA.address[idNetw],
+          token_abi,
+          this._provider
+        )
         : undefined,
       isNative: Boolean(config.tokenA.native),
-      erc20: new Token(
+      // @ts-ignore 
+      // NOTE: erc20 is undefined if tokenA is native, but native is boolean that is maybe false
+      erc20: config.tokenA.native || new Token(
         this._networkId,
         config.tokenA.address[idNetw],
         config.tokenA.decimals,
@@ -177,15 +179,17 @@ export class Payment {
     };
     this._tokenB = {
       info: config.tokenB,
-      contract: !config.tokenB.native
+      contract: (!config.tokenB.native)
         ? new ethers.Contract(
-            config.tokenB.address[idNetw],
-            token_abi,
-            this._provider
-          )
+          config.tokenB.address[idNetw],
+          token_abi,
+          this._provider
+        )
         : undefined,
       isNative: Boolean(config.tokenA.native),
-      erc20: new Token(
+
+      // @ts-ignore 
+      erc20: config.tokenB.native || new Token(
         this._networkId,
         config.tokenB.address[idNetw],
         config.tokenB.decimals,
@@ -338,7 +342,7 @@ export class Payment {
   }
 
   public async Approve(
-    address: string | "permit",
+    address: string | "permit" | "polus",
     type: 0 | 1 = 1
   ): Promise<ethers.providers.TransactionRequest | any> {
     if (type === 0) {
@@ -347,7 +351,7 @@ export class Payment {
       const data = this._tokenA.contract.interface.encodeFunctionData(
         "approve",
         [
-          address === "permit" ? this._addressPermit : address,
+          address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address,
           ethers.constants.MaxUint256,
         ]
       );

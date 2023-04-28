@@ -40,7 +40,7 @@ import { NtoStr, getParameterByName } from "../../logic/utils";
 import { Tron } from "./tron";
 
 const addressPolus = {
-  polygon: "0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2",
+  polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
   mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
   bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
 };
@@ -219,7 +219,6 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     }
 
     setDefaultChain(polygon);
-    console.log("info", data);
     setInfo(data);
 
     const currentT = fullListTokens.filter(
@@ -555,7 +554,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                   <div>
                     {/* FIX: fix type   */}
                     {(coin.native && coin.native === coinMerchant.native) ||
-                    coin.address[chain.id as PolusChainId] ===
+                      coin.address[chain.id as PolusChainId] ===
                       coinMerchant.address[chain.id as PolusChainId] ? (
                       <Process
                         id={"all1"}
@@ -566,7 +565,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             ? addressPolus.mainnet
                             : addressPolus.polygon
                         }
-                        amount={coinInvoice}
+                        amount={info.invoice.asset_amount}
                         addressMerchant={info.invoice.evm_withdraw_address}
                         uuid={info.invoice.id.replaceAll("-", "")}
                         currentAddressToken={
@@ -574,7 +573,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         }
                         consoleLog={props.consoleLog}
                         setPayed={setPayed}
+                        fee={info.invoice.fee!}
+                        asset_amount_decimals_without_fee={
+                          info.invoice.asset_amount_decimals_without_fee!
+                        }
                         setProgress={setProgress}
+                        isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
+
                       />
                     ) : (
                       <ProcessAll

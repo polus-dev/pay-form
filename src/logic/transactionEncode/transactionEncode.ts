@@ -40,8 +40,7 @@ export function encodePay({
   merchantAmount,
   fee,
 }: IEncodeTransfer): string {
-  // assertAmount(amount);
-  debugger;
+  // assertAmount(amoun);
   const data = txData.slice(10);
   const types = ["bytes", "bytes[]", "uint256"];
   const decoded = coder.decode(types, Buffer.from(data, "hex"));

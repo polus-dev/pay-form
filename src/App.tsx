@@ -207,9 +207,9 @@ export const App: React.FC = () => {
             className="polus-header"
           />
         }
-        // header={
-        //     <HeaderBlock />
-        // }
+      // header={
+      //     <HeaderBlock />
+      // }
       >
         <SplitCol
           animate={false}

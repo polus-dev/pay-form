@@ -11,11 +11,17 @@ import {
   useContractRead,
   useContractWrite,
   usePrepareContractWrite,
+  usePrepareSendTransaction,
+  useSendTransaction,
 } from "wagmi";
 
-import { BigNumber, ethers } from "ethers";
+
+import { BigNumber, ethers, utils } from "ethers";
 import polus_abi from "../../polus_abi.json";
 import token_abi from "../../token_abi.json";
+import { MAX_APPROVE_AMOUNT } from "../../constants";
+import { ConfigPayment, Payment } from "../../logic/payment";
+import { doPayThroughPolusContract } from "../../logic/transactionEncode/doPayThroughPolusContract";
 
 interface AllType {
   id: string;
@@ -29,6 +35,9 @@ interface AllType {
   consoleLog: Function;
   setPayed: Function;
   setProgress: Function;
+  isNativeToNative: boolean
+  asset_amount_decimals_without_fee: string;
+  fee: string;
 }
 
 interface ProcessType {
@@ -46,10 +55,17 @@ interface ProcessType {
   consoleLog: Function;
   reRender: Function;
   setPayed: Function;
+  isNativeToNative: boolean
+  asset_amount_decimals_without_fee: string;
+  fee: string;
 }
 
-const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
+const ProcessOne: React.FC<ProcessType> = (props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  if (props.isNativeToNative) {
+    props.setPosition(1);
+    return null;
+  }
 
   const addr: `0x${string}` = `0x${props.tokenAddress.replace("0x", "")}`;
   const contractRead = useContractRead({
@@ -72,8 +88,7 @@ const ProcessOne: React.FC<ProcessType> = (props: ProcessType) => {
       setFirstRender(true);
       console.log("amount isApprove", contractRead.data);
       if (contractRead.data) {
-        if (Number(contractRead.data) < 1000000000) {
-          // TODO
+        if (Number(contractRead.data) < +props.amount) {
           try {
             write();
           } catch (errorTry) {
@@ -143,89 +158,67 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   const addr: `0x${string}` = `0x${props.addressPolus.replace("0x", "")}`;
   const addrToken: `0x${string}` = `0x${props.tokenAddress.replace("0x", "")}`;
 
-  const balanceUser = useContractRead({
-    address: addrToken,
-    abi: token_abi,
-    functionName: "balanceOf",
-    args: [props.address],
-  });
 
-  const configPay =
-    props.tokenAddress === props.currentAddressToken
-      ? usePrepareContractWrite({
-          address: addr,
-          abi: polus_abi.abi,
-          functionName: "swapEqualInOutToken",
-          args: [
-            props.tokenAddress,
-            props.addressMerchant,
-            props.amount,
-            `0x${props.uuid}`,
-          ],
-        })
-      : usePrepareContractWrite({
-          address: addr,
-          abi: polus_abi.abi,
-          functionName: "swapExactInputSingleHop",
-          args: [
-            props.tokenAddress,
-            props.currentAddressToken,
-            props.addressMerchant,
-            props.amount,
-            `0x${props.uuid}`,
-            3000, // fee ??
-          ],
-        });
+  const configForTransaction: Parameters<typeof usePrepareSendTransaction>[0] = {
+    request: {
+      to: props.addressPolus,
+    }
+  }
 
-  const trans = useContractWrite(configPay.config);
+  if (props.isNativeToNative) {
+    configForTransaction!.request!.value = utils.parseEther(props.amount);
+    configForTransaction!.request!.data = doPayThroughPolusContract({
+      uuid: props.uuid,
+      fee: props.fee,
+      merchant: props.addressMerchant,
+      merchantAmount: props.asset_amount_decimals_without_fee,
+    })
+  } else {
+    configForTransaction!.request!.data = doPayThroughPolusContract({
+      uuid: props.uuid,
+      fee: props.fee,
+      merchant: props.addressMerchant,
+      merchantAmount: props.asset_amount_decimals_without_fee,
+      tokenAddress: props.tokenAddress,
+    })
+  }
+
+  console.log('configForTransaction', configForTransaction)
+
+  const { config } = usePrepareSendTransaction(configForTransaction);
+  const { data, isLoading, isSuccess, sendTransaction, error, isError } =
+    useSendTransaction(config);
 
   useEffect(() => {
-    // console.log('props.position', props.position)
-    if (!firstRender && trans.write && props.position === 1) {
+    if (!firstRender && props.position === 1 && sendTransaction) {
       setFirstRender(true);
-
-      trans.write();
-
+      sendTransaction();
       setTimeout(() => {
         if (props.position === 1) {
           setTime(true);
         }
       }, 10 * 1000);
     }
-    balanceUser.refetch();
-  }, [trans.write, props.position]);
+  }, [sendTransaction, props.position]);
 
   useEffect(() => {
-    if (trans.data) {
-      console.log("txHash transfer", trans.data);
-      trans.data.wait(1).then(() => {
+    if (data) {
+      console.log("txHash transfer", data);
+      data.wait(1).then(() => {
         props.setPosition(2);
-
         props.setPayed(true);
       });
     }
-  }, [trans.data]);
+  }, [data]);
 
   useEffect(() => {
-    if (trans.error) {
-      // console.log('error: ', error)
-      props.consoleLog(trans.error?.message ?? "Unknown error", false);
+    if (isError) {
+      props.consoleLog(error?.message ?? "Unknown error", false);
       props.setPositionError(2);
     }
-    console.log(trans.error);
-  }, [trans.error]);
-
-  useEffect(() => {
-    if (balanceUser.data && props.position === 1 && !firstRender2) {
-      setFirstRender2(true);
-      console.log("balanceOf", balanceUser.data);
-      if (Number(balanceUser.data) < Number(props.amount)) {
-        props.consoleLog("Amount exceeds", false);
-        props.setPositionError(2);
-      }
-    }
-  }, [balanceUser.data, balanceUser.fetchStatus]);
-
+    console.log(error);
+  }, [error]);
+  //
   useEffect(() => {
     console.log("render");
   }, []);
@@ -293,7 +286,7 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
   );
 };
 
-export const ProcessAll: React.FC<AllType> = (props: AllType) => {
+export const ProcessAll: React.FC<AllType> = (props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
   const [position, setPosition] = React.useState<number>(0);
@@ -333,7 +326,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
   return (
     <div id={props.id} className="process-block">
       <ProcessOne
-        key={oneId}
+        key={'1'}
         address={props.address}
         addressPolus={props.addressPolus}
         tokenAddress={props.tokenAddress}
@@ -348,6 +341,10 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         consoleLog={props.consoleLog}
         reRender={reRender}
         setPayed={props.setPayed}
+        isNativeToNative={props.isNativeToNative}
+        fee={props.fee}
+        asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
+
       />
       <ProcessTwo
         key={twoId}
@@ -364,7 +361,11 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         currentAddressToken={props.currentAddressToken}
         consoleLog={props.consoleLog}
         reRender={reRender}
+        // fee={props.}
         setPayed={props.setPayed}
+        isNativeToNative={props.isNativeToNative}
+        fee={props.fee}
+        asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
       />
       <ProcessTree
         key={"tree1"}
@@ -382,6 +383,10 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         consoleLog={props.consoleLog}
         reRender={reRender}
         setPayed={props.setPayed}
+        isNativeToNative={props.isNativeToNative}
+        fee={props.fee}
+        asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
+
       />
     </div>
   );
