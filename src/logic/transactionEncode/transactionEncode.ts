@@ -1,4 +1,4 @@
-import { FEE_RECIPIENT } from "../../constants";
+import { FEE_RECIPIENT, NULL_ADDRESS, UNIVERSAL_ROUTER } from "../../constants";
 import { ethers } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
@@ -35,12 +35,15 @@ export function encodePay({
   uuid: uuid,
   txData,
   merchant: merchant,
-  tokenAddress = "Constants.ETH",
+  tokenAddress,
   context,
   merchantAmount,
+  asset_amount_decimals,
   fee,
 }: IEncodeTransfer): string {
   // assertAmount(amoun);
+  if (!tokenAddress)
+    tokenAddress = NULL_ADDRESS
   const data = txData.slice(10);
   const types = ["bytes", "bytes[]", "uint256"];
   const decoded = coder.decode(types, Buffer.from(data, "hex"));
@@ -49,8 +52,8 @@ export function encodePay({
 
   if (context.from === "native" && context.to === "erc20") {
     commands =
-      Command.WRAP +
-      decoded[0] +
+      '0x' + Command.WRAP +
+      (<string>decoded[0]).slice(2) +
       Command.TRANSFER +
       Command.TRANSFER +
       Command.FAKE;
@@ -63,36 +66,20 @@ export function encodePay({
       Command.TRANSFER +
       Command.FAKE;
     wrapStatus = WrapStatus.UNWRAP;
-  } else {
-    const polusContract = new ethers.utils.Interface(PolusContractAbi);
-    if (context.throughPolusContract.erc20) {
-      return polusContract.encodeFunctionData("DoERC20Payment", [
-        uuid,
-        tokenAddress,
-        FEE_RECIPIENT,
-        fee,
-        merchant,
-        merchantAmount,
-      ]);
-    } else if (context.throughPolusContract.native) {
-      return polusContract.encodeFunctionData("DoETHPayment", [
-        uuid,
-        FEE_RECIPIENT,
-        fee,
-        merchant,
-        merchantAmount,
-      ]);
-    }
+  }
+
+  else {
+
     commands = decoded[0] + Command.TRANSFER + Command.TRANSFER + Command.FAKE;
   }
 
   const inputs = structuredClone<string[]>(decoded[1]);
 
   if (wrapStatus === WrapStatus.WRAP) {
-    const wrap = wrapper(tokenAddress, merchantAmount);
+    const wrap = wrapper('0x0000000000000000000000000000000000000002', asset_amount_decimals!);
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
-    const wrap = wrapper(tokenAddress, merchantAmount);
+    const wrap = wrapper(merchant, merchantAmount);
     inputs.push(wrap);
   }
 
@@ -110,9 +97,7 @@ export function encodePay({
     ["uint256", "bytes"],
     ["0x" + uuid, "0x00"]
   );
-
   inputs.push(...[merchantTransfer, commisionTransfer, uiid_encoded]);
-
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");

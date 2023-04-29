@@ -32,7 +32,6 @@ import {
 import { ETHToWei, weiToEthNum } from "../../logic/utils";
 import { encodePay } from "../../logic/transactionEncode/transactionEncode";
 import { PolusContractAddress } from "../../logic/transactionEncode/types/polusContractAbi";
-const UNIVERSAL_ROUTER = "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5";
 
 interface AllType {
   id: string;
@@ -48,6 +47,7 @@ interface AllType {
   addressMerchant: string;
   amountOut: string | number;
   asset_amount_decimals_without_fee: string;
+  asset_amount_decimals: string;
   fee: string;
 }
 
@@ -57,7 +57,7 @@ export type PolusChainId = keyof ListToken["address"];
 interface ProcessType
   extends Pick<
     AllType,
-    "asset_amount_decimals_without_fee" | "fee" | "chainId"
+    "asset_amount_decimals_without_fee" | "fee" | "chainId" | 'asset_amount_decimals'
   > {
   address: `0x${string}`;
   position: number;
@@ -88,12 +88,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 
   if (payClass.tokenA.isNative) {
     return null;
-
   }
-
-
-
-
 
   const { config } = usePrepareContractWrite(payClass?.ApproveSyncPermit());
   const { data, write, error } = useContractWrite(config);
@@ -212,7 +207,8 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
   const { payClass } = props;
 
   if (props.payClass.tokenA.isNative) {
-    return null;
+    // TODO: make check balance of native token
+    readyToSend || setReadyToSend(true)
   }
 
   const router = new CustomRouter(payClass?.networkId);
@@ -225,9 +221,14 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
     value: dataFS.value,
   });
 
+
+  if (props.payClass.tokenA.isNative) {
+    firstRender || setFirstRender(true);
+  }
+
   useEffect(() => {
     // check allowance permit
-    if (!firstRender && props.position === 1 && sign) {
+    if (!firstRender && props.position === 1 && sign && !props.payClass.tokenA.isNative) {
       console.log("start sign");
       setFirstRender(true);
 
@@ -288,12 +289,11 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
       if (!firstRender2 && firstRender) {
         console.log("start pa");
         setFirstRender2(true);
-        // data.wait(1).then(() => {
         router
           .getRouter(
             amountOut,
-            props.payClass.tokenA.erc20!,
-            props.payClass.tokenB.erc20!
+            props.payClass.tokenA.erc20,
+            props.payClass.tokenB.erc20,
           )
           .then((path) => {
             if (path) {
@@ -332,40 +332,29 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
               // const datatr = UniversalRouter.encodeExecute(ser.commands, ser.inputs, deadline)
 
               const isContextFromNative = props.tokenA.native === true;
-              const isContextToPolusContract = {
-                native:
-                  Boolean(props.tokenA.native) &&
-                  props.tokenA.address === props.tokenB.address,
-                erc20:
-                  !props.tokenA.native &&
-                  props.tokenA.address === props.tokenB.address,
-              };
               const encodePayParams: Parameters<typeof encodePay>[0] = {
                 uuid: props.uuid,
                 fee: props.fee,
                 merchantAmount: props.asset_amount_decimals_without_fee,
-                tokenAddress: props.tokenB.address[props.chainId],
+                tokenAddress: props.tokenB.native ? undefined : props.tokenB.address[props.chainId],
                 merchant: props.payClass.addressMerchant,
+                asset_amount_decimals: props.asset_amount_decimals,
                 txData: calldata,
                 context: {
                   from: isContextFromNative ? "native" : "erc20",
                   to: props.tokenB.native === true ? "native" : "erc20",
-                  throughPolusContract: isContextToPolusContract,
                 },
               };
 
               const encoded = encodePay(encodePayParams);
+              debugger
 
               props.setDataTr(encoded);
 
-              if (isContextFromNative || isContextToPolusContract.native)
-                props.setTxValue?.(props.asset_amount_decimals_without_fee);
+              if (isContextFromNative) {
+                props.setTxValue?.('1000000000000000000');
+              }
 
-              if (
-                isContextToPolusContract.native ||
-                isContextToPolusContract.erc20
-              )
-                props.setTxTo?.(PolusContractAddress[props.chainId]);
 
               props.setPosition(2);
 
@@ -417,13 +406,15 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 
   const { config } = usePrepareSendTransaction({
     request: {
-      to: props.txTo ? props.txTo : props.payClass.addressRouter,
+      to: props.payClass.addressRouter,
       data: props.dataTr,
       value: props.txValue
         ? BigNumber.from(props.txValue)
         : BigNumber.from("0"),
     },
   });
+
+  console.log('config', config)
   const { data, isLoading, isSuccess, sendTransaction, error } =
     useSendTransaction(config);
 
@@ -512,7 +503,6 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 
   const [dataTr, setDataTr] = React.useState<string | undefined>(undefined);
   const [txValue, setTxValue] = React.useState<string | null>();
-  const [txTo, setTxTo] = React.useState<string | null>();
 
   const [feeData, setFeeData] = React.useState<
     ethers.providers.FeeData | undefined
@@ -588,6 +578,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         asset_amount_decimals_without_fee={
           props.asset_amount_decimals_without_fee
         }
+        asset_amount_decimals={props.asset_amount_decimals}
         fee={props.fee}
         chainId={props.chainId}
       />
@@ -607,11 +598,14 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         feeData={feeData}
         payClass={payClass}
         tokenA={props.tokenA}
+        setTxValue={setTxValue}
         tokenB={props.tokenB}
         fullListTokensUp={props.fullListTokensUp}
         asset_amount_decimals_without_fee={
           props.asset_amount_decimals_without_fee
         }
+
+        asset_amount_decimals={props.asset_amount_decimals}
         fee={props.fee}
         chainId={props.chainId}
       />
@@ -636,11 +630,10 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
         asset_amount_decimals_without_fee={
           props.asset_amount_decimals_without_fee
         }
+        asset_amount_decimals={props.asset_amount_decimals}
         fee={props.fee}
         chainId={props.chainId}
-        txTo={txTo}
         txValue={txValue}
-        setTxTo={setTxTo}
         setTxValue={setTxValue}
       />
     </div>

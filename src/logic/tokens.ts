@@ -76,7 +76,7 @@ export const fullListTokens: ListTokens = [
 		address: {
 			1: "0",
 			56: "0",
-			137: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", //  WMATIC
+			137: "1",
 		} as AddressType,
 		decimals: {
 			1: 18,
@@ -86,6 +86,7 @@ export const fullListTokens: ListTokens = [
 		native: true,
 		icon: maticLogo,
 		price: 1,
+		wrapAlt: 'wmatic',
 		namePrice: "matic-network",
 		amountIn: 0,
 	},

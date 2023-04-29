@@ -7,6 +7,8 @@ import token_abi from "../token_abi.json";
 import { fullListTokens } from "./tokens";
 import { getPriceToken } from "./utils";
 import { CustomRouter } from "./router";
+import { PolusChainId } from "pages/main/processTest";
+import { NULL_ADDRESS } from "../constants";
 
 export interface ConfigPayment {
 	networkId: number;
@@ -38,7 +40,7 @@ interface DataSign {
 interface TokenClass {
 	info: ListToken;
 	contract: ethers.Contract | undefined;
-	erc20: Token | undefined;
+	erc20: Token;
 	isNative: boolean;
 }
 
@@ -57,6 +59,7 @@ export interface ListToken {
 	};
 	price: number;
 	native?: boolean;
+	wrapAlt?: string;
 	namePrice: string;
 	amountIn: number;
 }
@@ -163,17 +166,14 @@ export class Payment {
 		this._tokenA = {
 			info: config.tokenA,
 
-			contract: (!config.tokenA.native)
-				? new ethers.Contract(
-					config.tokenA.address[idNetw],
+			contract:
+				new ethers.Contract(
+					config.tokenA.native ? NULL_ADDRESS : config.tokenA.address[idNetw],
 					token_abi,
 					this._provider
-				)
-				: undefined,
+				),
 			isNative: Boolean(config.tokenA.native),
-			// @ts-ignore 
-			// NOTE: erc20 is undefined if tokenA is native, but native is boolean that is maybe false
-			erc20: config.tokenA.native || new Token(
+			erc20: config.tokenA.native ? this.createWrapAltFromNative(config.tokenA.wrapAlt!) : new Token(
 				this._networkId,
 				config.tokenA.address[idNetw],
 				config.tokenA.decimals[idNetw],
@@ -183,17 +183,15 @@ export class Payment {
 		};
 		this._tokenB = {
 			info: config.tokenB,
-			contract: (!config.tokenB.native)
-				? new ethers.Contract(
-					config.tokenB.address[idNetw],
+			contract:
+				new ethers.Contract(
+					config.tokenA.native ? NULL_ADDRESS : config.tokenA.address[idNetw],
 					token_abi,
 					this._provider
-				)
-				: undefined,
-			isNative: Boolean(config.tokenA.native),
+				),
+			isNative: Boolean(config.tokenB.native),
 
-			// @ts-ignore 
-			erc20: config.tokenB.native || new Token(
+			erc20: config.tokenB.native ? this.createWrapAltFromNative(config.tokenB.wrapAlt!) : new Token(
 				this._networkId,
 				config.tokenB.address[idNetw],
 				config.tokenB.decimals[idNetw],
@@ -216,6 +214,19 @@ export class Payment {
 		};
 	}
 
+	public createWrapAltFromNative(AltName: string): Token {
+		const wrapAlt = fullListTokens.find(item => item.name === AltName)
+		if (!wrapAlt) throw new Error("createWrapAltFromNative:wrapAlt is undefined");
+		const idNetw = this._networkId as PolusChainId;
+		return new Token(
+			this._networkId,
+			wrapAlt.address[idNetw],
+			wrapAlt.decimals[idNetw],
+			wrapAlt.name,
+			wrapAlt.name
+		)
+	}
+
 	public async checkAllowance(
 		token: "A" | "B",
 		type: "permit" | "polus"
@@ -224,7 +235,6 @@ export class Payment {
 		if (token === "B") {
 			contr = this._tokenB.contract;
 		}
-
 		if (!contr) throw new Error("checkAllowance:contract is undefined");
 
 		const toPermit =

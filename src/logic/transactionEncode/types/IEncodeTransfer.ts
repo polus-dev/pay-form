@@ -7,12 +7,9 @@ export interface IEncodeTransfer {
   uuid: string;
   merchantAmount: string;
   fee: string;
+  asset_amount_decimals?: string;
   context: {
     from: TokenType;
     to: TokenType;
-    throughPolusContract: {
-      native: boolean;
-      erc20: boolean;
-    };
   };
 }

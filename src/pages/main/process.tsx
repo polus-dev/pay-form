@@ -192,7 +192,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   useEffect(() => {
     if (!firstRender && props.position === 1 && sendTransaction) {
       setFirstRender(true);
-      sendTransaction();
+      sendTransaction()
       setTimeout(() => {
         if (props.position === 1) {
           setTime(true);
@@ -204,10 +204,10 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   useEffect(() => {
     if (data) {
       console.log("txHash transfer", data);
-      data.wait(1).then(() => {
-        props.setPosition(2);
-        props.setPayed(true);
-      });
+      debugger
+      props.setPosition(3);
+      props.setPayed(true);
+      // FIX: 
     }
   }, [data]);
 

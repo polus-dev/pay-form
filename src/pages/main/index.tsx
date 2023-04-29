@@ -40,9 +40,9 @@ import { NtoStr, getParameterByName } from "../../logic/utils";
 import { Tron } from "./tron";
 
 const addressPolus = {
-  polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
-  mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-  bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
+    polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
+    mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
+    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
 };
 
 interface MainProps {
@@ -294,7 +294,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         if (props.seletcToken) {
             chCoinNew(props.seletcToken);
         }
-    }, [ props.seletcToken ])
+    }, [props.seletcToken])
 
     useEffect(() => {
         if (info) {
@@ -404,7 +404,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     className="selector"
                                     onClick={() => {
                                         // if (isConnected) {
-                                            props.setActiveModal("network");
+                                        props.setActiveModal("network");
                                         // } else {
                                         //     open();
                                         // }
@@ -548,7 +548,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     <div>
                                         {/* FIX: fix type   */}
                                         {(coin.native && coin.native === coinMerchant.native) ||
-                                              coin.address[chain.id as PolusChainId] ===
+                                            coin.address[chain.id as PolusChainId] ===
                                             coinMerchant.address[chain.id as PolusChainId] ? (
                                             <Process
                                                 id={"all1"}
@@ -568,13 +568,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 consoleLog={props.consoleLog}
                                                 setPayed={setPayed}
                                                 fee={info.invoice.fee!}
-                        asset_amount_decimals_without_fee={
-                          info.invoice.asset_amount_decimals_without_fee!
-                        }
-                        setProgress={setProgress}
-                                              isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
+                                                asset_amount_decimals_without_fee={
+                                                    info.invoice.asset_amount_decimals_without_fee!
+                                                }
+                                                setProgress={setProgress}
+                                                isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
 
-                      />
+                                            />
                                         ) : (
                                             <ProcessAll
                                                 id={"all1"}
@@ -594,6 +594,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 asset_amount_decimals_without_fee={
                                                     info.invoice.asset_amount_decimals_without_fee!
                                                 }
+                                                asset_amount_decimals={info.invoice.asset_amount_decimals!}
                                             />
                                         )}
                                     </div>
