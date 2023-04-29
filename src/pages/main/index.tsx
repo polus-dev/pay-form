@@ -442,7 +442,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                             className="fix-forpadding"
                                             onClick={() => chCoinNew(token)}
                                             mode={coin.name === token.name ? "primary" : "outline"}
-                                            before={<img src={token.icon} />}
+                                            before={<img src={token.icon} className="logo-cur" />}
                                         >
                                             {token.name.toUpperCase()}
                                         </Button>
@@ -458,7 +458,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                             className="fix-forpadding"
                                             onClick={() => chCoinNew(token)}
                                             mode={coin.name === token.name ? "primary" : "outline"}
-                                            before={<img src={token.icon} />}
+                                            before={<img src={token.icon} className="logo-cur" />}
                                         >
                                             {token.name.toUpperCase()}
                                         </Button>

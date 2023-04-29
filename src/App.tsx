@@ -207,7 +207,7 @@ export const App: React.FC = () => {
                     ) : null
                   }
                   before={
-                    <img src={token.icon} style={{ marginRight: "12px" }} />
+                    <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
                   }
                 >
                   {token.name.toUpperCase()}

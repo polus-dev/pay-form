@@ -93,10 +93,10 @@ export function NtoStr(n1: number | string | BigNumber | Number): string {
   if (Number(stringAmount) === 0) {
     stringAmount = Number(n2).toFixed(1);
   }
-  n2.toLocaleString("en", {
+  stringAmount = n2.toLocaleString("en", {
     currency: "usd",
-    maximumFractionDigits: 2,
-    maximumSignificantDigits: 2,
+    maximumFractionDigits: 7,
+    maximumSignificantDigits: 7,
   });
   return stringAmount;
 }

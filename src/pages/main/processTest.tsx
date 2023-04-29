@@ -103,7 +103,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
     if (!firstRender && write && props.position === 0 && payClass) {
       payClass.getBalance("A").then((b) => {
         if (
-          weiToEthNum(b, payClass.tokenA.info.decimals) <
+          weiToEthNum(b, payClass.tokenA.info.decimals[props.chainId]) <
           payClass.tokenA.info.amountIn
         ) {
           props.consoleLog("Not enough balance", false);
@@ -130,7 +130,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 
         payClass.checkAllowance("A", "permit").then((amount) => {
           if (
-            weiToEthNum(amount, payClass.tokenA.info.decimals) <
+            weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) <
             payClass.tokenA.info.amountIn
           ) {
             try {
@@ -240,7 +240,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
           }
 
           if (
-            weiToEthNum(allowance.amount, payClass.tokenA.info.decimals) <
+            weiToEthNum(allowance.amount, payClass.tokenA.info.decimals[props.chainId]) <
             payClass.tokenA.info.amountIn ||
             allowance.expiration < Date.now() / 1000
           ) {
@@ -282,7 +282,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
         console.log("address sign", isv);
       }
 
-      const amountOut = ETHToWei(payClass.amountOut, props.tokenB.decimals);
+      const amountOut = ETHToWei(payClass.amountOut, props.tokenB.decimals[props.chainId]);
       console.log("amountOut", amountOut);
 
       if (!firstRender2 && firstRender) {
