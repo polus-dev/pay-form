@@ -300,6 +300,7 @@ export class Payment {
 			if (!contr) throw new Error("getBalance:contract is undefined");
 
 			const balance: BigNumber = await contr.balanceOf(this._addressUser);
+			debugger
 
 			console.log("getBalance:balance", balance);
 
@@ -356,7 +357,7 @@ export class Payment {
 	}
 
 	public async Approve(
-		address: string | "permit" | "polus",
+		address: string | "permit" | "polus" | "router",
 		type: 0 | 1 = 1
 	): Promise<ethers.providers.TransactionRequest | any> {
 		if (type === 0) {
@@ -365,7 +366,7 @@ export class Payment {
 			const data = this._tokenA.contract.interface.encodeFunctionData(
 				"approve",
 				[
-					address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address,
+					address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address === 'router' ? UNIVERSAL_ROUTER : address,
 					ethers.constants.MaxUint256,
 				]
 			);

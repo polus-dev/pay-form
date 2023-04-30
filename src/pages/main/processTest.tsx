@@ -21,7 +21,6 @@ import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
 import { verifyTypedData } from "ethers/lib/utils.js";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { CustomRouter } from "../../logic/router";
-
 import {
   ConfigPayment,
   ListToken,
@@ -84,6 +83,8 @@ interface ProcessType
 const ProcessOne: React.FC<ProcessType> = (props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
+  const isMetaMask = window.ethereum?.isMetaMask;
+
   const { payClass } = props;
 
   if (payClass.tokenA.isNative) {
@@ -91,6 +92,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
   }
 
   const { config } = usePrepareContractWrite(payClass?.ApproveSyncPermit());
+
   const { data, write, error } = useContractWrite(config);
 
   useEffect(() => {
@@ -117,8 +119,12 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
             props.tokenA.address === props.tokenB.address,
         };
 
-        if (isContextToPolusContract.erc20) {
-          payClass.Approve(PolusContractAddress[props.chainId]);
+        if (isContextToPolusContract.erc20 || !isMetaMask) {
+          payClass.checkAllowance('A', 'polus').then(amount => {
+            if (amount.toNumber() <= 0) {
+              payClass.Approve(isMetaMask ? PolusContractAddress[props.chainId] : 'router');
+            }
+          })
         } else if (isContextToPolusContract.native) {
           return;
         }
@@ -126,7 +132,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
         payClass.checkAllowance("A", "permit").then((amount) => {
           if (
             weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) <
-            payClass.tokenA.info.amountIn
+            payClass.tokenA.info.amountIn && isMetaMask
           ) {
             try {
               write();
@@ -347,7 +353,6 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
               };
 
               const encoded = encodePay(encodePayParams);
-              debugger
 
               props.setDataTr(encoded);
 
