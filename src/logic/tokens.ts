@@ -7,6 +7,7 @@ import btcLogo from "../img/btc.svg";
 import ethLogo from "../img/weth.svg";
 import busdLogo from "../img/busd.svg";
 import bnbLogo from "../img/bnb.svg";
+import shibLogo from "../img/shib.svg";
 import { TokenPolus } from "./types";
 import { ListTokens } from "./payment";
 
@@ -38,6 +39,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "tether",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "usdc",
@@ -55,6 +57,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "usd-coin",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "dai",
@@ -72,6 +75,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "dai",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "matic",
@@ -91,6 +95,7 @@ export const fullListTokens: ListTokens = [
 		wrapAlt: 'wmatic',
 		namePrice: "matic-network",
 		amountIn: 0,
+		category: 'native'
 	},
 	{
 		name: "wbtc",
@@ -109,6 +114,27 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "wrapped-bitcoin",
 		amountIn: 0,
+		category: 'wrap'
+	},
+	{
+		name: "eth",
+		address: {
+			1: "1",
+			56: "0",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: true,
+		icon: ethLogo,
+		price: 2000,
+		wrapAlt: 'weth',
+		namePrice: "weth",
+		amountIn: 0,
+		category: 'native'
 	},
 	{
 		name: "weth",
@@ -124,9 +150,10 @@ export const fullListTokens: ListTokens = [
 		},
 		native: false,
 		icon: ethLogo,
-		price: 1,
+		price: 2000,
 		namePrice: "weth",
 		amountIn: 0,
+		category: 'wrap'
 	},
 	{
 		name: "wmatic",
@@ -145,6 +172,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "matic-network",
 		amountIn: 0,
+		category: 'wrap'
 	},
 	{
 		name: "busd",
@@ -163,6 +191,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "binance-usd",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "bnb",
@@ -182,6 +211,7 @@ export const fullListTokens: ListTokens = [
 		wrapAlt: 'wbnb',
 		namePrice: "bnb",
 		amountIn: 0,
+		category: 'native'
 	},
 	{
 		name: "wbnb",
@@ -200,6 +230,26 @@ export const fullListTokens: ListTokens = [
 		price: 300,
 		namePrice: "bnb",
 		amountIn: 0,
+		category: 'wrap'
+	},
+	{
+		name: "shib",
+		address: {
+			1: "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+			56: "0x2859e4544C4bB03966803b044A93563Bd2D0DD4D",
+			137: "0x6f8a06447Ff6FcF75d803135a7de15CE88C1d4ec",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: shibLogo,
+		price: 0.00001,
+		namePrice: "shiba-inu",
+		amountIn: 0,
+		category: 'other'
 	},
 ];
 

@@ -54,7 +54,8 @@ interface MainProps {
     closePop: Function;
     setTron: Function;
     tron: boolean;
-    seletcToken: ListToken | undefined
+    seletcToken: ListToken | undefined,
+    setSelectToken: Function
 }
 
 interface ErrorType {
@@ -349,6 +350,10 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             props.setTron(false);
         }
     }, [type]);
+
+    useEffect(() => {
+        props.setSelectToken(coin)
+    }, [coin])
 
     useEffect(() => {
         if (info) {
