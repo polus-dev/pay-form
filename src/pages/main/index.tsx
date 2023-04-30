@@ -192,18 +192,18 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return undefined;
         }
 
-        // if (data.status === 'completed') {
-        //     setErrorObj({
-        //         text: 'Invoice is payed',
-        //         code: 1003
-        //     })
-        // }
-        // if (data.status === 'expired') {
-        //     setErrorObj({
-        //         text: 'Invoice is expired',
-        //         code: 1004
-        //     })
-        // }
+        if (data.invoice.status === 'completed') {
+            setErrorObj({
+                text: 'Invoice is payed',
+                code: 1003
+            })
+        }
+        if (data.invoice.status === 'expired') {
+            setErrorObj({
+                text: 'Invoice is expired',
+                code: 1004
+            })
+        }
         if (timer === "00:00") {
             startTimer(data.invoice);
         }
@@ -557,7 +557,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 addressPolus={
                                                     chain.id === 1
                                                         ? addressPolus.mainnet
-                                                        : addressPolus.polygon
+                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
                                                 }
                                                 amount={info.invoice.asset_amount}
                                                 addressMerchant={info.invoice.evm_withdraw_address}

@@ -5,6 +5,8 @@ import daiLogo from "../img/dai.svg";
 import maticLogo from "../img/matic.svg";
 import btcLogo from "../img/btc.svg";
 import ethLogo from "../img/weth.svg";
+import busdLogo from "../img/busd.svg";
+import bnbLogo from "../img/bnb.svg";
 import { TokenPolus } from "./types";
 import { ListTokens } from "./payment";
 
@@ -142,6 +144,61 @@ export const fullListTokens: ListTokens = [
 		icon: maticLogo,
 		price: 1,
 		namePrice: "matic-network",
+		amountIn: 0,
+	},
+	{
+		name: "busd",
+		address: {
+			1: "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
+			56: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+			137: "0x9C9e5fD8bbc25984B178FdCE6117Defa39d2db39", //  WMATIC
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: busdLogo,
+		price: 1,
+		namePrice: "binance-usd",
+		amountIn: 0,
+	},
+	{
+		name: "bnb",
+		address: {
+			1: "0",
+			56: "1",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: true,
+		icon: bnbLogo,
+		price: 300,
+		wrapAlt: 'wbnb',
+		namePrice: "bnb",
+		amountIn: 0,
+	},
+	{
+		name: "wbnb",
+		address: {
+			1: "0",
+			56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: bnbLogo,
+		price: 300,
+		namePrice: "bnb",
 		amountIn: 0,
 	},
 ];
