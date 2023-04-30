@@ -194,7 +194,12 @@ export const App: React.FC = () => {
       >
         <Div>
           <CardGrid size="l">
-            {fullListTokens.map((token, key) => (
+            {fullListTokens.filter((token) => {
+				if (chain) {
+					return token.address[chain.id as 1 | 56 | 137] !== '0'
+				}
+				return true
+			}).map((token, key) => (
               <Card key={key}>
                 <SimpleCell
                   onClick={() => {

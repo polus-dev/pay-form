@@ -256,6 +256,18 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return undefined;
     }
 
+    function getSubCoin(list: ListTokens) {
+
+        const _list = list.slice(4, list.length)
+
+        for (let i=0;i<_list.length;i++) {
+            if (_list[i].name === coin.name) {
+                return [ coin ]
+            }
+        }
+        return [ _list[0] ]
+    }
+
     useEffect(() => {
         if (isLoading === false) {
             if (error) {
@@ -450,7 +462,21 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 </div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(3, 5).map((token, key) => (
+                                    {fullListTokensUp.slice(3, 4).map((token, key) => (
+                                        <Button
+                                            key={key}
+                                            size="l"
+                                            stretched
+                                            className="fix-forpadding"
+                                            onClick={() => chCoinNew(token)}
+                                            mode={coin.name === token.name ? "primary" : "outline"}
+                                            before={<img src={token.icon} className="logo-cur" />}
+                                        >
+                                            {token.name.toUpperCase()}
+                                        </Button>
+                                    ))}
+
+                                    {getSubCoin(fullListTokensUp).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
