@@ -356,6 +356,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 setType(0);
             } else if (info.invoice.tron_withdraw_address && props.tron) {
                 setType(1);
+                setCoin(fullListTokens[0])
             }
         }
     }, [info, props.tron]);
