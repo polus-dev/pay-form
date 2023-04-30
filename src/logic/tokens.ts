@@ -5,6 +5,9 @@ import daiLogo from "../img/dai.svg";
 import maticLogo from "../img/matic.svg";
 import btcLogo from "../img/btc.svg";
 import ethLogo from "../img/weth.svg";
+import busdLogo from "../img/busd.svg";
+import bnbLogo from "../img/bnb.svg";
+import shibLogo from "../img/shib.svg";
 import { TokenPolus } from "./types";
 import { ListTokens } from "./payment";
 
@@ -36,6 +39,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "tether",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "usdc",
@@ -53,6 +57,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "usd-coin",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "dai",
@@ -70,6 +75,7 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "dai",
 		amountIn: 0,
+		category: 'stable'
 	},
 	{
 		name: "matic",
@@ -89,6 +95,7 @@ export const fullListTokens: ListTokens = [
 		wrapAlt: 'wmatic',
 		namePrice: "matic-network",
 		amountIn: 0,
+		category: 'native'
 	},
 	{
 		name: "wbtc",
@@ -107,6 +114,27 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "wrapped-bitcoin",
 		amountIn: 0,
+		category: 'wrap'
+	},
+	{
+		name: "eth",
+		address: {
+			1: "1",
+			56: "0",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: true,
+		icon: ethLogo,
+		price: 2000,
+		wrapAlt: 'weth',
+		namePrice: "weth",
+		amountIn: 0,
+		category: 'native'
 	},
 	{
 		name: "weth",
@@ -122,9 +150,10 @@ export const fullListTokens: ListTokens = [
 		},
 		native: false,
 		icon: ethLogo,
-		price: 1,
+		price: 2000,
 		namePrice: "weth",
 		amountIn: 0,
+		category: 'wrap'
 	},
 	{
 		name: "wmatic",
@@ -143,6 +172,84 @@ export const fullListTokens: ListTokens = [
 		price: 1,
 		namePrice: "matic-network",
 		amountIn: 0,
+		category: 'wrap'
+	},
+	{
+		name: "busd",
+		address: {
+			1: "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
+			56: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+			137: "0x9C9e5fD8bbc25984B178FdCE6117Defa39d2db39", //  WMATIC
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: busdLogo,
+		price: 1,
+		namePrice: "binance-usd",
+		amountIn: 0,
+		category: 'stable'
+	},
+	{
+		name: "bnb",
+		address: {
+			1: "0",
+			56: "1",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: true,
+		icon: bnbLogo,
+		price: 300,
+		wrapAlt: 'wbnb',
+		namePrice: "bnb",
+		amountIn: 0,
+		category: 'native'
+	},
+	{
+		name: "wbnb",
+		address: {
+			1: "0",
+			56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+			137: "0",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: bnbLogo,
+		price: 300,
+		namePrice: "bnb",
+		amountIn: 0,
+		category: 'wrap'
+	},
+	{
+		name: "shib",
+		address: {
+			1: "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+			56: "0x2859e4544C4bB03966803b044A93563Bd2D0DD4D",
+			137: "0x6f8a06447Ff6FcF75d803135a7de15CE88C1d4ec",
+		} as AddressType,
+		decimals: {
+			1: 18,
+			56: 18,
+			137: 18
+		},
+		native: false,
+		icon: shibLogo,
+		price: 0.00001,
+		namePrice: "shiba-inu",
+		amountIn: 0,
+		category: 'other'
 	},
 ];
 

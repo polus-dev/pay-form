@@ -54,7 +54,8 @@ interface MainProps {
     closePop: Function;
     setTron: Function;
     tron: boolean;
-    seletcToken: ListToken | undefined
+    seletcToken: ListToken | undefined,
+    setSelectToken: Function
 }
 
 interface ErrorType {
@@ -192,18 +193,18 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return undefined;
         }
 
-        // if (data.status === 'completed') {
-        //     setErrorObj({
-        //         text: 'Invoice is payed',
-        //         code: 1003
-        //     })
-        // }
-        // if (data.status === 'expired') {
-        //     setErrorObj({
-        //         text: 'Invoice is expired',
-        //         code: 1004
-        //     })
-        // }
+        if (data.invoice.status === 'completed') {
+            setErrorObj({
+                text: 'Invoice is payed',
+                code: 1003
+            })
+        }
+        if (data.invoice.status === 'expired') {
+            setErrorObj({
+                text: 'Invoice is expired',
+                code: 1004
+            })
+        }
         if (timer === "00:00") {
             startTimer(data.invoice);
         }
@@ -254,6 +255,18 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return info.merchant?.fail_redirect_url ?? undefined;
         }
         return undefined;
+    }
+
+    function getSubCoin(list: ListTokens) {
+
+        const _list = list.slice(4, list.length)
+
+        for (let i=0;i<_list.length;i++) {
+            if (_list[i].name === coin.name) {
+                return [ coin ]
+            }
+        }
+        return [ _list[0] ]
     }
 
     useEffect(() => {
@@ -339,11 +352,16 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     }, [type]);
 
     useEffect(() => {
+        props.setSelectToken(coin)
+    }, [coin])
+
+    useEffect(() => {
         if (info) {
             if (info.invoice.tron_withdraw_address === null && props.tron) {
                 setType(0);
             } else if (info.invoice.tron_withdraw_address && props.tron) {
                 setType(1);
+                setCoin(fullListTokens[0])
             }
         }
     }, [info, props.tron]);
@@ -450,7 +468,21 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 </div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(3, 5).map((token, key) => (
+                                    {fullListTokensUp.slice(3, 4).map((token, key) => (
+                                        <Button
+                                            key={key}
+                                            size="l"
+                                            stretched
+                                            className="fix-forpadding"
+                                            onClick={() => chCoinNew(token)}
+                                            mode={coin.name === token.name ? "primary" : "outline"}
+                                            before={<img src={token.icon} className="logo-cur" />}
+                                        >
+                                            {token.name.toUpperCase()}
+                                        </Button>
+                                    ))}
+
+                                    {getSubCoin(fullListTokensUp).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
@@ -557,7 +589,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 addressPolus={
                                                     chain.id === 1
                                                         ? addressPolus.mainnet
-                                                        : addressPolus.polygon
+                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
                                                 }
                                                 amount={info.invoice.asset_amount}
                                                 addressMerchant={info.invoice.evm_withdraw_address}

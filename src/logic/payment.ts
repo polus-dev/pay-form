@@ -62,6 +62,7 @@ export interface ListToken {
 	wrapAlt?: string;
 	namePrice: string;
 	amountIn: number;
+	category: 'stable' | 'native' | 'wrap' | 'other'
 }
 
 export type ListTokens = ListToken[];

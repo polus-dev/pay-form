@@ -99,6 +99,17 @@ export const App: React.FC = () => {
     );
   }
 
+  function fullFilter (type: 'stable' | 'native' | 'wrap' | 'other') {
+	const list = fullListTokens.filter((token) => {
+		if (chain) {
+			return token.address[chain.id as 1 | 56 | 137] !== '0'
+		}
+		return true
+	})
+
+	return list.filter((token) => token.category === type)
+  }
+
   useEffect(() => {
     if (!firstRender) {
       setFirstRender(true);
@@ -193,8 +204,81 @@ export const App: React.FC = () => {
         }
       >
         <Div>
-          <CardGrid size="l">
-            {fullListTokens.map((token, key) => (
+			<h3>Stable Coin</h3>
+          <CardGrid size="m">
+		  {fullFilter('stable').map((token, key) => (
+              <Card key={key}>
+                <SimpleCell
+                  onClick={() => {
+                    setSelectToken(token);
+                    setActiveModal(null);
+                  }}
+                  after={
+                    seletcToken?.name === token.name ? (
+                      <Icon28DoneOutline />
+                    ) : null
+                  }
+                  before={
+                    <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                  }
+                >
+                  {token.name.toUpperCase()}
+                </SimpleCell>
+              </Card>
+            ))}
+          </CardGrid>
+
+		  <h3>Native Coin</h3>
+          <CardGrid size="m">
+		  {fullFilter('native').map((token, key) => (
+              <Card key={key}>
+                <SimpleCell
+                  onClick={() => {
+                    setSelectToken(token);
+                    setActiveModal(null);
+                  }}
+                  after={
+                    seletcToken?.name === token.name ? (
+                      <Icon28DoneOutline />
+                    ) : null
+                  }
+                  before={
+                    <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                  }
+                >
+                  {token.name.toUpperCase()}
+                </SimpleCell>
+              </Card>
+            ))}
+          </CardGrid>
+
+		  <h3>Wrapped Coin</h3>
+          <CardGrid size="m">
+		  {fullFilter('wrap').map((token, key) => (
+              <Card key={key}>
+                <SimpleCell
+                  onClick={() => {
+                    setSelectToken(token);
+                    setActiveModal(null);
+                  }}
+                  after={
+                    seletcToken?.name === token.name ? (
+                      <Icon28DoneOutline />
+                    ) : null
+                  }
+                  before={
+                    <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                  }
+                >
+                  {token.name.toUpperCase()}
+                </SimpleCell>
+              </Card>
+            ))}
+          </CardGrid>
+
+		  <h3>Other Coin</h3>
+          <CardGrid size="m">
+		  {fullFilter('other').map((token, key) => (
               <Card key={key}>
                 <SimpleCell
                   onClick={() => {
@@ -265,6 +349,7 @@ export const App: React.FC = () => {
                       setTron={setTron}
                       tron={tron}
                       seletcToken={seletcToken}
+					  setSelectToken={setSelectToken}
                     />
                   </View>
                 }

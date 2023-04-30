@@ -7,7 +7,7 @@ export interface InvoiceType {
   description: string;
   asset: "usdt" | "usdc" | "weth" | "matic";
   asset_amount: string;
-  status: "pending";
+  status: "pending" | "completed" | "expired";
   evm_withdraw_address: string;
   tron_withdraw_address: string | undefined;
   selected_blockchain: null;
