@@ -230,7 +230,7 @@ export class Payment {
 
 	public async checkAllowance(
 		token: "A" | "B",
-		type: "permit" | "polus"
+		type: "permit" | "polus" | "router"
 	): Promise<BigNumber> {
 		let contr = this._tokenA.contract;
 		if (token === "B") {
@@ -239,7 +239,7 @@ export class Payment {
 		if (!contr) throw new Error("checkAllowance:contract is undefined");
 
 		const toPermit =
-			type === "permit" ? this._addressPermit : this._addressPolusContract;
+			type === "permit" ? this._addressPermit : type === "polus" ? this._addressPolusContract : this._addressRouter;
 
 		try {
 			const allow: BigNumber = await contr.allowance(
@@ -357,44 +357,49 @@ export class Payment {
 		};
 	}
 
-	public async Approve(
+	public Approve(
 		address: string | "permit" | "polus" | "router",
 		type: 0 | 1 = 1
-	): Promise<ethers.providers.TransactionRequest | any> {
-		if (type === 0) {
-			if (!this._tokenA.contract)
-				throw new Error("Approve:contract is undefined");
-			const data = this._tokenA.contract.interface.encodeFunctionData(
-				"approve",
-				[
-					address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address === 'router' ? UNIVERSAL_ROUTER : address,
-					ethers.constants.MaxUint256,
-				]
-			);
-			const tr: ethers.providers.TransactionRequest = {
-				to: this._tokenA.contract.address,
-				value: 0,
-				chainId: this._networkId,
-				data,
-			};
+	): {
+		address: `0x${string}`;
+		abi: any;
+		functionName: string;
+		args: any[];
+	} {
+		// if (type === 0) {
+		// 	if (!this._tokenA.contract)
+		// 		throw new Error("Approve:contract is undefined");
+		// 	const data = this._tokenA.contract.interface.encodeFunctionData(
+		// 		"approve",
+		// 		[
+		// 			address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address === 'router' ? UNIVERSAL_ROUTER : address,
+		// 			ethers.constants.MaxUint256,
+		// 		]
+		// 	);
+		// 	const tr: ethers.providers.TransactionRequest = {
+		// 		to: this._tokenA.contract.address,
+		// 		value: 0,
+		// 		chainId: this._networkId,
+		// 		data,
+		// 	};
 
-			const estimatedGas = await this._provider.estimateGas(tr);
-			const gasPrice = await this._provider.getGasPrice();
+		// 	const estimatedGas = await this._provider.estimateGas(tr);
+		// 	const gasPrice = await this._provider.getGasPrice();
 
-			tr.gasPrice = gasPrice;
-			tr.gasLimit = estimatedGas;
-			return tr;
-		}
+		// 	tr.gasPrice = gasPrice;
+		// 	tr.gasLimit = estimatedGas;
+		// 	return tr;
+		// }
 
 		if (!this._tokenA.contract)
 			throw new Error("Approve:contract is undefined");
 
 		return {
-			address: this._tokenA.contract.address,
+			address: this._tokenA.contract.address as `0x${string}`,
 			abi: token_abi,
 			functionName: "approve",
 			args: [
-				address === "permit" ? this._addressPermit : address,
+				address === "permit" ? this._addressPermit : address === 'polus' ? this._addressPolusContract : address === 'router' ? UNIVERSAL_ROUTER : address,
 				ethers.constants.MaxUint256,
 			],
 		};
