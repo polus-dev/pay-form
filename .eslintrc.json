@@ -11,11 +11,15 @@
     "airbnb-typescript/base",
     "plugin:import/errors",
     "plugin:import/warnings",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "prettier"
   ],
   "ignorePatterns": [".eslintrc.json"],
   "root": true,
-  "env": { "node": true, "jest": true },
+  "env": {
+    "node": true,
+    "jest": true
+  },
   "settings": {
     "import/resolver": {
       "typescript": {
@@ -25,7 +29,12 @@
     }
   },
   "rules": {
-    "max-len": ["error", { "code": 120 }],
+    "max-len": [
+      "error",
+      {
+        "code": 120
+      }
+    ],
     "no-console": "off",
     "no-shadow": "off",
     "no-bitwise": "off",
@@ -37,9 +46,20 @@
     "no-promise-executor-return": "off",
     "function-paren-newline": "off",
     "array-bracket-spacing": ["error", "always"],
-    "object-curly-newline": ["error", { "multiline": true }],
+    "object-curly-newline": [
+      "error",
+      {
+        "multiline": true
+      }
+    ],
     "no-useless-constructor": "off",
-    "@typescript-eslint/indent": ["error", 4, { "SwitchCase": 1 }],
+    "@typescript-eslint/indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1
+      }
+    ],
     "@typescript-eslint/no-unused-expressions": "off",
     "@typescript-eslint/space-before-function-paren": ["error", "always"],
     "@typescript-eslint/semi": ["error", "never"],
@@ -51,7 +71,9 @@
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
-      { "argsIgnorePattern": "^_" }
+      {
+        "argsIgnorePattern": "^_"
+      }
     ],
     "@typescript-eslint/no-explicit-any": "off",
     "import/prefer-default-export": "off",
@@ -60,11 +82,24 @@
     "lines-between-class-members": [
       "error",
       "always",
-      { "exceptAfterSingleLine": true }
+      {
+        "exceptAfterSingleLine": true
+      }
     ],
     "no-underscore-dangle": "off",
-    "arrow-parens": [2, "as-needed", { "requireForBlockBody": true }],
-    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "arrow-parens": [
+      2,
+      "as-needed",
+      {
+        "requireForBlockBody": true
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ],
     "@typescript-eslint/member-delimiter-style": [
       "error",
       {
@@ -80,7 +115,9 @@
     ],
     "@typescript-eslint/explicit-module-boundary-types": [
       "error",
-      { "allowedNames": ["transform"] }
+      {
+        "allowedNames": ["transform"]
+      }
     ],
     "import/extensions": [
       "error",

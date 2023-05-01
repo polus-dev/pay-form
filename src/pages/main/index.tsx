@@ -1,304 +1,403 @@
 import {
-    Button, Div,
-    Panel, PanelHeader, Spinner
-} from '@vkontakte/vkui'
+    Button,
+    Div,
+    Panel,
+    PanelHeader,
+    Progress,
+    Spinner,
+} from "@vkontakte/vkui";
 
-import React, { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { useWeb3Modal } from '@web3modal/react'
+import { useWeb3Modal } from "@web3modal/react";
 
-import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi'
-import { mainnet, polygon } from 'wagmi/chains'
-import { Icon28ChevronDownOutline, Icon28WarningTriangleOutline } from '@vkontakte/icons'
+import { useAccount, useNetwork, useSwitchNetwork } from "wagmi";
+import { polygon } from "wagmi/chains";
+import {
+    Icon28ChevronDownOutline,
+    Icon28WarningTriangleOutline,
+} from "@vkontakte/icons";
 
-import moment from 'moment'
-import logo from '../../img/logo.svg'
-import maticLogo from '../../img/matic.svg'
-import otherLogo from '../../img/other.svg'
-import etherLogo from '../../img/weth.svg'
+import moment from "moment";
+import logo from "../../img/logo.svg";
+import maticLogo from "../../img/matic.svg";
+import otherLogo from "../../img/other.svg";
+import etherLogo from "../../img/weth.svg";
+import daiLogo from "../../img/dai.svg";
 
-import btn from '../../img/btn.jpg'
-import wc from '../../img/wc.svg'
+import btn from "../../img/btn.jpg";
+import wc from "../../img/wc.svg";
 
-import { tokens } from '../../logic/tokens'
-import { Invoice, ListCurrencies, TokenPolus } from '../../logic/types'
-import { PolusApi } from '../../logic/api'
-import { ProcessAll } from './process'
+import { fullListTokens } from "../../logic/tokens";
+import { Invoice } from "../../logic/types";
+import { Info, InvoiceType, PolusApi } from "../../logic/api";
+import { PolusChainId, ProcessAll } from "./processTest";
+
+import { ProcessAll as Process } from "./process";
+import { ListToken, ListTokens, Payment } from "../../logic/payment";
+import { NtoStr, getParameterByName } from "../../logic/utils";
+import { Tron } from "./tron";
 
 const addressPolus = {
-    polygon: '0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2',
-    mainnet: '0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0'
-}
+    polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
+    mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
+    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
+};
 
 interface MainProps {
-    id: string,
-    setActiveModal: Function,
-    consoleLog: Function,
-    isDesktop: boolean,
-    openPop: Function,
-    closePop: Function
+    id: string;
+    setActiveModal: Function;
+    consoleLog: Function;
+    isDesktop: boolean;
+    openPop: Function;
+    closePop: Function;
+    setTron: Function;
+    tron: boolean;
+    seletcToken: ListToken | undefined,
+    setSelectToken: Function
 }
 
 interface ErrorType {
-    text: string,
-    code: number
-}
-
-function getParameterByName (name: string, url = window.location.href) {
-    const name1 = name.replace(/[\[\]]/g, '\\$&')
-    const regex = new RegExp(`[?&]${name1}(=([^&#]*)|&|#|$)`)
-    const results = regex.exec(url)
-    if (!results) return null
-    if (!results[2]) return ''
-    return decodeURIComponent(results[2].replace(/\+/g, ' '))
-}
-
-function fixAmount (nanoAmount: number, type: boolean, nano?: number) {
-    const amount = type && nano ? (nanoAmount / (10 ** nano)) : nanoAmount
-    // console.log(amount)
-    let stringAmount = Number(amount).toFixed(2)
-
-    if (Number(stringAmount) === 0) {
-        stringAmount = Number(amount).toFixed(4)
-    }
-    return stringAmount
+    text: string;
+    code: number;
 }
 
 export const Main: React.FC<MainProps> = (props: MainProps) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
-    const [ type, setType ] = React.useState<number>(0)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false);
+    const [type, setType] = React.useState<number>(0);
 
-    const [ ready, setReady ] = React.useState<boolean>(false)
-    const [ payed, setPayed ] = React.useState<boolean>(false)
+    const [ready, setReady] = React.useState<boolean>(false);
+    const [payed, setPayed] = React.useState<boolean>(false);
 
-    const [ timer, setTimer ] = React.useState<string>('00:00')
+    const [timer, setTimer] = React.useState<string>("00:00");
 
-    const [ tokensFromChain, setTokensFromChain ] = React.useState<TokenPolus[]>(tokens.polygon)
+    const [reRender, setRerender] = React.useState<boolean>(false);
 
-    const [ coin, setCoin ] = React.useState<TokenPolus>(tokens.polygon[0])
-    const [ coinInvoice, setCoinInvoice ] = React.useState<string>('0')
-    const [ coinMerchant, setCoinMerchant ] = React.useState<TokenPolus>(tokens.polygon[0])
+    const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0]);
+    const [coinInvoice, setCoinInvoice] = React.useState<string>("0");
+    const [coinMerchant, setCoinMerchant] = React.useState<ListToken>(
+        fullListTokens[0]
+    );
 
-    const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
-    const { address, isConnected } = useAccount()
+    const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
+    const { address, isConnected } = useAccount();
 
-    const { chain } = useNetwork()
-    const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
+    const { chain } = useNetwork();
+    const { chains, error, isLoading, pendingChainId, switchNetwork } =
+        useSwitchNetwork();
 
-    const [ info, setInfo ] = React.useState<Invoice | undefined | false>(undefined)
+    const [info, setInfo] = React.useState<Info | undefined | false>(undefined);
 
-    const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(undefined)
+    const [errorObj, setErrorObj] = React.useState<ErrorType | undefined>(
+        undefined
+    );
 
-    const location = useLocation()
-    const history = useNavigate()
+    const [progress, setProgress] = React.useState<number>(0);
 
-    const polusApi = new PolusApi()
+    const [fullListTokensUp, setFullListTokensUp] =
+        React.useState<ListTokens>(fullListTokens);
 
-    function startTimer (inf: Invoice) {
-        const eventTime = inf.exp // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
-        const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
-        const diffTime = eventTime - currentTime
-        let duration = moment.duration(diffTime * 1000, 'milliseconds')
-        const interval = 1000
+    const location = useLocation();
+    const history = useNavigate();
 
-        if (diffTime < 0) return
+    const polusApi = new PolusApi();
+
+    function startTimer(inf: InvoiceType) {
+        const eventTime = Number(inf.expires_at); // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
+        const currentTime = Date.now() / 1000; // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
+        const diffTime = eventTime - currentTime;
+        let duration = moment.duration(diffTime * 1000, "milliseconds");
+        const interval = 1000;
+
+        if (diffTime < 0) return;
 
         const interv = setInterval(() => {
-            duration = moment.duration(Number(duration) - interval, 'milliseconds')
-            setTimer(`${duration.minutes()}:${duration.seconds()}`)
-        }, interval)
+            duration = moment.duration(Number(duration) - interval, "milliseconds");
+            setTimer(`${duration.minutes()}:${duration.seconds()}`);
+        }, interval);
     }
-    function changeCoin (coin1: TokenPolus, chainID?: number) {
-        setCoin(coin1)
-        const chainIdLocal = chain ? chain.id : chainID
-        if (!info || !chainIdLocal) {
-            console.error('changeCoin: info or chain')
-            return undefined
-        }
-        const nameCoin = coin1.name.toLowerCase() as ListCurrencies
-        if (chainIdLocal === 1) {
-            setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
-            const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
-            const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
-            setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
+    // function changeCoin (coin1: TokenPolus, chainID?: number) {
+    //     setCoin(coin1)
+    //     const chainIdLocal = chain ? chain.id : chainID
+    //     if (!info || !chainIdLocal) {
+    //         console.error('changeCoin: info or chain')
+    //         return undefined
+    //     }
+    //     const nameCoin = coin1.name.toLowerCase() as ListCurrencies
 
-            if (tokenUser) setCoin(tokenUser)
-        }
-        if (chainIdLocal === 137) {
-            setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
+    //     if (chainIdLocal === 1) {
+    //         setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
+    //         const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
+    //         const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
+    //         setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
 
-            const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-            setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+    //     if (chainIdLocal === 137) {
+    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
 
-            const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-            if (tokenUser) setCoin(tokenUser)
+    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
+    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+
+    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+
+    //     if (chainIdLocal === 56) {
+    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
+
+    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
+    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
+
+    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
+    //         if (tokenUser) setCoin(tokenUser)
+    //     }
+    //     // console.log('changeCoin:', info.currencies.polygon[nameCoin])
+    //     return true
+    // }
+
+    function chCoinNew(token: ListToken) {
+        setCoin(token);
+        if (info) {
+            const merchantToken = fullListTokensUp.filter(
+                (t) => t.name.toLowerCase() === info.invoice.asset.toLowerCase()
+            )[0];
+            setCoinMerchant(merchantToken);
+            console.log("Select merchant", merchantToken);
         }
-        // console.log('changeCoin:', info.currencies.polygon[nameCoin])
-        return true
+        console.log("Select coin", token);
     }
 
-    async function swithNet (id: string | undefined | number) {
-        props.openPop()
-        console.log('swithNet', id)
+    async function swithNet(id: number) {
+        props.openPop();
+        console.log("swithNet", id);
         if (!switchNetwork || !id) {
-            return false
+            return false;
         }
 
-        await switchNetwork(id === 'ethereum' ? mainnet.id : polygon.id)
-        return true
+        await switchNetwork(id);
+        return true;
     }
 
-    async function getInfo (uuid1: string) {
-        const data = await polusApi.getPaymentInfo(uuid1)
+    async function getInfo(uuid1: string) {
+        // const data = await polusApi.getPaymentInfo(uuid1)
+        const data = await polusApi.getInfo(uuid1);
         if (!data) {
-            props.consoleLog('Error load info', false)
-            setInfo(false)
+            props.consoleLog("Error load info", false);
+            setInfo(false);
             setErrorObj({
-                text: 'Error load data invoice',
-                code: 1002
-            })
-            return undefined
+                text: "Error load data invoice",
+                code: 1002,
+            });
+            return undefined;
         }
 
-        if (data.status === 'completed') {
-            // setErrorObj({
-            //     text: 'Invoice is payed',
-            //     code: 1003
-            // })
+        if (data.invoice.status === 'completed') {
+            setErrorObj({
+                text: 'Invoice is payed',
+                code: 1003
+            })
         }
-        if (data.status === 'expired') {
+        if (data.invoice.status === 'expired') {
             setErrorObj({
                 text: 'Invoice is expired',
                 code: 1004
             })
         }
-        if (timer === '00:00') {
-            startTimer(data)
+        if (timer === "00:00") {
+            startTimer(data.invoice);
         }
 
-        setDefaultChain(polygon)
-        console.log('info', data)
-        setInfo(data)
-        return true
+        setDefaultChain(polygon);
+        console.log("info", data);
+        setInfo(data);
+
+        const currentT = fullListTokens.filter(
+            (t) => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
+        )[0];
+
+        const fullList = await Payment.getAllAmountIn(
+            data.invoice.asset_amount.toString(),
+            currentT
+        );
+
+        setFullListTokensUp(fullList);
+
+        chCoinNew(fullList.filter((t) => t.namePrice === coin.namePrice)[0]); // update amountIn
+
+        setRerender(!reRender);
+
+        return true;
     }
 
-    async function startPay () {
+    async function startPay() {
         if (!ready) {
-            await swithNet('polygon')
+            await swithNet(137);
         }
 
-        setType(1)
+        setType(1);
 
         if (!chain || !address) {
-            return false
+            return false;
         }
         // const PolusUtils = new PolusTokenUtils(coin, chain.id, address)
         // PolusUtils.isApprove()
 
-        return true
+        return true;
     }
 
-    function generatedUrlRedirect (status: string) {
+    function generatedUrlRedirect(status: string) {
         if (info) {
-            let url = 'https://'
-            url += info.merchant_object_info.website.replace('https://', '')
-            url += info.merchant_object_info.redirect_url
-            url += `?status=${status}&uuid=${info.uuid}`
-            return url
+            if (status === "sucess") {
+                return info.merchant?.success_redirect_url ?? undefined;
+            }
+            return info.merchant?.fail_redirect_url ?? undefined;
         }
-        return '/'
+        return undefined;
+    }
+
+    function getSubCoin(list: ListTokens) {
+
+        const _list = list.slice(4, list.length)
+
+        for (let i=0;i<_list.length;i++) {
+            if (_list[i].name === coin.name) {
+                return [ coin ]
+            }
+        }
+        return [ _list[0] ]
     }
 
     useEffect(() => {
         if (isLoading === false) {
             if (error) {
-                console.log(error)
-                props.consoleLog('Error network change', false)
-                props.closePop(false)
+                console.log(error);
+                props.consoleLog("Error network change", false);
+                props.closePop(false);
             } else {
-                props.closePop(true)
+                props.closePop(true);
             }
         }
-    }, [ isLoading ])
+    }, [isLoading]);
 
     useEffect(() => {
-        console.log('pendingChainId', pendingChainId)
-    }, [ pendingChainId ])
+        console.log("pendingChainId", pendingChainId);
+    }, [pendingChainId]);
 
     useEffect(() => {
-        console.log('chain', chain)
+        console.log("chain", chain);
         if (!chain) {
-            setReady(false)
-            console.error('not found network')
-        } else if (chain.id === 1 || chain.id === 137) {
-            setReady(true)
+            setReady(false);
+            console.error("not found network");
+        } else if (chain.id === 1 || chain.id === 137 || chain.id === 56) {
+            setReady(true);
 
-            if (chain.id === 1) {
-                setTokensFromChain(tokens.mainnet)
-            }
-
-            if (chain.id === 137) {
-                setTokensFromChain(tokens.polygon)
-            }
-
-            changeCoin(coin, chain.id)
+            // changeCoin(coin, chain.id)
         } else {
-            setReady(false)
+            setReady(false);
             // swithNet('polygon')
         }
-        props.closePop(false)
-        close()
-    }, [ chain ])
+        props.closePop(false);
+        props.setActiveModal(null);
+        close();
+    }, [chain]);
+
+    useEffect(() => {
+        if (props.seletcToken) {
+            chCoinNew(props.seletcToken);
+        }
+    }, [props.seletcToken])
 
     useEffect(() => {
         if (info) {
-            changeCoin(tokens.polygon[0], 137)
+            chCoinNew(fullListTokensUp[0]);
+            // changeCoin(tokens.polygon[0], 137)
         }
-    }, [ info ])
+    }, [info]);
+
+    useEffect(() => {
+        if (isConnected) {
+            setProgress(25);
+        } else {
+            setProgress(0);
+        }
+    }, [isConnected]);
 
     useEffect(() => {
         if (!firstRender) {
-            setFirstRender(true)
+            setFirstRender(true);
 
-            const uuid1 = getParameterByName('uuid')
-            if (uuid1 && uuid1 !== '') {
+            const uuid1 = getParameterByName("uuid");
+            if (uuid1 && uuid1 !== "") {
                 // setUuid(uuid1)
-                getInfo(uuid1)
+                getInfo(uuid1);
+
+                // setInterval(() => getInfo(uuid1), 5000);
             } else {
                 setErrorObj({
-                    text: 'Invalid uuid param',
-                    code: 1001
-                })
-                setInfo(false)
+                    text: "Invalid uuid param",
+                    code: 1001,
+                });
+                setInfo(false);
+            }
+
+        }
+    }, []);
+
+    useEffect(() => {
+        if (type === 0) {
+            props.setTron(false);
+        }
+    }, [type]);
+
+    useEffect(() => {
+        props.setSelectToken(coin)
+    }, [coin])
+
+    useEffect(() => {
+        if (info) {
+            if (info.invoice.tron_withdraw_address === null && props.tron) {
+                setType(0);
+            } else if (info.invoice.tron_withdraw_address && props.tron) {
+                setType(1);
+                setCoin(fullListTokens[0])
             }
         }
-    }, [])
+    }, [info, props.tron]);
 
     return (
-        <Panel id={props.id}>
-
+        <Panel id={reRender ? props.id : "render"}>
             <PanelHeader separator={false} />
 
-            {!errorObj && info
-                ? <Div className="pay-block">
-
-                    <div className="domain-block">
-                        <div className="domain-amount-block">
-                            <span>{info.merchant_object_info.website.replace('https://', '')}</span>
-                            <div className="amount-block">
-                                {fixAmount(Number(coinInvoice), true, coin.nano)}
-                                <span>{coin.name.toUpperCase()}</span>
+            {!errorObj && info && coin ? (
+                <div className="pay-block">
+                    <div>
+                        <div className="domain-block">
+                            <div className="domain-amount-block">
+                                <span>{info.merchant?.domain.replace("https://", "")}</span>
+                                <div className="amount-block">
+                                    {NtoStr(coin.amountIn)}
+                                    <span>{coin.name.toUpperCase()}</span>
+                                </div>
                             </div>
+                            <span
+                                className="opacity-block"
+                                style={{ marginTop: "10px", display: "block" }}
+                            >
+                                {info.invoice.description}
+                            </span>
                         </div>
-                        <span className="opacity-block" style={{ marginTop: '10px', display: 'block' }}>
-                            {info.description}
-                        </span>
                     </div>
-
-                    {type === 0
-                        ? <div>
-                            {/* <SegmentedControl
+                    <Progress
+                        aria-labelledby="progresslabel"
+                        value={progress}
+                        style={{ marginTop: "16px" }}
+                    />
+                    <div>
+                        {type === 0 ? (
+                            <div>
+                                {/* <SegmentedControl
                                 style={{ marginTop: '24px' }}
                                 size="l"
                                 onChange={e => swithNet(e)}
@@ -317,86 +416,97 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 ]}
                             /> */}
 
-                            <div className="text-one">Choose network</div>
+                                <div className="text-one">Choose network</div>
 
-                            <div className="selector" onClick={() => open({ route: 'SelectNetwork' })}>
-                                {chain
-                                    ? <div className="selector-right">
-                                        {chain.id === 1 ? <img src={etherLogo} /> : null }
-                                        {chain.id === 137 ? <img src={maticLogo} /> : null }
-                                        {chain.id !== 137 && chain.id !== 1 ? <img src={otherLogo} width={24} /> : '' }
-                                        <span>{chain.name}</span>
-                                    </div>
-                                    : <div className="selector-right">
-                                        <img src={maticLogo} />
-                                        <span>Polygon</span>
-                                    </div>}
+                                <div
+                                    className="selector"
+                                    onClick={() => {
+                                        // if (isConnected) {
+                                        props.setActiveModal("network");
+                                        // } else {
+                                        //     open();
+                                        // }
+                                    }}
+                                >
+                                    {chain ? (
+                                        <div className="selector-right">
+                                            {chain.id === 1 ? <img src={etherLogo} /> : null}
+                                            {chain.id === 137 ? <img src={maticLogo} /> : null}
+                                            {chain.id !== 137 && chain.id !== 1 ? (
+                                                <img src={otherLogo} width={24} />
+                                            ) : (
+                                                ""
+                                            )}
+                                            <span>{chain.name}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="selector-right">
+                                            <img src={maticLogo} />
+                                            <span>Polygon</span>
+                                        </div>
+                                    )}
 
-                                <Icon28ChevronDownOutline />
-                            </div>
+                                    <Icon28ChevronDownOutline />
+                                </div>
 
-                            <div className="text-one">Choose currency</div>
+                                <div className="text-one">Choose currency</div>
 
-                            <div className="btn-block" >
-                                {!chain || (chain && chain.id === 137) ? tokens.polygon.map((token, key) => (
+                                <div className="btn-block">
+                                    {fullListTokensUp.slice(0, 3).map((token, key) => (
+                                        <Button
+                                            key={key}
+                                            size="l"
+                                            stretched
+                                            className="fix-forpadding"
+                                            onClick={() => chCoinNew(token)}
+                                            mode={coin.name === token.name ? "primary" : "outline"}
+                                            before={<img src={token.icon} className="logo-cur" />}
+                                        >
+                                            {token.name.toUpperCase()}
+                                        </Button>
+                                    ))}
+                                </div>
+
+                                <div className="btn-block">
+                                    {fullListTokensUp.slice(3, 4).map((token, key) => (
+                                        <Button
+                                            key={key}
+                                            size="l"
+                                            stretched
+                                            className="fix-forpadding"
+                                            onClick={() => chCoinNew(token)}
+                                            mode={coin.name === token.name ? "primary" : "outline"}
+                                            before={<img src={token.icon} className="logo-cur" />}
+                                        >
+                                            {token.name.toUpperCase()}
+                                        </Button>
+                                    ))}
+
+                                    {getSubCoin(fullListTokensUp).map((token, key) => (
+                                        <Button
+                                            key={key}
+                                            size="l"
+                                            stretched
+                                            className="fix-forpadding"
+                                            onClick={() => chCoinNew(token)}
+                                            mode={coin.name === token.name ? "primary" : "outline"}
+                                            before={<img src={token.icon} className="logo-cur" />}
+                                        >
+                                            {token.name.toUpperCase()}
+                                        </Button>
+                                    ))}
+
                                     <Button
-                                        key={key}
                                         size="l"
                                         stretched
-                                        className='fix-forpadding'
-                                        onClick={() => changeCoin(token, 137)}
-                                        mode={coin.name === token.name ? 'primary' : 'outline'}
-                                        before={
-                                            <img src={token.icon} />
-                                        }>{token.name.toUpperCase()}</Button>
-                                )) : null}
-
-                                {chain && chain.id === 1 ? tokens.mainnet.map((token, key) => (
-                                    <Button
-                                        key={key}
-                                        size="l"
-                                        stretched
-                                        className='fix-forpadding'
-                                        onClick={() => changeCoin(token)}
-                                        mode={coin.name === token.name ? 'primary' : 'outline'}
-                                        before={
-                                            <img src={token.icon} />
-                                        }>{token.name.toUpperCase()}</Button>
-                                )) : null}
-
-                            </div>
-
-                            {/* <div className="btn-block" >
-
-                                <Button
-                                    size="l"
-                                    stretched
-                                    onClick={() => null}
-                                    mode={'outline'}
-                                    before={
-                                        <img src={otherLogo} width={24} />
-                                    }>Other</Button>
-
-                                <Button
-                                    size="l"
-                                    stretched
-                                    onClick={() => null}
-                                    mode={'outline'}
-                                    before={
-                                        <img src={otherLogo} width={24} />
-                                    }>Other</Button>
-
-                                <Button
-                                    size="l"
-                                    stretched
-                                    onClick={() => null}
-                                    mode={'outline'}
-                                    before={
-                                        <img src={otherLogo} width={24} />
-                                    }>Other</Button>
-
-                            </div> */}
-                            {/* <div className="block-tax" style={{ marginTop: '24px' }}>
+                                        onClick={() => props.setActiveModal("coins")}
+                                        mode={"outline"}
+                                        before={<img src={otherLogo} width={24} />}
+                                    >
+                                        Other
+                                    </Button>
+                                </div>
+                                {/* <div className="block-tax" style={{ marginTop: '24px' }}>
                                 <MiniInfoCell
                                     before={null}
                                     textWrap="full"
@@ -435,104 +545,179 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
                             </div> */}
 
-                            <span className="timer-block" >The invoice is active in {timer}</span>
+                                <span className="timer-block">
+                                    The invoice is active in {timer}
+                                </span>
 
-                            {/* <Web3Button /> */}
+                                {/* <Web3Button /> */}
 
-                            {isConnected
-                                ? <Button
-                                    stretched
-                                    size='l'
-                                    className="btn-connect"
-                                    style={{ backgroundImage: `url(${btn})` }}
-                                    onClick={() => startPay()}
-                                >
-                    Pay {fixAmount(Number(coinInvoice), true, coin.nano)} {coin.name.toUpperCase()}
-                                </Button>
-                                : <Button
-                                    stretched
-                                    size='l'
-                                    className="btn-connect"
-                                    style={{ backgroundImage: `url(${btn})` }}
-                                    before={
-                                        <img src={wc} />
-                                    }
-                                    onClick={() => open()}
-                                >Connect Wallet</Button>
-                            }
+                                {isConnected ? (
+                                    <Button
+                                        stretched
+                                        size="l"
+                                        className="btn-connect"
+                                        style={{ backgroundImage: `url(${btn})` }}
+                                        onClick={() => startPay()}
+                                    >
+                                        Pay {NtoStr(coin.amountIn)} {coin.name.toUpperCase()}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        stretched
+                                        size="l"
+                                        className="btn-connect"
+                                        style={{ backgroundImage: `url(${btn})` }}
+                                        before={<img src={wc} />}
+                                        onClick={() => open()}
+                                    >
+                                        Connect Wallet
+                                    </Button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="proccess-block">
+                                {address && chain ? (
+                                    <div>
+                                        {/* FIX: fix type   */}
+                                        {(coin.native && coin.native === coinMerchant.native) ||
+                                            coin.address[chain.id as PolusChainId] ===
+                                            coinMerchant.address[chain.id as PolusChainId] ? (
+                                            <Process
+                                                id={"all1"}
+                                                address={address}
+                                                tokenAddress={coin.address[chain.id as PolusChainId]}
+                                                addressPolus={
+                                                    chain.id === 1
+                                                        ? addressPolus.mainnet
+                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
+                                                }
+                                                amount={info.invoice.asset_amount}
+                                                addressMerchant={info.invoice.evm_withdraw_address}
+                                                uuid={info.invoice.id.replaceAll("-", "")}
+                                                currentAddressToken={
+                                                    coinMerchant.address[chain.id as PolusChainId]
+                                                }
+                                                consoleLog={props.consoleLog}
+                                                setPayed={setPayed}
+                                                fee={info.invoice.fee!}
+                                                asset_amount_decimals_without_fee={
+                                                    info.invoice.asset_amount_decimals_without_fee!
+                                                }
+                                                setProgress={setProgress}
+                                                isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
 
+                                            />
+                                        ) : (
+                                            <ProcessAll
+                                                id={"all1"}
+                                                address={address}
+                                                uuid={info.invoice.id.replaceAll("-", "")}
+                                                consoleLog={props.consoleLog}
+                                                setPayed={setPayed}
+                                                setProgress={setProgress}
+                                                // NOTE: chainId must be a restriction of the supported chains
+                                                chainId={chain.id as PolusChainId}
+                                                addressMerchant={info.invoice.evm_withdraw_address}
+                                                amountOut={info.invoice.asset_amount}
+                                                tokenA={coin}
+                                                tokenB={coinMerchant}
+                                                fullListTokensUp={fullListTokensUp}
+                                                fee={info.invoice.fee!}
+                                                asset_amount_decimals_without_fee={
+                                                    info.invoice.asset_amount_decimals_without_fee!
+                                                }
+                                                asset_amount_decimals={info.invoice.asset_amount_decimals!}
+                                            />
+                                        )}
+                                    </div>
+                                ) : null}
+
+                                {props.tron ? (
+                                    <Tron
+                                        id="tron1"
+                                        address={info.invoice.tron_withdraw_address ?? ""}
+                                    />
+                                ) : null}
+
+                                {payed ? (
+                                    <Button
+                                        stretched
+                                        size="l"
+                                        className="btn-connect fix-padding"
+                                        style={{ backgroundImage: `url(${btn})` }}
+                                        href={generatedUrlRedirect("success")}
+                                    >
+                                        Back to store
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        stretched
+                                        size="l"
+                                        className="btn-connect"
+                                        style={{ backgroundImage: `url(${btn})` }}
+                                        onClick={() => setType(0)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+
+                        <small className="small-block">
+                            By making a payment, you agree to the <a href="">Terms of Use</a>
+                            <br />
+                            and <a href="">Privacy Policy</a>
+                        </small>
+
+                        <div className="logo-block">
+                            <span>Powered by </span>
+                            <a href="https://poluspay.com" target="_blank">
+                                <img src={logo} />
+                            </a>
                         </div>
-                        : <div className="proccess-block">
-                            {address && chain
-                                ? <ProcessAll
-                                    id={'all1'}
-                                    address={address}
-                                    tokenAddress={coin.address}
-                                    addressPolus={chain.id === 1 ? addressPolus.mainnet : addressPolus.polygon}
-                                    amount={coinInvoice}
-                                    addressMerchant={info.merchant_object_info.address}
-                                    uuid={info.uuid_hex}
-                                    currentAddressToken={coinMerchant.address}
-                                    consoleLog={props.consoleLog}
-                                    setPayed={setPayed}
-                                />
-                                : null }
-
-                            {payed ? <Button
-                                stretched
-                                size='l'
-                                className="btn-connect fix-padding"
-                                style={{ backgroundImage: `url(${btn})` }}
-                                href={generatedUrlRedirect('success')}
-                            >Back to store</Button> : <Button
-                                stretched
-                                size='l'
-                                className="btn-connect"
-                                style={{ backgroundImage: `url(${btn})` }}
-                                onClick={() => setType(0)}
-                            >Cansel</Button>}
-                        </div> }
-
-                    <small className="small-block">
-                        By making a payment, you agree to the <a href="" >Terms of Use</a>
-                        <br />and  <a href="" >Privacy Policy</a>
-                    </small>
-
-                    
-                    <div className="logo-block">
-                        <span>Powered by </span>
-                        <a href="https://poluspay.com" target="_blank" >
-                            <img src={logo} />
-                        </a>
+                    </div>
+                </div>
+            ) : null}
+            {!errorObj && !info ? (
+                <Div className="pay-block">
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexDirection: "column",
+                        }}
+                    >
+                        <Spinner size="large" style={{ margin: "20px 0" }} />
                     </div>
                 </Div>
-                : null
-            }
-            {!errorObj && !info
-                ? <Div className="pay-block">
-                    <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-                        <Spinner size="large" style={{ margin: '20px 0' }} />
-                    </div>
-                </Div> : null}
+            ) : null}
 
-            {errorObj
-                ? <Div className="pay-block">
-                    <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-                        <Icon28WarningTriangleOutline fill="var(--destructive)" />
-                        <span style={{ margin: '16px 0' }}>{errorObj.text}</span>
-
-                    </div>
-                    {info ? <Button
-                        stretched
-                        size='l'
-                        className="btn-connect"
-                        style={{ backgroundImage: `url(${btn})` }}
-                        // onClick={() => startPay()}
-                        href={generatedUrlRedirect('error')}
+            {errorObj ? (
+                <Div className="pay-block">
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexDirection: "column",
+                        }}
                     >
-                    Back to store
-                    </Button> : null }
-                </Div> : null}
+                        <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" />
+                        <span style={{ margin: "16px 0" }}>{errorObj.text}</span>
+                    </div>
+                    {info ? (
+                        <Button
+                            stretched
+                            size="l"
+                            className="btn-connect"
+                            style={{ backgroundImage: `url(${btn})` }}
+                            // onClick={() => startPay()}
+                            href={generatedUrlRedirect("error")}
+                        >
+                            Back to store
+                        </Button>
+                    ) : null}
+                </Div>
+            ) : null}
         </Panel>
-    )
-}
+    );
+};
