@@ -80,10 +80,11 @@ interface ProcessType
 	fullListTokensUp: ListTokens;
 }
 
+const isMetaMask = window.ethereum?.isMetaMask;
+
 const ProcessOne: React.FC<ProcessType> = (props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-	const isMetaMask = window.ethereum?.isMetaMask;
 
 	const { payClass } = props;
 
@@ -211,8 +212,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 	const { payClass } = props;
 
-	if (props.payClass.tokenA.isNative) {
-		// TODO: make check balance of native token
+	if (props.payClass.tokenA.isNative || !isMetaMask) {
 		readyToSend || setReadyToSend(true)
 	}
 
