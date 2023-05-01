@@ -205,7 +205,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
     if (data) {
       console.log("txHash transfer", data);
       debugger
-      props.setPosition(3);
+      props.setPosition(2);
       props.setPayed(true);
       // FIX: 
     }
