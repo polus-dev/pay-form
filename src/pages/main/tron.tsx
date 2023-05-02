@@ -1,4 +1,4 @@
-import { Input, SimpleCell } from "@vkontakte/vkui";
+import { FormItem, Input, SimpleCell } from "@vkontakte/vkui";
 import React, { useEffect } from "react";
 import { QRCode } from "react-qr-svg";
 import usdtLogo from '../../img/usdt.svg';
@@ -8,7 +8,8 @@ interface AllType {
 	id: string;
 	address: string;
 	polusApi: PolusApi;
-	uuid: string
+	uuid: string;
+	amount: string
 }
 
 export const Tron: React.FC<AllType> = (props: AllType) => {
@@ -58,6 +59,14 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
 
 				
 			</div>
+			<FormItem bottom="Check the amount you send in USDT TRON, in case it will be different from 0, funds may be lost">
+				<Input 
+						value={props.amount}
+						onChange={() => null}
+						style={{marginBottom: '10px', marginTop: '10px'}}
+					/>
+			</FormItem>
+
 			<Input 
 					value={props.address}
 					onChange={() => null}

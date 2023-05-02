@@ -645,6 +645,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         address={info.invoice.tron_withdraw_address ?? ""}
                                         polusApi={polusApi}
                                         uuid={info.invoice.id}
+                                        amount={info.invoice.tron_asset_amount_decimals ?? ''}
                                     />
                                 ) : null}
 

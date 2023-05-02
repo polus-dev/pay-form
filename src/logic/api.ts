@@ -17,6 +17,7 @@ export interface InvoiceType {
 	asset_amount_decimals: string | null;
 	asset_amount_decimals_without_fee: string | null;
 	fee: string | null;
+	tron_asset_amount_decimals: string | null;
 }
 
 export interface MerchantType {
