@@ -1,123 +1,126 @@
+/* eslint-disable no-nested-ternary */
+/* eslint-disable @typescript-eslint/naming-convention */
 import {
     Button,
     Div,
     Panel,
     PanelHeader,
     Progress,
-    Spinner,
-} from "@vkontakte/vkui";
+    Spinner
+} from "@vkontakte/vkui"
 
-import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
-import { useWeb3Modal } from "@web3modal/react";
+import { useWeb3Modal } from "@web3modal/react"
 
-import { useAccount, useNetwork, useSwitchNetwork } from "wagmi";
-import { polygon } from "wagmi/chains";
+import { useAccount, useNetwork, useSwitchNetwork } from "wagmi"
+import { polygon } from "wagmi/chains"
 import {
     Icon28CheckCircleFill,
     Icon28ChevronDownOutline,
     Icon28DoneOutline,
-    Icon28WarningTriangleOutline,
-} from "@vkontakte/icons";
+    Icon28WarningTriangleOutline
+} from "@vkontakte/icons"
 
-import moment from "moment";
-import logo from "../../img/logo.svg";
-import maticLogo from "../../img/matic.svg";
-import otherLogo from "../../img/other.svg";
-import etherLogo from "../../img/weth.svg";
-import daiLogo from "../../img/dai.svg";
+import moment from "moment"
+import logo from "../../img/logo.svg"
+import maticLogo from "../../img/matic.svg"
+import otherLogo from "../../img/other.svg"
+import etherLogo from "../../img/weth.svg"
+import daiLogo from "../../img/dai.svg"
 
-import btn from "../../img/btn.jpg";
-import wc from "../../img/wc.svg";
+import btn from "../../img/btn.jpg"
+import wc from "../../img/wc.svg"
 
-import { fullListTokens } from "../../logic/tokens";
-import { Invoice } from "../../logic/types";
-import { Info, InvoiceType, PolusApi } from "../../logic/api";
-import { PolusChainId, ProcessAll } from "./processTest";
+import { fullListTokens } from "../../logic/tokens"
+import { Invoice } from "../../logic/types"
+import { Info, InvoiceType, PolusApi } from "../../logic/api"
+import { PolusChainId, ProcessAll } from "./processTest"
 
-import { ProcessAll as Process } from "./process";
-import { ListToken, ListTokens, Payment } from "../../logic/payment";
-import { NtoStr, getParameterByName } from "../../logic/utils";
-import { Tron } from "./tron";
+import { ProcessAll as Process } from "./process"
+import { ListToken, ListTokens, Payment } from "../../logic/payment"
+import { NtoStr, getParameterByName } from "../../logic/utils"
+import { Tron } from "./tron"
 
 const addressPolus = {
     polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
     mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-};
+    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0"
+}
 
 interface MainProps {
-    id: string;
-    setActiveModal: Function;
-    consoleLog: Function;
-    isDesktop: boolean;
-    openPop: Function;
-    closePop: Function;
-    setTron: Function;
-    tron: boolean;
+    id: string,
+    setActiveModal: Function,
+    consoleLog: Function,
+    isDesktop: boolean,
+    openPop: Function,
+    closePop: Function,
+    setTron: Function,
+    tron: boolean,
     seletcToken: ListToken | undefined,
-    setSelectToken: Function
+    setSelectToken: Function,
+    setAllowTron: Function
 }
 
 interface ErrorType {
-    text: string;
-    code: number;
+    text: string,
+    code: number
 }
 
 export const Main: React.FC<MainProps> = (props: MainProps) => {
-    const [firstRender, setFirstRender] = React.useState<boolean>(false);
-    const [type, setType] = React.useState<number>(0);
+    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [ type, setType ] = React.useState<number>(0)
 
-    const [ready, setReady] = React.useState<boolean>(false);
-    const [payed, setPayed] = React.useState<boolean>(false);
+    const [ ready, setReady ] = React.useState<boolean>(false)
+    const [ payed, setPayed ] = React.useState<boolean>(false)
 
-    const [timer, setTimer] = React.useState<string>("00:00");
+    const [ timer, setTimer ] = React.useState<string>("00:00")
 
-    const [reRender, setRerender] = React.useState<boolean>(false);
+    const [ reRender, setRerender ] = React.useState<boolean>(false)
 
-    const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0]);
-    const [coinInvoice, setCoinInvoice] = React.useState<string>("0");
-    const [coinMerchant, setCoinMerchant] = React.useState<ListToken>(
+    const [ coin, setCoin ] = React.useState<ListToken>(fullListTokens[0])
+    const [ coinInvoice, setCoinInvoice ] = React.useState<string>("0")
+    const [ coinMerchant, setCoinMerchant ] = React.useState<ListToken>(
         fullListTokens[0]
-    );
+    )
 
-    const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
-    const { address, isConnected } = useAccount();
+    const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
+    const { address, isConnected } = useAccount()
 
-    const { chain } = useNetwork();
+    const { chain } = useNetwork()
     const { chains, error, isLoading, pendingChainId, switchNetwork } =
-        useSwitchNetwork();
+        useSwitchNetwork()
 
-    const [info, setInfo] = React.useState<Info | undefined | false>(undefined);
+    const [ info, setInfo ] = React.useState<Info | undefined | false>(undefined)
 
-    const [errorObj, setErrorObj] = React.useState<ErrorType | undefined>(
+    const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(
         undefined
-    );
+    )
 
-    const [progress, setProgress] = React.useState<number>(0);
+    const [ progress, setProgress ] = React.useState<number>(0)
 
-    const [fullListTokensUp, setFullListTokensUp] =
-        React.useState<ListTokens>(fullListTokens);
+    const [ fullListTokensUp, setFullListTokensUp ] =
+        React.useState<ListTokens>(fullListTokens)
 
-    const location = useLocation();
-    const history = useNavigate();
+    const location = useLocation()
+    const history = useNavigate()
 
-    const polusApi = new PolusApi();
+    const polusApi = new PolusApi()
 
-    function startTimer(inf: InvoiceType) {
-        const eventTime = Number(inf.expires_at); // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
-        const currentTime = Date.now() / 1000; // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
-        const diffTime = eventTime - currentTime;
-        let duration = moment.duration(diffTime * 1000, "milliseconds");
-        const interval = 1000;
+    function startTimer (inf: InvoiceType) {
+        const eventTime = Number(inf.expires_at) // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
+        const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
+        const diffTime = eventTime - currentTime
+        let duration = moment.duration(diffTime * 1000, "milliseconds")
+        const interval = 1000
 
-        if (diffTime < 0) return;
+        if (diffTime < 0) return
 
         const interv = setInterval(() => {
-            duration = moment.duration(Number(duration) - interval, "milliseconds");
-            setTimer(`${duration.minutes()}:${duration.seconds()}`);
-        }, interval);
+            duration = moment.duration(Number(duration) - interval, "milliseconds")
+            setTimer(`${duration.minutes()}:${duration.seconds()}`)
+        }, interval)
     }
     // function changeCoin (coin1: TokenPolus, chainID?: number) {
     //     setCoin(coin1)
@@ -159,40 +162,40 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     //     return true
     // }
 
-    function chCoinNew(token: ListToken) {
-        setCoin(token);
+    function chCoinNew (token: ListToken) {
+        setCoin(token)
         if (info) {
             const merchantToken = fullListTokensUp.filter(
-                (t) => t.name.toLowerCase() === info.invoice.asset.toLowerCase()
-            )[0];
-            setCoinMerchant(merchantToken);
-            console.log("Select merchant", merchantToken);
+                t => t.name.toLowerCase() === info.invoice.asset.toLowerCase()
+            )[0]
+            setCoinMerchant(merchantToken)
+            console.log("Select merchant", merchantToken)
         }
-        console.log("Select coin", token);
+        console.log("Select coin", token)
     }
 
-    async function swithNet(id: number) {
-        props.openPop();
-        console.log("swithNet", id);
+    async function swithNet (id: number) {
+        props.openPop()
+        console.log("swithNet", id)
         if (!switchNetwork || !id) {
-            return false;
+            return false
         }
 
-        await switchNetwork(id);
-        return true;
+        await switchNetwork(id)
+        return true
     }
 
-    async function getInfo(uuid1: string) {
+    async function getInfo (uuid1: string) {
         // const data = await polusApi.getPaymentInfo(uuid1)
-        const data = await polusApi.getInfo(uuid1);
+        const data = await polusApi.getInfo(uuid1)
         if (!data) {
-            props.consoleLog("Error load info", false);
-            setInfo(false);
+            props.consoleLog("Error load info", false)
+            setInfo(false)
             setErrorObj({
                 text: "Error load data invoice",
-                code: 1002,
-            });
-            return undefined;
+                code: 1002
+            })
+            return undefined
         }
 
         if (data.invoice.status === 'success') {
@@ -214,58 +217,64 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             })
         }
         if (timer === "00:00") {
-            startTimer(data.invoice);
+            startTimer(data.invoice)
         }
 
-        setDefaultChain(polygon);
-        console.log("info", data);
-        setInfo(data);
+        setDefaultChain(polygon)
+        console.log("info", data)
+        setInfo(data)
 
         const currentT = fullListTokens.filter(
-            (t) => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
-        )[0];
+            t => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
+        )[0]
 
         const fullList = await Payment.getAllAmountIn(
             data.invoice.asset_amount.toString(),
             currentT
-        );
+        )
 
-        setFullListTokensUp(fullList);
+        setFullListTokensUp(fullList)
 
-        chCoinNew(fullList.filter((t) => t.namePrice === coin.namePrice)[0]); // update amountIn
+        chCoinNew(fullList.filter(t => t.namePrice === coin.namePrice)[0]) // update amountIn
 
-        setRerender(!reRender);
+        setRerender(!reRender)
 
-        return true;
-    }
+        if (data.invoice.asset === 'usdt') props.setAllowTron(true)
 
-    async function startPay() {
-        if (!ready) {
-            await swithNet(137);
+        if (data.invoice.status === 'in_progress' || data.invoice.status === 'pending') { 
+            setTimeout(() => getInfo(uuid1), 10000) 
         }
 
-        setType(1);
+        return true
+    }
+
+    async function startPay () {
+        if (!ready) {
+            await swithNet(137)
+        }
+
+        setType(1)
 
         if (!chain || !address) {
-            return false;
+            return false
         }
         // const PolusUtils = new PolusTokenUtils(coin, chain.id, address)
         // PolusUtils.isApprove()
 
-        return true;
+        return true
     }
 
-    function generatedUrlRedirect(status: string) {
+    function generatedUrlRedirect (status: string) {
         if (info) {
             if (status === "sucess") {
-                return info.merchant?.success_redirect_url ?? undefined;
+                return info.merchant?.success_redirect_url ?? undefined
             }
-            return info.merchant?.fail_redirect_url ?? undefined;
+            return info.merchant?.fail_redirect_url ?? undefined
         }
-        return undefined;
+        return undefined
     }
 
-    function getSubCoin(list: ListTokens) {
+    function getSubCoin (list: ListTokens) {
 
         const _list = list.slice(4, list.length)
 
@@ -280,99 +289,99 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     useEffect(() => {
         if (isLoading === false) {
             if (error) {
-                console.log(error);
-                props.consoleLog("Error network change", false);
-                props.closePop(false);
+                console.log(error)
+                props.consoleLog("Error network change", false)
+                props.closePop(false)
             } else {
-                props.closePop(true);
+                props.closePop(true)
             }
         }
-    }, [isLoading]);
+    }, [ isLoading ])
 
     useEffect(() => {
-        console.log("pendingChainId", pendingChainId);
-    }, [pendingChainId]);
+        console.log("pendingChainId", pendingChainId)
+    }, [ pendingChainId ])
 
     useEffect(() => {
-        console.log("chain", chain);
+        console.log("chain", chain)
         if (!chain) {
-            setReady(false);
-            console.error("not found network");
+            setReady(false)
+            console.error("not found network")
         } else if (chain.id === 1 || chain.id === 137 || chain.id === 56) {
-            setReady(true);
+            setReady(true)
 
             // changeCoin(coin, chain.id)
         } else {
-            setReady(false);
+            setReady(false)
             // swithNet('polygon')
         }
-        props.closePop(false);
-        props.setActiveModal(null);
-        close();
-    }, [chain]);
+        props.closePop(false)
+        props.setActiveModal(null)
+        close()
+    }, [ chain ])
 
     useEffect(() => {
         if (props.seletcToken) {
-            chCoinNew(props.seletcToken);
+            chCoinNew(props.seletcToken)
         }
-    }, [props.seletcToken])
+    }, [ props.seletcToken ])
 
     useEffect(() => {
         if (info) {
-            chCoinNew(fullListTokensUp[0]);
+            chCoinNew(fullListTokensUp[0])
             // changeCoin(tokens.polygon[0], 137)
         }
-    }, [info]);
+    }, [ info ])
 
     useEffect(() => {
         if (isConnected) {
-            setProgress(25);
+            setProgress(25)
         } else {
-            setProgress(0);
+            setProgress(0)
         }
-    }, [isConnected]);
+    }, [ isConnected ])
 
     useEffect(() => {
         if (!firstRender) {
-            setFirstRender(true);
+            setFirstRender(true)
 
-            const uuid1 = getParameterByName("uuid");
+            const uuid1 = getParameterByName("uuid")
             if (uuid1 && uuid1 !== "") {
                 // setUuid(uuid1)
-                getInfo(uuid1);
+                getInfo(uuid1)
 
-                setInterval(() => getInfo(uuid1), 10000);
+                // setInterval(() => getInfo(uuid1), 10000)
             } else {
                 setErrorObj({
                     text: "Invalid uuid param",
-                    code: 1001,
-                });
-                setInfo(false);
+                    code: 1001
+                })
+                setInfo(false)
             }
 
         }
-    }, []);
+    }, [])
 
     useEffect(() => {
         if (type === 0) {
-            props.setTron(false);
+            props.setTron(false)
         }
-    }, [type]);
+    }, [ type ])
 
     useEffect(() => {
         props.setSelectToken(coin)
-    }, [coin])
+    }, [ coin ])
 
     useEffect(() => {
         if (info) {
             if (info.invoice.tron_withdraw_address === null && props.tron) {
-                setType(0);
+                setType(0)
             } else if (info.invoice.tron_withdraw_address && props.tron) {
-                setType(1);
+                setType(1)
                 setCoin(fullListTokens[0])
             }
         }
-    }, [info, props.tron]);
+    }, [ info, props.tron ])
 
     return (
         <Panel id={reRender ? props.id : "render"}>
@@ -430,7 +439,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     className="selector"
                                     onClick={() => {
                                         // if (isConnected) {
-                                        props.setActiveModal("network");
+                                        props.setActiveModal("network")
                                         // } else {
                                         //     open();
                                         // }
@@ -590,54 +599,56 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         {(coin.native && coin.native === coinMerchant.native) ||
                                             coin.address[chain.id as PolusChainId] ===
                                             coinMerchant.address[chain.id as PolusChainId] ? (
-                                            <Process
-                                                id={"all1"}
-                                                address={address}
-                                                tokenAddress={coin.address[chain.id as PolusChainId]}
-                                                addressPolus={
-                                                    chain.id === 1
-                                                        ? addressPolus.mainnet
-                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
-                                                }
-                                                amount={info.invoice.asset_amount}
-                                                addressMerchant={info.invoice.evm_withdraw_address}
-                                                uuid={info.invoice.id}
-                                                currentAddressToken={
-                                                    coinMerchant.address[chain.id as PolusChainId]
-                                                }
-                                                consoleLog={props.consoleLog}
-                                                setPayed={setPayed}
-                                                fee={info.invoice.fee!}
-                                                asset_amount_decimals_without_fee={
-                                                    info.invoice.asset_amount_decimals_without_fee!
-                                                }
-                                                setProgress={setProgress}
-                                                isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
-                                                polusApi={polusApi}
-                                            />
-                                        ) : (
-                                            <ProcessAll
-                                                id={"all1"}
-                                                address={address}
-                                                uuid={info.invoice.id}
-                                                consoleLog={props.consoleLog}
-                                                setPayed={setPayed}
-                                                setProgress={setProgress}
-                                                // NOTE: chainId must be a restriction of the supported chains
-                                                chainId={chain.id as PolusChainId}
-                                                addressMerchant={info.invoice.evm_withdraw_address}
-                                                amountOut={info.invoice.asset_amount}
-                                                tokenA={coin}
-                                                tokenB={coinMerchant}
-                                                fullListTokensUp={fullListTokensUp}
-                                                fee={info.invoice.fee!}
-                                                asset_amount_decimals_without_fee={
-                                                    info.invoice.asset_amount_decimals_without_fee!
-                                                }
-                                                asset_amount_decimals={info.invoice.asset_amount_decimals!}
-                                                polusApi={polusApi}
-                                            />
-                                        )}
+                                                <Process
+                                                    id={"all1"}
+                                                    address={address}
+                                                    tokenAddress={coin.address[chain.id as PolusChainId]}
+                                                    addressPolus={
+                                                        chain.id === 1
+                                                            ? addressPolus.mainnet
+                                                            : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
+                                                    }
+                                                    amount={info.invoice.asset_amount}
+                                                    addressMerchant={info.invoice.evm_withdraw_address}
+                                                    uuid={info.invoice.id}
+                                                    currentAddressToken={
+                                                        coinMerchant.address[chain.id as PolusChainId]
+                                                    }
+                                                    consoleLog={props.consoleLog}
+                                                    setPayed={setPayed}
+                                                    fee={info.invoice.fee!}
+                                                    asset_amount_decimals_without_fee={
+                                                        info.invoice.asset_amount_decimals_without_fee!
+                                                    }
+                                                    setProgress={setProgress}
+                                                    isNativeToNative={
+                                                        Boolean(coin.native && coin.native === coinMerchant.native)
+                                                    }
+                                                    polusApi={polusApi}
+                                                />
+                                            ) : (
+                                                <ProcessAll
+                                                    id={"all1"}
+                                                    address={address}
+                                                    uuid={info.invoice.id}
+                                                    consoleLog={props.consoleLog}
+                                                    setPayed={setPayed}
+                                                    setProgress={setProgress}
+                                                    // NOTE: chainId must be a restriction of the supported chains
+                                                    chainId={chain.id as PolusChainId}
+                                                    addressMerchant={info.invoice.evm_withdraw_address}
+                                                    amountOut={info.invoice.asset_amount}
+                                                    tokenA={coin}
+                                                    tokenB={coinMerchant}
+                                                    fullListTokensUp={fullListTokensUp}
+                                                    fee={info.invoice.fee!}
+                                                    asset_amount_decimals_without_fee={
+                                                        info.invoice.asset_amount_decimals_without_fee!
+                                                    }
+                                                    asset_amount_decimals={info.invoice.asset_amount_decimals!}
+                                                    polusApi={polusApi}
+                                                />
+                                            )}
                                     </div>
                                 ) : null}
 
@@ -648,6 +659,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         polusApi={polusApi}
                                         uuid={info.invoice.id}
                                         amount={info.invoice.tron_asset_amount_decimals ?? ''}
+                                        log={props.consoleLog}
                                     />
                                 ) : null}
 
@@ -696,7 +708,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            flexDirection: "column",
+                            flexDirection: "column"
                         }}
                     >
                         <Spinner size="large" style={{ margin: "20px 0" }} />
@@ -710,12 +722,12 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            flexDirection: "column",
+                            flexDirection: "column"
                         }}
                     >
                         {errorObj.code === 1003 ? 
-                        <Icon28CheckCircleFill /> : 
-                        <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" /> }
+                            <Icon28CheckCircleFill /> : 
+                            <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" /> }
                         <span style={{ margin: "16px 0" }}>{errorObj.text}</span>
                     </div>
                     {info ? (
@@ -733,5 +745,5 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 </Div>
             ) : null}
         </Panel>
-    );
-};
+    )
+}
