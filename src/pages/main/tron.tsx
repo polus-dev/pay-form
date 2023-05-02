@@ -59,9 +59,9 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
 
 				
 			</div>
-			<FormItem bottom="Check the amount you send in USDT TRON, in case it will be different from 0, funds may be lost">
+			<FormItem bottom={`Check the amount you send in USDT TRON, in case it will be different from ${(Number(props.amount) / 10 ** 6)}, funds may be lost`}>
 				<Input 
-						value={props.amount}
+						value={(Number(props.amount) / 10 ** 6) }
 						onChange={() => null}
 						style={{marginBottom: '10px', marginTop: '10px'}}
 					/>
