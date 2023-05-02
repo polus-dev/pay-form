@@ -15,7 +15,9 @@ import { useWeb3Modal } from "@web3modal/react";
 import { useAccount, useNetwork, useSwitchNetwork } from "wagmi";
 import { polygon } from "wagmi/chains";
 import {
+    Icon28CheckCircleFill,
     Icon28ChevronDownOutline,
+    Icon28DoneOutline,
     Icon28WarningTriangleOutline,
 } from "@vkontakte/icons";
 
@@ -195,7 +197,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
         if (data.invoice.status === 'success') {
             setErrorObj({
-                text: 'Invoice is payed',
+                text: 'Payed',
                 code: 1003
             })
         }
@@ -711,7 +713,9 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             flexDirection: "column",
                         }}
                     >
-                        <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" />
+                        {errorObj.code === 1003 ? 
+                        <Icon28CheckCircleFill /> : 
+                        <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" /> }
                         <span style={{ margin: "16px 0" }}>{errorObj.text}</span>
                     </div>
                     {info ? (
