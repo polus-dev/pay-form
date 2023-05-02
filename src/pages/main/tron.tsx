@@ -1,7 +1,8 @@
-import { FormItem, Input, SimpleCell } from "@vkontakte/vkui"
+import { FormItem, IconButton, Input, SimpleCell } from "@vkontakte/vkui"
 import React, { useEffect } from "react"
 import { QRCode } from "react-qr-svg"
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { Icon16CopyOutline } from "@vkontakte/icons"
 import usdtLogo from '../../img/usdt.svg'
 import { PolusApi } from "../../logic/api"
 
@@ -51,7 +52,7 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
                     fgColor="#000000"
                     level="Q"
                     style={{ 
-                        width: 256,
+                        width: 196,
                         padding: '20px',
                         borderRadius: "16px",
                         background: "#fff"
@@ -64,27 +65,41 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
             <FormItem 
                 top="Amount"
                 bottom={`Check the amount you send in USDT TRON, in case it will be different from ${(Number(props.amount) / 10 ** 6)}, funds may be lost`}>
-                <CopyToClipboard text={(Number(props.amount) / 10 ** 6).toString()}
-                    onCopy={() => props.log('Copyed', true)}>
-                    <Input 
-                        value={(Number(props.amount) / 10 ** 6) }
-                        onChange={() => null}
-                        style={{ marginBottom: '10px', marginTop: '10px', userSelect: 'all' }}
-                    />
-                </CopyToClipboard>
+                
+                <Input 
+                    value={(Number(props.amount) / 10 ** 6) }
+                    onChange={() => null}
+                    style={{ marginBottom: '10px', marginTop: '10px', userSelect: 'all' }}
+                    after={
+                        <CopyToClipboard text={(Number(props.amount) / 10 ** 6).toString()}
+                            onCopy={() => props.log('Copyed', true)}>
+                            <IconButton hoverMode="opacity" aria-label="Copy">
+							  <Icon16CopyOutline />
+                            </IconButton>
+                        </CopyToClipboard>
+						  }
+                />
+               
 				
             </FormItem>
 
             <FormItem top="Address">
-                <CopyToClipboard text={props.address}
-                    onCopy={() => props.log('Copyed', true)}>
-                    <Input 
-                        value={props.address}
-                        onChange={() => null}
-                        style={{ marginBottom: '10px', userSelect: 'all'  }}
+               
+                <Input 
+                    value={props.address}
+                    onChange={() => null}
+                    style={{ marginBottom: '10px', userSelect: 'all'  }}
+                    after={
+                        <CopyToClipboard text={props.address}
+                            onCopy={() => props.log('Copyed', true)}>
+                            <IconButton hoverMode="opacity" aria-label="Copy">
+							  <Icon16CopyOutline />
+                            </IconButton>
+                        </CopyToClipboard>
+						  }
 				
-                    />
-                </CopyToClipboard>
+                />
+                
             </FormItem>
 
             
