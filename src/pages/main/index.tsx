@@ -193,16 +193,22 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             return undefined;
         }
 
-        if (data.invoice.status === 'completed') {
+        if (data.invoice.status === 'success') {
             setErrorObj({
                 text: 'Invoice is payed',
                 code: 1003
             })
         }
-        if (data.invoice.status === 'expired') {
+        if (data.invoice.status === 'in_progress') {
             setErrorObj({
-                text: 'Invoice is expired',
+                text: 'Invoice in progress',
                 code: 1004
+            })
+        }
+        if (data.invoice.status === 'failed') {
+            setErrorObj({
+                text: 'Failed',
+                code: 1005
             })
         }
         if (timer === "00:00") {
@@ -333,7 +339,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 // setUuid(uuid1)
                 getInfo(uuid1);
 
-                // setInterval(() => getInfo(uuid1), 5000);
+                setInterval(() => getInfo(uuid1), 10000);
             } else {
                 setErrorObj({
                     text: "Invalid uuid param",
@@ -593,7 +599,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 }
                                                 amount={info.invoice.asset_amount}
                                                 addressMerchant={info.invoice.evm_withdraw_address}
-                                                uuid={info.invoice.id.replaceAll("-", "")}
+                                                uuid={info.invoice.id}
                                                 currentAddressToken={
                                                     coinMerchant.address[chain.id as PolusChainId]
                                                 }
@@ -605,13 +611,13 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                 }
                                                 setProgress={setProgress}
                                                 isNativeToNative={Boolean(coin.native && coin.native === coinMerchant.native)}
-
+                                                polusApi={polusApi}
                                             />
                                         ) : (
                                             <ProcessAll
                                                 id={"all1"}
                                                 address={address}
-                                                uuid={info.invoice.id.replaceAll("-", "")}
+                                                uuid={info.invoice.id}
                                                 consoleLog={props.consoleLog}
                                                 setPayed={setPayed}
                                                 setProgress={setProgress}
@@ -627,6 +633,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                                     info.invoice.asset_amount_decimals_without_fee!
                                                 }
                                                 asset_amount_decimals={info.invoice.asset_amount_decimals!}
+                                                polusApi={polusApi}
                                             />
                                         )}
                                     </div>
@@ -636,6 +643,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                     <Tron
                                         id="tron1"
                                         address={info.invoice.tron_withdraw_address ?? ""}
+                                        polusApi={polusApi}
+                                        uuid={info.invoice.id}
                                     />
                                 ) : null}
 
