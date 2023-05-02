@@ -197,7 +197,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
         if (data.invoice.status === 'success') {
             setErrorObj({
-                text: 'Payed',
+                text: 'Paid',
                 code: 1003
             })
         }
