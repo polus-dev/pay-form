@@ -31,6 +31,7 @@ import {
 import { ETHToWei, weiToEthNum } from "../../logic/utils";
 import { encodePay } from "../../logic/transactionEncode/transactionEncode";
 import { PolusContractAddress } from "../../logic/transactionEncode/types/polusContractAbi";
+import { Info, InvoiceType, PolusApi } from "../../logic/api";
 
 interface AllType {
 	id: string;
@@ -48,6 +49,7 @@ interface AllType {
 	asset_amount_decimals_without_fee: string;
 	asset_amount_decimals: string;
 	fee: string;
+	polusApi: PolusApi;
 }
 
 export type PolusChainId = keyof ListToken["address"];
@@ -78,6 +80,7 @@ interface ProcessType
 	tokenA: ListToken;
 	tokenB: ListToken;
 	fullListTokensUp: ListTokens;
+	polusApi: PolusApi
 }
 
 const isMetaMask = window.ethereum?.isMetaMask;
@@ -338,7 +341,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 							const isContextFromNative = props.tokenA.native === true;
 							const encodePayParams: Parameters<typeof encodePay>[0] = {
-								uuid: props.uuid,
+								uuid: props.uuid.replaceAll("-", ""),
 								fee: props.fee,
 								merchantAmount: props.asset_amount_decimals_without_fee,
 								tokenAddress: props.tokenB.native ? undefined : props.tokenB.address[props.chainId],
@@ -453,6 +456,8 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 				props.setPosition(3);
 
 				props.setPayed(true);
+
+				props.polusApi.changeBlockchain(props.uuid, 'evm') // смена блокчеина для богдана
 			});
 		}
 	}, [data]);
@@ -585,6 +590,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				asset_amount_decimals={props.asset_amount_decimals}
 				fee={props.fee}
 				chainId={props.chainId}
+				polusApi={props.polusApi}
 			/>
 			<ProcessTwo
 				key={twoId}
@@ -612,6 +618,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				asset_amount_decimals={props.asset_amount_decimals}
 				fee={props.fee}
 				chainId={props.chainId}
+				polusApi={props.polusApi}
 			/>
 			<ProcessThree
 				key={treId}
@@ -639,6 +646,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				chainId={props.chainId}
 				txValue={txValue}
 				setTxValue={setTxValue}
+				polusApi={props.polusApi}
 			/>
 		</div>
 	);

@@ -2,10 +2,13 @@ import { Input, SimpleCell } from "@vkontakte/vkui";
 import React, { useEffect } from "react";
 import { QRCode } from "react-qr-svg";
 import usdtLogo from '../../img/usdt.svg';
+import { PolusApi } from "../../logic/api";
 
 interface AllType {
 	id: string;
 	address: string;
+	polusApi: PolusApi;
+	uuid: string
 }
 
 export const Tron: React.FC<AllType> = (props: AllType) => {
@@ -14,6 +17,8 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
 	useEffect(() => {
 		if (!firstRender) {
 			setFirstRender(true);
+
+			props.polusApi.changeBlockchain(props.uuid, 'tron') // смена блокчеина для богдана
 		}
 	}, []);
 

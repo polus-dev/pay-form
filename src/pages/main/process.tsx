@@ -22,6 +22,7 @@ import token_abi from "../../token_abi.json";
 import { MAX_APPROVE_AMOUNT } from "../../constants";
 import { ConfigPayment, Payment } from "../../logic/payment";
 import { doPayThroughPolusContract } from "../../logic/transactionEncode/doPayThroughPolusContract";
+import { PolusApi } from "../../logic/api";
 
 interface AllType {
   id: string;
@@ -38,6 +39,7 @@ interface AllType {
   isNativeToNative: boolean
   asset_amount_decimals_without_fee: string;
   fee: string;
+  polusApi: PolusApi
 }
 
 interface ProcessType {
@@ -58,6 +60,7 @@ interface ProcessType {
   isNativeToNative: boolean
   asset_amount_decimals_without_fee: string;
   fee: string;
+  polusApi: PolusApi
 }
 
 const ProcessOne: React.FC<ProcessType> = (props) => {
@@ -168,14 +171,14 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
   if (props.isNativeToNative) {
     configForTransaction!.request!.value = utils.parseEther(props.amount);
     configForTransaction!.request!.data = doPayThroughPolusContract({
-      uuid: props.uuid,
+      uuid: props.uuid.replaceAll("-", ""),
       fee: props.fee,
       merchant: props.addressMerchant,
       merchantAmount: props.asset_amount_decimals_without_fee,
     })
   } else {
     configForTransaction!.request!.data = doPayThroughPolusContract({
-      uuid: props.uuid,
+      uuid: props.uuid.replaceAll("-", ""),
       fee: props.fee,
       merchant: props.addressMerchant,
       merchantAmount: props.asset_amount_decimals_without_fee,
@@ -264,6 +267,13 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
     }
   }, []);
 
+  useEffect(()=>{
+    if (props.position === 2) {
+      props.polusApi.changeBlockchain(props.uuid, 'evm') // смена блокчеина для богдана
+    }
+
+  }, [props.position])
+
   return (
     <SimpleCell
       disabled
@@ -344,6 +354,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
         isNativeToNative={props.isNativeToNative}
         fee={props.fee}
         asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
+        polusApi={props.polusApi}
 
       />
       <ProcessTwo
@@ -366,6 +377,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
         isNativeToNative={props.isNativeToNative}
         fee={props.fee}
         asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
+        polusApi={props.polusApi}
       />
       <ProcessTree
         key={"tree1"}
@@ -386,6 +398,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
         isNativeToNative={props.isNativeToNative}
         fee={props.fee}
         asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
+        polusApi={props.polusApi}
 
       />
     </div>
