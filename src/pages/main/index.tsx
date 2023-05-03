@@ -249,7 +249,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         if (data.invoice.asset === 'usdt') props.setAllowTron(true)
 
         if (data.invoice.status === 'in_progress' || data.invoice.status === 'pending') {
-            await sleep(10000)
+            await sleep(5000)
             getInfo(uuid1, false)
         }
 

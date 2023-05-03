@@ -8,6 +8,7 @@
   "license": "MIT",
   "scripts": {
     "start": "webpack-dev-server --mode development",
+    "build:copy": "cp -r public/manifest.json build/; cp -r public/favicon.ico build/",
     "build": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1",
     "eject": "react-scripts eject",
