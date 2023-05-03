@@ -120,6 +120,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 				if (!isMetaMask) {
 					payClass.checkAllowance('A', 'router').then(amount => {
 						if (weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) < payClass.tokenA.info.amountIn) {
+							debugger
 							if (approveNotMetamask.write) approveNotMetamask.write()
 							else console.error('write approve null')
 
@@ -130,9 +131,10 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 				} else {
 
 					payClass.checkAllowance("A", "permit").then((amount) => {
+						debugger
 						if (
-							weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) <
-							payClass.tokenA.info.amountIn && isMetaMask
+							(weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) <
+								payClass.tokenA.info.amountIn) && isMetaMask
 						) {
 							try {
 								write();
@@ -212,7 +214,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 	const [readyToSend, setReadyToSend] = React.useState<boolean>(false);
 
-	const [noncePermit, setNoncePermit] = React.useState<number>(0);
+	const [dataForSign, setDataForSign] = React.useState<any>({}); // TODO: make type 
 
 	const { payClass } = props;
 
@@ -220,20 +222,20 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 		readyToSend || setReadyToSend(true)
 	}
 
-	const router = new CustomRouter(payClass?.networkId);
-	// sign permit
-	const dataFS = payClass.dataForSign(noncePermit);
-
-	const sign = useSignTypedData({
-		domain: dataFS.domain,
-		types: dataFS.types,
-		value: dataFS.value,
-	});
-
-
 	if (props.payClass.tokenA.isNative) {
 		firstRender || setFirstRender(true);
 	}
+
+	const router = new CustomRouter(payClass?.networkId);
+	// sign permit
+
+	const sign = useSignTypedData({
+		domain: dataForSign.domain,
+		types: dataForSign.types,
+		value: dataForSign.value,
+	});
+
+
 
 	useEffect(() => {
 		// check allowance permit
@@ -254,10 +256,13 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 						payClass.tokenA.info.amountIn ||
 						allowance.expiration < Date.now() / 1000
 					) {
+						debugger
+
+						const dataFS = payClass.dataForSign(allowance.nonce);
+						setDataForSign(dataFS)
 						setNeedToPermit(true);
 						return;
 					}
-					setNoncePermit(allowance.nonce);
 					setReadyToSend(true);
 				});
 		}
@@ -281,15 +286,15 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 			if (sign.data) {
 				// TODO
 				const isv = verifyTypedData(
-					dataFS.domain,
-					dataFS.types,
-					dataFS.value,
+					dataForSign.domain,
+					dataForSign.types,
+					dataForSign.value,
 					sign.data
 				);
 
 				// console.log('sign.data', sign.data)
 
-				console.log("address sign", isv);
+				console.log("sign:", isv === props.address);
 			}
 
 			const amountOut = ETHToWei(payClass.amountOut, props.tokenB.decimals[props.chainId]);
@@ -310,7 +315,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 							const deadline = ~~(Date.now() / 1000) + 60 * 32;
 
-							const valuesSign: any = dataFS.value;
+							const valuesSign: any = dataForSign.value;
 							valuesSign.signature = sign.data;
 
 							const permit2permit: Permit2Permit = valuesSign;
@@ -354,6 +359,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 									to: props.tokenB.native === true ? "native" : "erc20",
 								},
 							};
+
 
 							const encoded = encodePay(encodePayParams);
 
