@@ -421,7 +421,6 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 		},
 	});
 
-	console.log('config', config)
 	const { data, isLoading, isSuccess, sendTransaction, error } =
 		useSendTransaction(config);
 
