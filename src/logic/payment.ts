@@ -301,7 +301,6 @@ export class Payment {
 			if (!contr) throw new Error("getBalance:contract is undefined");
 
 			const balance: BigNumber = await contr.balanceOf(this._addressUser);
-			debugger
 
 			console.log("getBalance:balance", balance);
 

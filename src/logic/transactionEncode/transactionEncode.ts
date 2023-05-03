@@ -79,7 +79,7 @@ export function encodePay({
     const wrap = wrapper('0x0000000000000000000000000000000000000002', asset_amount_decimals!);
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
-    const wrap = wrapper(merchant, merchantAmount);
+    const wrap = wrapper(UNIVERSAL_ROUTER, asset_amount_decimals!);
     inputs.push(wrap);
   }
 
@@ -101,6 +101,5 @@ export function encodePay({
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");
-  debugger
   return EXECUTE_SELECTOR + out;
 }
