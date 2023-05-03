@@ -83,11 +83,11 @@ interface ProcessType
 	polusApi: PolusApi
 }
 
-const isMetaMask = window.ethereum?.isMetaMask;
 
 const ProcessOne: React.FC<ProcessType> = (props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
+	const isMetaMask = window.ethereum?.isMetaMask;
 
 	const { payClass } = props;
 
@@ -116,7 +116,6 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 					return;
 				}
 
-				// FIX: remove double logic
 
 				if (!isMetaMask) {
 					payClass.checkAllowance('A', 'router').then(amount => {
@@ -204,6 +203,8 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 
 const ProcessTwo: React.FC<ProcessType> = (props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
+
+	const isMetaMask = window.ethereum?.isMetaMask;
 
 	const [firstRender2, setFirstRender2] = React.useState<boolean>(false);
 
