@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.7.2",
+    "@sentry/react": "^7.50.0",
     "@types/react-copy-to-clipboard": "^5.0.4",
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/sdk-core": "^3.1.1",
