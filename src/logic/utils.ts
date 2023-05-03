@@ -26,7 +26,7 @@ export async function getPriceToken(
     if (data.data[_listTokens[i].namePrice]) {
       _listTokens[i].price = data.data[_listTokens[i].namePrice].usd;
     } else {
-      console.error("not found coin ", _listTokens[i].namePrice);
+      console.log("not found coin ", _listTokens[i].namePrice);
     }
   }
 
