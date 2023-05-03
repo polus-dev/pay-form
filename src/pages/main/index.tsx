@@ -67,6 +67,7 @@ interface ErrorType {
     text: string,
     code: number
 }
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
@@ -185,7 +186,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return true
     }
 
-    async function getInfo (uuid1: string) {
+    async function getInfo (uuid1: string, type1: boolean = true) {
         // const data = await polusApi.getPaymentInfo(uuid1)
         const data = await polusApi.getInfo(uuid1)
         if (!data) {
@@ -216,33 +217,40 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 code: 1005
             })
         }
-        if (timer === "00:00") {
+        if (type1) {
             startTimer(data.invoice)
         }
 
-        setDefaultChain(polygon)
+        if (type1) {
+            console.log('info===', info)
+            setDefaultChain(polygon)
+            setInfo(data)
+
+            const currentT = fullListTokens.filter(
+                t => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
+            )[0]
+    
+            const fullList = await Payment.getAllAmountIn(
+                data.invoice.asset_amount.toString(),
+                currentT
+            )
+    
+            setFullListTokensUp(fullList)
+    
+            chCoinNew(fullList.filter(t => t.namePrice === coin.namePrice)[0]) // update amountIn
+        } else if (data.invoice.status === 'success' || data.invoice.status === 'failed') {
+            setInfo(data)
+        }
+
         console.log("info", data)
-        setInfo(data)
-
-        const currentT = fullListTokens.filter(
-            t => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
-        )[0]
-
-        const fullList = await Payment.getAllAmountIn(
-            data.invoice.asset_amount.toString(),
-            currentT
-        )
-
-        setFullListTokensUp(fullList)
-
-        chCoinNew(fullList.filter(t => t.namePrice === coin.namePrice)[0]) // update amountIn
-
+        
         setRerender(!reRender)
 
         if (data.invoice.asset === 'usdt') props.setAllowTron(true)
 
         if (data.invoice.status === 'in_progress' || data.invoice.status === 'pending') { 
-            setTimeout(() => getInfo(uuid1), 10000) 
+            await sleep(10000)
+            getInfo(uuid1, false)
         }
 
         return true
@@ -328,7 +336,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     useEffect(() => {
         if (info) {
-            chCoinNew(fullListTokensUp[0])
+            // chCoinNew(fullListTokensUp[0])
             // changeCoin(tokens.polygon[0], 137)
         }
     }, [ info ])
@@ -727,7 +735,11 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                     >
                         {errorObj.code === 1003 ? 
                             <Icon28CheckCircleFill /> : 
-                            <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" /> }
+                            null }
+
+                        {errorObj.code === 1004 ? <Spinner size="large" style={{ margin: "20px 0" }} /> : null }
+                        {errorObj.code !== 1004 && errorObj.code !== 1003 ? 
+                            <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" /> : null }
                         <span style={{ margin: "16px 0" }}>{errorObj.text}</span>
                     </div>
                     {info ? (
