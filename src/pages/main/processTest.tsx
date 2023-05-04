@@ -92,6 +92,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 	const { payClass } = props;
 
 	if (payClass.tokenA.isNative) {
+		props.setPosition(1);
 		return null;
 	}
 
@@ -315,7 +316,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 							const deadline = ~~(Date.now() / 1000) + 60 * 32;
 
-							const valuesSign: any = dataForSign.value;
+							const valuesSign: any = dataForSign.value ?? {};
 							valuesSign.signature = sign.data;
 
 							const permit2permit: Permit2Permit = valuesSign;
@@ -366,7 +367,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 							props.setDataTr(encoded);
 
 							if (isContextFromNative) {
-								props.setTxValue?.('1000000000000000000');
+								props.setTxValue?.(ethers.utils.parseEther('1'));
 							}
 
 

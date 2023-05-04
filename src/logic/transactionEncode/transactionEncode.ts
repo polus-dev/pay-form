@@ -42,6 +42,7 @@ export function encodePay({
   fee,
 }: IEncodeTransfer): string {
   // assertAmount(amoun);
+  debugger
   if (!tokenAddress)
     tokenAddress = NULL_ADDRESS
   const data = txData.slice(10);
@@ -76,7 +77,7 @@ export function encodePay({
   const inputs = structuredClone<string[]>(decoded[1]);
 
   if (wrapStatus === WrapStatus.WRAP) {
-    const wrap = wrapper('0x0000000000000000000000000000000000000002', asset_amount_decimals!);
+    const wrap = wrapper('0x0000000000000000000000000000000000000002', '0x8000000000000000000000000000000000000000000000000000000000000000');
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
     const wrap = wrapper(UNIVERSAL_ROUTER, asset_amount_decimals!);
