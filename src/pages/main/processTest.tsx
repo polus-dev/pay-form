@@ -86,21 +86,25 @@ interface ProcessType
 
 const ProcessOne: React.FC<ProcessType> = (props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
+	const [firstRenderForNativeToken, setFirstRenderForNativeToken] = React.useState<boolean>(false);
 
 	const isMetaMask = window.ethereum?.isMetaMask;
 
 	const { payClass } = props;
 
-	if (payClass.tokenA.isNative) {
-		props.setPosition(1);
-		return null;
-	}
+	useEffect(() => {
+		if (firstRenderForNativeToken && payClass.tokenA.isNative) {
+			setFirstRenderForNativeToken(true);
+			props.setPosition(1);
+		}
+	}, [])
+
 
 	const { config } = usePrepareContractWrite(payClass?.ApproveSyncPermit());
 
 	const { data, write, error } = useContractWrite(config);
 
-	const { config: config2 } = usePrepareContractWrite(payClass.Approve(isMetaMask ? PolusContractAddress[props.chainId] : 'router'));
+	const { config: config2 } = usePrepareContractWrite(payClass.Approve(isMetaMask ? PolusContractAddress[props.chainId] : 'router')); // aprove for router
 
 	const approveNotMetamask = useContractWrite(config2);
 
@@ -121,10 +125,8 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 				if (!isMetaMask) {
 					payClass.checkAllowance('A', 'router').then(amount => {
 						if (weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) < payClass.tokenA.info.amountIn) {
-							debugger
 							if (approveNotMetamask.write) approveNotMetamask.write()
 							else console.error('write approve null')
-
 							return
 						}
 						props.setPosition(1);
@@ -132,7 +134,6 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 				} else {
 
 					payClass.checkAllowance("A", "permit").then((amount) => {
-						debugger
 						if (
 							(weiToEthNum(amount, payClass.tokenA.info.decimals[props.chainId]) <
 								payClass.tokenA.info.amountIn) && isMetaMask
@@ -219,13 +220,15 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 	const { payClass } = props;
 
-	if (props.payClass.tokenA.isNative || !isMetaMask) {
-		readyToSend || setReadyToSend(true)
-	}
 
-	if (props.payClass.tokenA.isNative) {
-		firstRender || setFirstRender(true);
-	}
+
+
+	useEffect(() => {
+		if ((props.payClass.tokenA.isNative || !isMetaMask) && !readyToSend) {
+			setReadyToSend(true)
+		}
+	}, [])
+
 
 	const router = new CustomRouter(payClass?.networkId);
 	// sign permit
@@ -243,29 +246,33 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 		if (!firstRender && props.position === 1 && sign && !props.payClass.tokenA.isNative) {
 			console.log("start sign");
 			setFirstRender(true);
+			if (!isMetaMask) {
 
-			payClass
-				.AllowancePermit("A", "router")
-				.then((allowance: Permit2AllowanceType | undefined) => {
-					if (!allowance) {
-						setNeedToPermit(true);
-						return;
-					}
+				setReadyToSend(true);
+			} else {
 
-					if (
-						weiToEthNum(allowance.amount, payClass.tokenA.info.decimals[props.chainId]) <
-						payClass.tokenA.info.amountIn ||
-						allowance.expiration < Date.now() / 1000
-					) {
-						debugger
+				payClass
+					.AllowancePermit("A", "router")
+					.then((allowance: Permit2AllowanceType | undefined) => {
+						if (!allowance) {
+							setNeedToPermit(true);
+							return;
+						}
 
-						const dataFS = payClass.dataForSign(allowance.nonce);
-						setDataForSign(dataFS)
-						setNeedToPermit(true);
-						return;
-					}
-					setReadyToSend(true);
-				});
+						if (
+							weiToEthNum(allowance.amount, payClass.tokenA.info.decimals[props.chainId]) <
+							payClass.tokenA.info.amountIn ||
+							allowance.expiration < Date.now() / 1000
+						) {
+
+							const dataFS = payClass.dataForSign(allowance.nonce);
+							setDataForSign(dataFS)
+							setNeedToPermit(true);
+							return;
+						}
+						setReadyToSend(true);
+					});
+			}
 		}
 	}, [props.position, sign]);
 
