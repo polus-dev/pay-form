@@ -9,7 +9,7 @@
   "scripts": {
     "start": "webpack-dev-server --mode development",
     "build:copy": "cp -r public/manifest.json build/; cp -r public/favicon.ico build/",
-    "build": "webpack --mode production",
+    "build": "webpack --mode production; yarn build:copy",
     "test": "echo \"Error: no test specified\" && exit 1",
     "eject": "react-scripts eject",
     "prepare": "install-peers"
@@ -25,7 +25,7 @@
     "@types/react-copy-to-clipboard": "^5.0.4",
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/sdk-core": "^3.1.1",
-    "@uniswap/smart-order-router": "^3.5.0",
+    "@uniswap/smart-order-router": "^3.11.2",
     "@uniswap/universal-router-sdk": "^1.4.3",
     "@uniswap/v3-sdk": "^3.9.0",
     "@vkontakte/icons": "^2.16.0",

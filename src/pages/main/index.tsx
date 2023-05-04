@@ -28,7 +28,7 @@ import logo from "../../img/logo.svg"
 import maticLogo from "../../img/matic.svg"
 import otherLogo from "../../img/other.svg"
 import etherLogo from "../../img/weth.svg"
-import daiLogo from "../../img/dai.svg"
+import bnbLogo from "../../img/bnb.svg"
 
 import btn from "../../img/btn.jpg"
 import wc from "../../img/wc.svg"
@@ -246,7 +246,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
         setRerender(!reRender)
 
-        if (data.invoice.asset === 'usdt') props.setAllowTron(true)
+        if (data.invoice.tron_withdraw_address !== null) props.setAllowTron(true)
 
         if (data.invoice.status === 'in_progress' || data.invoice.status === 'pending') {
             await sleep(5000)
@@ -457,7 +457,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         <div className="selector-right">
                                             {chain.id === 1 ? <img src={etherLogo} /> : null}
                                             {chain.id === 137 ? <img src={maticLogo} /> : null}
-                                            {chain.id !== 137 && chain.id !== 1 ? (
+                                            {chain.id === 56 ? <img src={bnbLogo} /> : null}
+                                            {chain.id !== 137 && chain.id !== 1 && chain.id !== 56 ? (
                                                 <img src={otherLogo} width={24} />
                                             ) : (
                                                 ""

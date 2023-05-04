@@ -640,6 +640,11 @@ a:-webkit-any-link {
   height: 24px;
 }
 
+.selector-right img {
+  width: 24px;
+  height: 24px;
+}
+
 @media (max-width: 800px) {
   .vkuiModalPage--s .vkuiModalPage__in-wrap {
     width: auto !important;

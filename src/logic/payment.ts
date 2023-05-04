@@ -141,7 +141,7 @@ export class Payment {
 
     private _contractPermit: ethers.Contract
 
-    constructor(config: ConfigPayment) {
+    constructor (config: ConfigPayment) {
         this._networkId = config.networkId
         this._addressUser = config.addressUser
         this._addressMerchant = config.addressMerchant
@@ -168,6 +168,9 @@ export class Payment {
         this._provider = new ethers.providers.JsonRpcProvider(this._networkRpcUrl)
 
         const idNetw: 1 | 56 | 137 = (this._networkId as 1 | 56 | 137) ?? 137
+
+        // console.log("Token A", config.tokenA.address[idNetw])
+        // console.log("Token B", config.tokenB.address[idNetw])
 
         this._tokenA = {
             info: config.tokenA,
@@ -220,7 +223,7 @@ export class Payment {
         }
     }
 
-    public createWrapAltFromNative(AltName: string): Token {
+    public createWrapAltFromNative (AltName: string): Token {
         const wrapAlt = fullListTokens.find(item => item.name === AltName)
         if (!wrapAlt) throw new Error("createWrapAltFromNative:wrapAlt is undefined")
         const idNetw = this._networkId as PolusChainId
@@ -233,7 +236,7 @@ export class Payment {
         )
     }
 
-    public async checkAllowance(
+    public async checkAllowance (
         token: "A" | "B",
         type: "permit" | "polus" | "router"
     ): Promise<BigNumber> {
@@ -263,7 +266,7 @@ export class Payment {
         }
     }
 
-    public async AllowancePermit(
+    public async AllowancePermit (
         token: "A" | "B",
         type: "router" | "polus"
     ): Promise<Permit2AllowanceType | undefined> {
@@ -293,7 +296,7 @@ export class Payment {
         }
     }
 
-    public async getBalance(token: "A" | "B"): Promise<BigNumber> {
+    public async getBalance (token: "A" | "B"): Promise<BigNumber> {
         let contr = this._tokenA.contract
         if (token === "B") {
             contr = this._tokenB.contract
@@ -318,7 +321,7 @@ export class Payment {
         }
     }
 
-    public static async getAllAmountIn(
+    public static async getAllAmountIn (
         amountOut: string,
         outToken: ListToken
     ): Promise<ListTokens> {
@@ -346,7 +349,7 @@ export class Payment {
         return newLocalFull
     }
 
-    public ApproveSyncPermit(): {
+    public ApproveSyncPermit (): {
         address: `0x${string}`,
         abi: any,
         functionName: string,
@@ -358,19 +361,19 @@ export class Payment {
             address: this._tokenA.contract.address as `0x${string}`,
             abi: token_abi,
             functionName: "approve",
-            args: [this._addressPermit, ethers.constants.MaxUint256]
+            args: [ this._addressPermit, ethers.constants.MaxUint256 ]
         }
     }
 
-    public Approve(
+    public Approve (
         address: string | "permit" | "polus" | "router",
         type: 0 | 1 = 1
     ): {
-        address: `0x${string}`,
-        abi: any,
-        functionName: string,
-        args: any[]
-    } {
+            address: `0x${string}`,
+            abi: any,
+            functionName: string,
+            args: any[]
+        } {
 
         if (!this._tokenA.contract)
             throw new Error("Approve:contract is undefined")
@@ -386,7 +389,7 @@ export class Payment {
         }
     }
 
-    public dataForSign(nonce: number): DataSign {
+    public dataForSign (nonce: number): DataSign {
         if (!this._tokenA.contract)
             throw new Error("checkAllowance:contract is undefined")
 
@@ -413,36 +416,36 @@ export class Payment {
         }
     }
 
-    public async getFee(): Promise<ethers.providers.FeeData> {
+    public async getFee (): Promise<ethers.providers.FeeData> {
         const fee = await this._provider.getFeeData()
         return fee
     }
 
-    public get networkId(): number {
+    public get networkId (): number {
         return this._networkId
     }
 
-    public get tokenA(): TokenClass {
+    public get tokenA (): TokenClass {
         return this._tokenA
     }
 
-    public get tokenB(): TokenClass {
+    public get tokenB (): TokenClass {
         return this._tokenB
     }
 
-    public get addressRouter(): string {
+    public get addressRouter (): string {
         return this._addressRouter
     }
 
-    public get addressPermit(): string {
+    public get addressPermit (): string {
         return this._addressPermit
     }
 
-    public get addressMerchant(): string {
+    public get addressMerchant (): string {
         return this._addressMerchant
     }
 
-    public get amountOut(): string {
+    public get amountOut (): string {
         return this._amountOut
     }
 }
