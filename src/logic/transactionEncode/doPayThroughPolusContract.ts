@@ -16,7 +16,7 @@ export function doPayThroughPolusContract({
   const polusContract = new ethers.utils.Interface(PolusContractAbi);
   if (tokenAddress) {
     return polusContract.encodeFunctionData("DoERC20Payment", [
-      +uuid,
+      '0x' + uuid,
       tokenAddress,
       feeRecipient,
       fee,
@@ -25,7 +25,7 @@ export function doPayThroughPolusContract({
     ]);
   } else {
     return polusContract.encodeFunctionData("DoETHPayment", [
-      uuid,
+      '0x' + uuid,
       feeRecipient,
       fee,
       merchant,

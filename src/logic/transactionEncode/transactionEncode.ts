@@ -25,7 +25,7 @@ function assertAmount(amount: any): asserts amount is number {
   }
 }
 
-function wrapper(address: string, amount: string | number): string {
+function wrapper(address: string, amount: any): string {
   const types = ["address", "uint256"];
   const encoded = coder.encode(types, [address, amount]);
   return encoded;
@@ -79,7 +79,7 @@ export function encodePay({
   const inputs = structuredClone<string[]>(decoded[1]);
 
   if (wrapStatus === WrapStatus.WRAP) {
-    const wrap = wrapper('0x0000000000000000000000000000000000000002', '0x8000000000000000000000000000000000000000000000000000000000000000');
+    const wrap = wrapper('0x0000000000000000000000000000000000000002', ethers.utils.parseEther('1'));
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
     const wrap = wrapper(universalRouterAddress, asset_amount_decimals!);

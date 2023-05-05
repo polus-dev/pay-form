@@ -95,7 +95,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 	const { payClass } = props;
 
 	useEffect(() => {
-		if (firstRenderForNativeToken && payClass.tokenA.isNative) {
+		if (!firstRenderForNativeToken && payClass.tokenA.isNative) {
 			setFirstRenderForNativeToken(true);
 			props.setPosition(1);
 		}
@@ -227,6 +227,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 	useEffect(() => {
 		if ((props.payClass.tokenA.isNative || !isMetaMask) && !readyToSend) {
+			setFirstRender(true);
 			setReadyToSend(true)
 		}
 	}, [])
@@ -427,7 +428,7 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 
 const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
-
+	debugger
 	const { config } = usePrepareSendTransaction({
 		request: {
 			to: props.payClass.addressRouter,

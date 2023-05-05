@@ -73,6 +73,10 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
         return null
     }
 
+
+
+    // TODO: check balance of token
+
     const addr: `0x${string}` = `0x${props.tokenAddress.replace("0x", "")}`
     const contractRead = useContractRead({
         address: addr,
@@ -87,6 +91,8 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
         functionName: "approve",
         args: [props.addressPolus, ethers.constants.MaxUint256]
     })
+
+
     const { data, write, error } = useContractWrite(config)
 
     useEffect(() => {
@@ -161,8 +167,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
     const [time, setTime] = React.useState<boolean>(false)
 
-    const addr: `0x${string}` = `0x${props.addressPolus.replace("0x", "")}`
-    const addrToken: `0x${string}` = `0x${props.tokenAddress.replace("0x", "")}`
 
 
     const configForTransaction: Parameters<typeof usePrepareSendTransaction>[0] = { request: { to: props.addressPolus } }
