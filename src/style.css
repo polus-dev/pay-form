@@ -443,7 +443,8 @@ a:-webkit-any-link {
   background-color: #c85b5b;
 }
 
-#main1 .vkuiPanel__in {
+#main1 .vkuiPanel__in,
+#render .vkuiPanel__in {
   display: flex;
   align-items: center;
   justify-content: center;

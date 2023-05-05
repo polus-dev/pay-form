@@ -713,7 +713,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 </div>
             ) : null}
             {!errorObj && !info ? (
-                <Div className="pay-block">
+                <div className="pay-block">
                     <div
                         style={{
                             display: "flex",
@@ -723,11 +723,11 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                     >
                         <Spinner size="large" style={{ margin: "20px 0" }} />
                     </div>
-                </Div>
+                </div>
             ) : null}
 
             {errorObj ? (
-                <Div className="pay-block">
+                <div className="pay-block">
                     <div
                         style={{
                             display: "flex",
@@ -756,7 +756,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                             Back to store
                         </Button>
                     ) : null}
-                </Div>
+                </div>
             ) : null}
         </Panel>
     )
