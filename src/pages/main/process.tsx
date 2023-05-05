@@ -31,6 +31,7 @@ interface AllType {
     address: `0x${string}`,
     amount: string,
     addressMerchant: string,
+
     currentAddressToken: string,
     uuid: string,
     consoleLog: Function,
@@ -39,6 +40,7 @@ interface AllType {
     isNativeToNative: boolean,
     asset_amount_decimals_without_fee: string,
     fee: string,
+    feeRecipient: `0x${string}`;
     polusApi: PolusApi
 }
 
@@ -60,11 +62,12 @@ interface ProcessType {
     isNativeToNative: boolean,
     asset_amount_decimals_without_fee: string,
     fee: string,
+    feeRecipient: string
     polusApi: PolusApi
 }
 
 const ProcessOne: React.FC<ProcessType> = (props) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
     if (props.isNativeToNative) {
         props.setPosition(1)
         return null
@@ -75,14 +78,14 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
         address: addr,
         abi: token_abi,
         functionName: "allowance",
-        args: [ props.address, props.addressPolus ]
+        args: [props.address, props.addressPolus]
     })
 
     const { config } = usePrepareContractWrite({
         address: addr,
         abi: token_abi,
         functionName: "approve",
-        args: [ props.addressPolus, ethers.constants.MaxUint256 ]
+        args: [props.addressPolus, ethers.constants.MaxUint256]
     })
     const { data, write, error } = useContractWrite(config)
 
@@ -107,7 +110,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
                 console.log("props.addressPolus", props.addressPolus)
             }
         }
-    }, [ contractRead.data, write ])
+    }, [contractRead.data, write])
 
     useEffect(() => {
         if (data) {
@@ -115,7 +118,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
             props.setPosition(1)
             props.reRender(2)
         }
-    }, [ data ])
+    }, [data])
 
     useEffect(() => {
         if (error) {
@@ -123,7 +126,7 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
             props.consoleLog(error?.message ?? "Unknown error", false)
             props.setPositionError(1)
         }
-    }, [ error ])
+    }, [error])
 
     return (
         <SimpleCell
@@ -147,16 +150,16 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
                 </div>
             }
         >
-      Approve your tokens
+            Approve your tokens
         </SimpleCell>
     )
 }
 
 const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
-    const [ firstRender2, setFirstRender2 ] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
+    const [firstRender2, setFirstRender2] = React.useState<boolean>(false)
 
-    const [ time, setTime ] = React.useState<boolean>(false)
+    const [time, setTime] = React.useState<boolean>(false)
 
     const addr: `0x${string}` = `0x${props.addressPolus.replace("0x", "")}`
     const addrToken: `0x${string}` = `0x${props.tokenAddress.replace("0x", "")}`
@@ -170,7 +173,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             uuid: props.uuid.replaceAll("-", ""),
             fee: props.fee,
             merchant: props.addressMerchant,
-            merchantAmount: props.asset_amount_decimals_without_fee
+            merchantAmount: props.asset_amount_decimals_without_fee,
+            feeRecipient: props.feeRecipient
         })
     } else {
         configForTransaction!.request!.data = doPayThroughPolusContract({
@@ -178,7 +182,8 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             fee: props.fee,
             merchant: props.addressMerchant,
             merchantAmount: props.asset_amount_decimals_without_fee,
-            tokenAddress: props.tokenAddress
+            tokenAddress: props.tokenAddress,
+            feeRecipient: props.feeRecipient,
         })
     }
 
@@ -186,7 +191,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
 
     const { config } = usePrepareSendTransaction(configForTransaction)
     const { data, isLoading, isSuccess, sendTransaction, error, isError } =
-    useSendTransaction(config)
+        useSendTransaction(config)
 
     useEffect(() => {
         if (!firstRender && props.position === 1 && sendTransaction) {
@@ -198,7 +203,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
                 }
             }, 10 * 1000)
         }
-    }, [ sendTransaction, props.position ])
+    }, [sendTransaction, props.position])
 
     useEffect(() => {
         if (data) {
@@ -208,7 +213,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             props.setPayed(true)
             // FIX: 
         }
-    }, [ data ])
+    }, [data])
 
     useEffect(() => {
         if (isError) {
@@ -216,7 +221,7 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             props.setPositionError(2)
         }
         console.log(error)
-    }, [ error ])
+    }, [error])
     //
     useEffect(() => {
         console.log("render")
@@ -249,13 +254,13 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
                 </div>
             }
         >
-      Sign transaction
+            Sign transaction
         </SimpleCell>
     )
 }
 
 const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
     useEffect(() => {
         if (!firstRender) {
@@ -263,12 +268,12 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
         }
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         if (props.position === 2) {
             props.polusApi.changeBlockchain(props.uuid, 'evm') // смена блокчеина для богдана
         }
 
-    }, [ props.position ])
+    }, [props.position])
 
     return (
         <SimpleCell
@@ -287,21 +292,21 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
                 </div>
             }
         >
-      Payment successfull
+            Payment successfull
         </SimpleCell>
     )
 }
 
 export const ProcessAll: React.FC<AllType> = (props) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
-    const [ position, setPosition ] = React.useState<number>(0)
-    const [ positionError, setPositionError ] = React.useState<number>(0)
+    const [position, setPosition] = React.useState<number>(0)
+    const [positionError, setPositionError] = React.useState<number>(0)
 
-    const [ oneId, setOneId ] = React.useState<string>("100")
-    const [ twoId, setTwoId ] = React.useState<string>("200")
+    const [oneId, setOneId] = React.useState<string>("100")
+    const [twoId, setTwoId] = React.useState<string>("200")
 
-    function reRender (id: number) {
+    function reRender(id: number) {
         if (id === 1) {
             setOneId(`${Number(oneId) + 1}`)
         }
@@ -327,7 +332,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
         if (position === 2) {
             props.setProgress(100)
         }
-    }, [ position ])
+    }, [position])
 
     return (
         <div id={props.id} className="process-block">
@@ -351,6 +356,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
                 fee={props.fee}
                 asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
                 polusApi={props.polusApi}
+                feeRecipient={props.feeRecipient}
 
             />
             <ProcessTwo
@@ -374,6 +380,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
                 fee={props.fee}
                 asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
                 polusApi={props.polusApi}
+                feeRecipient={props.feeRecipient}
             />
             <ProcessTree
                 key={"tree1"}
@@ -395,6 +402,7 @@ export const ProcessAll: React.FC<AllType> = (props) => {
                 fee={props.fee}
                 asset_amount_decimals_without_fee={props.asset_amount_decimals_without_fee}
                 polusApi={props.polusApi}
+                feeRecipient={props.feeRecipient}
 
             />
         </div>

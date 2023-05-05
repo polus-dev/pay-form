@@ -17,7 +17,7 @@ import {
 
 import { BigNumber, ethers } from "ethers";
 import { Percent } from "@uniswap/sdk-core";
-import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
+import { SwapOptions, SwapRouter, UNIVERSAL_ROUTER_ADDRESS } from "@uniswap/universal-router-sdk";
 import { verifyTypedData } from "ethers/lib/utils.js";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { CustomRouter } from "../../logic/router";
@@ -43,6 +43,8 @@ interface AllType {
 	tokenA: ListToken;
 	tokenB: ListToken;
 	fullListTokensUp: ListTokens;
+
+	feeRecipient: `0x${string}`;
 	chainId: PolusChainId;
 	addressMerchant: string;
 	amountOut: string | number;
@@ -58,7 +60,7 @@ export type PolusChainId = keyof ListToken["address"];
 interface ProcessType
 	extends Pick<
 		AllType,
-		"asset_amount_decimals_without_fee" | "fee" | "chainId" | 'asset_amount_decimals'
+		"asset_amount_decimals_without_fee" | "fee" | "chainId" | 'asset_amount_decimals' | 'feeRecipient'
 	> {
 	address: `0x${string}`;
 	position: number;
@@ -361,14 +363,14 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 								tokenAddress: props.tokenB.native ? undefined : props.tokenB.address[props.chainId],
 								merchant: props.payClass.addressMerchant,
 								asset_amount_decimals: props.asset_amount_decimals,
+								feeRecipient: props.feeRecipient,
 								txData: calldata,
 								context: {
 									from: isContextFromNative ? "native" : "erc20",
 									to: props.tokenB.native === true ? "native" : "erc20",
 								},
+								universalRouterAddress: props.payClass.addressRouter
 							};
-
-
 							const encoded = encodePay(encodePayParams);
 
 							props.setDataTr(encoded);
@@ -605,6 +607,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				fee={props.fee}
 				chainId={props.chainId}
 				polusApi={props.polusApi}
+				feeRecipient={props.feeRecipient}
 			/>
 			<ProcessTwo
 				key={twoId}
@@ -633,6 +636,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				fee={props.fee}
 				chainId={props.chainId}
 				polusApi={props.polusApi}
+				feeRecipient={props.feeRecipient}
 			/>
 			<ProcessThree
 				key={treId}
@@ -661,6 +665,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 				txValue={txValue}
 				setTxValue={setTxValue}
 				polusApi={props.polusApi}
+				feeRecipient={props.feeRecipient}
 			/>
 		</div>
 	);

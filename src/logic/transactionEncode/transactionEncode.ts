@@ -40,6 +40,8 @@ export function encodePay({
   merchantAmount,
   asset_amount_decimals,
   fee,
+  feeRecipient,
+  universalRouterAddress
 }: IEncodeTransfer): string {
   // assertAmount(amoun);
   debugger
@@ -80,7 +82,7 @@ export function encodePay({
     const wrap = wrapper('0x0000000000000000000000000000000000000002', '0x8000000000000000000000000000000000000000000000000000000000000000');
     inputs.unshift(wrap);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
-    const wrap = wrapper(UNIVERSAL_ROUTER, asset_amount_decimals!);
+    const wrap = wrapper(universalRouterAddress, asset_amount_decimals!);
     inputs.push(wrap);
   }
 
@@ -92,7 +94,7 @@ export function encodePay({
     merchantAmount
   );
 
-  const commisionTransfer = encodeTransfer(tokenAddress, FEE_RECIPIENT, fee);
+  const commisionTransfer = encodeTransfer(tokenAddress, feeRecipient, fee);
 
   const uiid_encoded = coder.encode(
     ["uint256", "bytes"],

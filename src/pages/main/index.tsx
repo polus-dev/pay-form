@@ -70,19 +70,19 @@ interface ErrorType {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 export const Main: React.FC<MainProps> = (props: MainProps) => {
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
-    const [ type, setType ] = React.useState<number>(0)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
+    const [type, setType] = React.useState<number>(0)
 
-    const [ ready, setReady ] = React.useState<boolean>(false)
-    const [ payed, setPayed ] = React.useState<boolean>(false)
+    const [ready, setReady] = React.useState<boolean>(false)
+    const [payed, setPayed] = React.useState<boolean>(false)
 
-    const [ timer, setTimer ] = React.useState<string>("00:00")
+    const [timer, setTimer] = React.useState<string>("00:00")
 
-    const [ reRender, setRerender ] = React.useState<boolean>(false)
+    const [reRender, setRerender] = React.useState<boolean>(false)
 
-    const [ coin, setCoin ] = React.useState<ListToken>(fullListTokens[0])
-    const [ coinInvoice, setCoinInvoice ] = React.useState<string>("0")
-    const [ coinMerchant, setCoinMerchant ] = React.useState<ListToken>(
+    const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0])
+    const [coinInvoice, setCoinInvoice] = React.useState<string>("0")
+    const [coinMerchant, setCoinMerchant] = React.useState<ListToken>(
         fullListTokens[0]
     )
 
@@ -93,15 +93,15 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const { chains, error, isLoading, pendingChainId, switchNetwork } =
         useSwitchNetwork()
 
-    const [ info, setInfo ] = React.useState<Info | undefined | false>(undefined)
+    const [info, setInfo] = React.useState<Info | undefined | false>(undefined)
 
-    const [ errorObj, setErrorObj ] = React.useState<ErrorType | undefined>(
+    const [errorObj, setErrorObj] = React.useState<ErrorType | undefined>(
         undefined
     )
 
-    const [ progress, setProgress ] = React.useState<number>(0)
+    const [progress, setProgress] = React.useState<number>(0)
 
-    const [ fullListTokensUp, setFullListTokensUp ] =
+    const [fullListTokensUp, setFullListTokensUp] =
         React.useState<ListTokens>(fullListTokens)
 
     const location = useLocation()
@@ -109,7 +109,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
 
     const polusApi = new PolusApi()
 
-    function startTimer (inf: InvoiceType) {
+    function startTimer(inf: InvoiceType) {
         const eventTime = Number(inf.expires_at) // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
         const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
         const diffTime = eventTime - currentTime
@@ -163,7 +163,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     //     return true
     // }
 
-    function chCoinNew (token: ListToken, info1: false | Info | undefined = info ) {
+    function chCoinNew(token: ListToken, info1: false | Info | undefined = info) {
         setCoin(token)
         if (info1) {
             const merchantToken = fullListTokensUp.filter(
@@ -175,7 +175,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         console.log("Select coin", token)
     }
 
-    async function swithNet (id: number) {
+    async function swithNet(id: number) {
         props.openPop()
         console.log("swithNet", id)
         if (!switchNetwork || !id) {
@@ -186,7 +186,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return true
     }
 
-    async function getInfo (uuid1: string, type1: boolean = true) {
+    async function getInfo(uuid1: string, type1: boolean = true) {
         // const data = await polusApi.getPaymentInfo(uuid1)
         const data = await polusApi.getInfo(uuid1)
         if (!data) {
@@ -256,7 +256,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return true
     }
 
-    async function startPay () {
+    async function startPay() {
         if (!ready) {
             await swithNet(137)
         }
@@ -272,7 +272,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return true
     }
 
-    function generatedUrlRedirect (status: string) {
+    function generatedUrlRedirect(status: string) {
         if (info) {
             if (status === "sucess") {
                 return info.merchant?.success_redirect_url ?? undefined
@@ -282,16 +282,16 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         return undefined
     }
 
-    function getSubCoin (list: ListTokens) {
+    function getSubCoin(list: ListTokens) {
 
         const _list = list.slice(4, list.length)
 
         for (let i = 0; i < _list.length; i++) {
             if (_list[i].name === coin.name) {
-                return [ coin ]
+                return [coin]
             }
         }
-        return [ _list[0] ]
+        return [_list[0]]
     }
 
     useEffect(() => {
@@ -304,11 +304,11 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 props.closePop(true)
             }
         }
-    }, [ isLoading ])
+    }, [isLoading])
 
     useEffect(() => {
         console.log("pendingChainId", pendingChainId)
-    }, [ pendingChainId ])
+    }, [pendingChainId])
 
     useEffect(() => {
         console.log("chain", chain)
@@ -326,20 +326,20 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         props.closePop(false)
         props.setActiveModal(null)
         close()
-    }, [ chain ])
+    }, [chain])
 
     useEffect(() => {
         if (props.seletcToken) {
             chCoinNew(props.seletcToken)
         }
-    }, [ props.seletcToken ])
+    }, [props.seletcToken])
 
     useEffect(() => {
         if (info) {
             // chCoinNew(fullListTokensUp[0])
             // changeCoin(tokens.polygon[0], 137)
         }
-    }, [ info ])
+    }, [info])
 
     useEffect(() => {
         if (isConnected) {
@@ -347,7 +347,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         } else {
             setProgress(0)
         }
-    }, [ isConnected ])
+    }, [isConnected])
 
     useEffect(() => {
         if (!firstRender) {
@@ -374,11 +374,11 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
         if (type === 0) {
             props.setTron(false)
         }
-    }, [ type ])
+    }, [type])
 
     useEffect(() => {
         props.setSelectToken(coin)
-    }, [ coin ])
+    }, [coin])
 
     useEffect(() => {
         if (info) {
@@ -389,7 +389,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                 setCoin(fullListTokens[0])
             }
         }
-    }, [ info, props.tron ])
+    }, [info, props.tron])
 
     return (
         <Panel id={reRender ? props.id : "render"}>
@@ -607,56 +607,58 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         {(coin.native && coin.native === coinMerchant.native) ||
                                             coin.address[chain.id as PolusChainId] ===
                                             coinMerchant.address[chain.id as PolusChainId] ? (
-                                                <Process
-                                                    id={"all1"}
-                                                    address={address}
-                                                    tokenAddress={coin.address[chain.id as PolusChainId]}
-                                                    addressPolus={
-                                                        chain.id === 1
-                                                            ? addressPolus.mainnet
-                                                            : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
-                                                    }
-                                                    amount={info.invoice.asset_amount}
-                                                    addressMerchant={info.invoice.evm_withdraw_address}
-                                                    uuid={info.invoice.id}
-                                                    currentAddressToken={
-                                                        coinMerchant.address[chain.id as PolusChainId]
-                                                    }
-                                                    consoleLog={props.consoleLog}
-                                                    setPayed={setPayed}
-                                                    fee={info.invoice.fee!}
-                                                    asset_amount_decimals_without_fee={
-                                                        info.invoice.asset_amount_decimals_without_fee!
-                                                    }
-                                                    setProgress={setProgress}
-                                                    isNativeToNative={
-                                                        Boolean(coin.native && coin.native === coinMerchant.native)
-                                                    }
-                                                    polusApi={polusApi}
-                                                />
-                                            ) : (
-                                                <ProcessAll
-                                                    id={"all1"}
-                                                    address={address}
-                                                    uuid={info.invoice.id}
-                                                    consoleLog={props.consoleLog}
-                                                    setPayed={setPayed}
-                                                    setProgress={setProgress}
-                                                    // NOTE: chainId must be a restriction of the supported chains
-                                                    chainId={chain.id as PolusChainId}
-                                                    addressMerchant={info.invoice.evm_withdraw_address}
-                                                    amountOut={info.invoice.asset_amount}
-                                                    tokenA={coin}
-                                                    tokenB={coinMerchant}
-                                                    fullListTokensUp={fullListTokensUp}
-                                                    fee={info.invoice.fee!}
-                                                    asset_amount_decimals_without_fee={
-                                                        info.invoice.asset_amount_decimals_without_fee!
-                                                    }
-                                                    asset_amount_decimals={info.invoice.asset_amount_decimals!}
-                                                    polusApi={polusApi}
-                                                />
-                                            )}
+                                            <Process
+                                                id={"all1"}
+                                                address={address}
+                                                tokenAddress={coin.address[chain.id as PolusChainId]}
+                                                addressPolus={
+                                                    chain.id === 1
+                                                        ? addressPolus.mainnet
+                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
+                                                }
+                                                amount={info.invoice.asset_amount}
+                                                addressMerchant={info.invoice.evm_withdraw_address}
+                                                uuid={info.invoice.id}
+                                                currentAddressToken={
+                                                    coinMerchant.address[chain.id as PolusChainId]
+                                                }
+                                                consoleLog={props.consoleLog}
+                                                setPayed={setPayed}
+                                                fee={info.invoice.fee!}
+                                                asset_amount_decimals_without_fee={
+                                                    info.invoice.asset_amount_decimals_without_fee!
+                                                }
+                                                setProgress={setProgress}
+                                                isNativeToNative={
+                                                    Boolean(coin.native && coin.native === coinMerchant.native)
+                                                }
+                                                polusApi={polusApi}
+                                                feeRecipient={info.invoice.evm_fee_address}
+                                            />
+                                        ) : (
+                                            <ProcessAll
+                                                id={"all1"}
+                                                address={address}
+                                                uuid={info.invoice.id}
+                                                consoleLog={props.consoleLog}
+                                                setPayed={setPayed}
+                                                setProgress={setProgress}
+                                                // NOTE: chainId must be a restriction of the supported chains
+                                                chainId={chain.id as PolusChainId}
+                                                addressMerchant={info.invoice.evm_withdraw_address}
+                                                amountOut={info.invoice.asset_amount}
+                                                tokenA={coin}
+                                                tokenB={coinMerchant}
+                                                fullListTokensUp={fullListTokensUp}
+                                                fee={info.invoice.fee!}
+                                                asset_amount_decimals_without_fee={
+                                                    info.invoice.asset_amount_decimals_without_fee!
+                                                }
+                                                asset_amount_decimals={info.invoice.asset_amount_decimals!}
+                                                polusApi={polusApi}
+                                                feeRecipient={info.invoice.evm_fee_address}
+                                            />
+                                        )}
                                     </div>
                                 ) : null}
 

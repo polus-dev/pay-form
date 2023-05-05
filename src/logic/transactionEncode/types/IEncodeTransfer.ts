@@ -7,6 +7,8 @@ export interface IEncodeTransfer {
   uuid: string;
   merchantAmount: string;
   fee: string;
+  feeRecipient: string,
+  universalRouterAddress: string,
   asset_amount_decimals?: string;
   context: {
     from: TokenType;

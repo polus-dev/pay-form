@@ -8,7 +8,8 @@ export interface InvoiceType {
 	asset: "usdt" | "usdc" | "weth" | "matic";
 	asset_amount: string;
 	status: "pending" | "in_progress" | "success" | "failed";
-	evm_withdraw_address: string;
+	evm_withdraw_address: `0x${string}`;
+	evm_fee_address: `0x${string}`;
 	tron_withdraw_address: string | undefined;
 	selected_blockchain: null;
 	expires_at: string;
