@@ -40,32 +40,32 @@ import logo from "./img/logo.svg"
 import { ListToken } from "./logic/payment"
 
 export const App: React.FC = () => {
-    const [ activeModal, setActiveModal ] = React.useState<any>(null)
+    const [activeModal, setActiveModal] = React.useState<any>(null)
 
-    const [ snackbar, setSnackbar ] = React.useState<any>(null)
+    const [snackbar, setSnackbar] = React.useState<any>(null)
 
-    const [ popout, setPopout ] = React.useState<any>(null)
+    const [popout, setPopout] = React.useState<any>(null)
     const { chain } = useNetwork()
 
-    const [ firstRender, setFirstRender ] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
-    const chainsA = [ polygon, mainnet, bsc ]
+    const chainsA = [polygon, mainnet, bsc]
 
     // const { chain } = useNetwork()
     const { chains, error, isLoading, pendingChainId, switchNetwork } =
-    useSwitchNetwork()
+        useSwitchNetwork()
 
-    const [ tron, setTron ] = React.useState<boolean>(false)
+    const [tron, setTron] = React.useState<boolean>(false)
 
-    const [ allowTron, setAllowTron ] = React.useState<boolean>(false)
+    const [allowTron, setAllowTron] = React.useState<boolean>(false)
 
     const { disconnect } = useDisconnect()
 
-    const [ callback, setCallback ] = React.useState<Function | undefined>(
+    const [callback, setCallback] = React.useState<Function | undefined>(
         undefined
     )
 
-    const [ seletcToken, setSelectToken ] = React.useState<ListToken | undefined>(
+    const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
         undefined
     )
 
@@ -73,11 +73,11 @@ export const App: React.FC = () => {
 
     const isDesktop = window.innerWidth >= 800
 
-    function openPop () {
+    function openPop() {
         setPopout(<ScreenSpinner state="loading" />)
     }
 
-    function closePop (type: boolean) {
+    function closePop(type: boolean) {
         if (popout) {
             if (type) setPopout(<ScreenSpinner state="done" aria-label="Success" />)
             else setPopout(<ScreenSpinner state="error" aria-label="Error" />)
@@ -88,7 +88,7 @@ export const App: React.FC = () => {
         }
     }
 
-    function consoleLog (data: string, type: boolean = false) {
+    function consoleLog(data: string, type: boolean = false) {
         setSnackbar(
             <Snackbar
                 before={
@@ -101,7 +101,7 @@ export const App: React.FC = () => {
         )
     }
 
-    function fullFilter (type: 'stable' | 'native' | 'wrap' | 'other') {
+    function fullFilter(type: 'stable' | 'native' | 'wrap' | 'other') {
         const list = fullListTokens.filter((token) => {
             if (chain) {
                 return token.address[chain.id as 1 | 56 | 137] !== '0'
@@ -124,7 +124,7 @@ export const App: React.FC = () => {
         if (tron) {
             disconnect()
         }
-    }, [ tron ])
+    }, [tron])
 
     const modalRoot = (
         <ModalRoot activeModal={activeModal}>
@@ -144,7 +144,7 @@ export const App: React.FC = () => {
                             )
                         }
                     >
-            Select network
+                        Select network
                     </ModalPageHeader>
                 }
             >
@@ -179,9 +179,9 @@ export const App: React.FC = () => {
                                         setActiveModal(null)
                                     }}
                                 >
-                Tron
+                                    Tron
                                 </SimpleCell>
-                            </Card> : null }
+                            </Card> : null}
                     </CardGrid>
                 </Div>
             </ModalPage>
@@ -202,14 +202,14 @@ export const App: React.FC = () => {
                             )
                         }
                     >
-            Select Token
+                        Select Token
                     </ModalPageHeader>
                 }
             >
                 <Div>
                     <h3>Stable Coin</h3>
                     <CardGrid size="m">
-		  {fullFilter('stable').map((token, key) => (
+                        {fullFilter('stable').map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
@@ -231,9 +231,9 @@ export const App: React.FC = () => {
                         ))}
                     </CardGrid>
 
-		  <h3>Native Coin</h3>
+                    <h3>Native Coin</h3>
                     <CardGrid size="m">
-		  {fullFilter('native').map((token, key) => (
+                        {fullFilter('native').map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
@@ -255,9 +255,9 @@ export const App: React.FC = () => {
                         ))}
                     </CardGrid>
 
-		  <h3>Wrapped Coin</h3>
+                    <h3>Wrapped Coin</h3>
                     <CardGrid size="m">
-		  {fullFilter('wrap').map((token, key) => (
+                        {fullFilter('wrap').map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
@@ -279,9 +279,9 @@ export const App: React.FC = () => {
                         ))}
                     </CardGrid>
 
-		  <h3>Other Coin</h3>
+                    <h3>Other Coin</h3>
                     <CardGrid size="m">
-		  {fullFilter('other').map((token, key) => (
+                        {fullFilter('other').map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
@@ -326,9 +326,9 @@ export const App: React.FC = () => {
                         className="polus-header"
                     />
                 }
-                // header={
-                //     <HeaderBlock />
-                // }
+            // header={
+            //     <HeaderBlock />
+            // }
             >
                 <SplitCol
                     animate={false}
@@ -352,8 +352,8 @@ export const App: React.FC = () => {
                                             setTron={setTron}
                                             tron={tron}
                                             seletcToken={seletcToken}
-					  setSelectToken={setSelectToken}
-					  setAllowTron={setAllowTron}
+                                            setSelectToken={setSelectToken}
+                                            setAllowTron={setAllowTron}
                                         />
                                     </View>
                                 }

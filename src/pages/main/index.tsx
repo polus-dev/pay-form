@@ -42,6 +42,7 @@ import { ProcessAll as Process } from "./process"
 import { ListToken, ListTokens, Payment } from "../../logic/payment"
 import { NtoStr, getParameterByName } from "../../logic/utils"
 import { Tron } from "./tron"
+import { TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
 
 const addressPolus = {
     polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
@@ -68,6 +69,7 @@ interface ErrorType {
     code: number
 }
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
 
 export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
@@ -128,8 +130,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     //     const chainIdLocal = chain ? chain.id : chainID
     //     if (!info || !chainIdLocal) {
     //         console.error('changeCoin: info or chain')
-    //         return undefined
-    //     }
+    //         return und
     //     const nameCoin = coin1.name.toLowerCase() as ListCurrencies
 
     //     if (chainIdLocal === 1) {
@@ -478,7 +479,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 <div className="text-one">Choose currency</div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(0, 3).map((token, key) => (
+                                    {fullListTokensUp.slice(0, 3).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
@@ -494,7 +495,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                 </div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(3, 4).map((token, key) => (
+                                    {fullListTokensUp.slice(3, 4).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
@@ -508,7 +509,7 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
                                         </Button>
                                     ))}
 
-                                    {getSubCoin(fullListTokensUp).map((token, key) => (
+                                    {getSubCoin(fullListTokensUp).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"

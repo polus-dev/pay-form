@@ -5,7 +5,7 @@ import { BigNumber, ethers } from "ethers"
 import { ListTokens } from "./payment"
 import { fullListTokens } from "./tokens"
 
-export async function getPriceToken (
+export async function getPriceToken(
     tokensList: ListTokens
 ): Promise<ListTokens> {
     const _listTokens = fullListTokens
@@ -52,7 +52,7 @@ export async function getPriceToken (
     return _listTokens
 }
 
-export function getParameterByName (
+export function getParameterByName(
     name: string,
     url = window.location.href
 ): string | null {
@@ -63,14 +63,14 @@ export function getParameterByName (
     if (!results[2]) return ""
     return decodeURIComponent(results[2].replace(/\+/g, " "))
 }
-export function weiToEthNum (
+export function weiToEthNum(
     nanoAmount: BigNumber | string | BigInt,
     decimals: number
 ): number {
     return Number(ethers.utils.formatUnits(BigNumber.from(nanoAmount), decimals))
 }
 
-export function weiToEth (
+export function weiToEth(
     nanoAmount: BigNumber | string,
     decimals: number
 ): string {
@@ -94,7 +94,7 @@ export function weiToEth (
     return stringAmount
 }
 
-export function NtoStr (n1: number | string | BigNumber | Number): string {
+export function NtoStr(n1: number | string | BigNumber | Number): string {
     const n2 = Number(n1.toString())
 
     let stringAmount = Number(n2).toPrecision(5)
@@ -120,6 +120,6 @@ export function NtoStr (n1: number | string | BigNumber | Number): string {
     return stringAmount
 }
 
-export function ETHToWei (amount: string, desimals: number): BigNumber {
+export function ETHToWei(amount: string, desimals: number): BigNumber {
     return ethers.utils.parseUnits(amount, desimals)
 }
