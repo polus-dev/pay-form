@@ -18,14 +18,36 @@ interface AllType {
 
 export const Tron: React.FC<AllType> = (props: AllType) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
+    const [isAvailable, setIsAvailable] = React.useState(false)
 
     useEffect(() => {
         if (!firstRender) {
             setFirstRender(true)
 
-            props.polusApi.changeBlockchain(props.uuid, 'tron') // смена блокчеина для богдана
+            props.polusApi.changeBlockchain(props.uuid, 'tron').then(status => (isAvailable !== Boolean(status))
+                && setIsAvailable(Boolean(status)))
+            // смена блокчеина для богдана
         }
     }, [])
+
+    if (!isAvailable) return (
+        <div style={{ margin: '1rem' }}>
+            <CardGrid size="l">
+                <Card>
+                    <Div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        <span style={{ width: '100%', textAlign: 'center' }}>
+                            This blockchain is not available for this transaction
+                        </span>
+                    </Div>
+                </Card>
+            </CardGrid>
+        </div>
+    )
+
 
     return (
         <div>
@@ -117,8 +139,6 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
                 </Card>
             </CardGrid>
             <br />
-
-
         </div>
     )
 }
