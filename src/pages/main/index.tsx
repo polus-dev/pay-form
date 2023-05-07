@@ -9,7 +9,7 @@ import {
     Spinner
 } from "@vkontakte/vkui"
 
-import React, { useEffect } from "react"
+import React, { memo, useEffect, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import { useWeb3Modal } from "@web3modal/react"
@@ -71,7 +71,7 @@ interface ErrorType {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 
-export const Main: React.FC<MainProps> = (props: MainProps) => {
+export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
     const [type, setType] = React.useState<number>(0)
 
@@ -106,10 +106,8 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
     const [fullListTokensUp, setFullListTokensUp] =
         React.useState<ListTokens>(fullListTokens)
 
-    const location = useLocation()
-    const history = useNavigate()
 
-    const polusApi = new PolusApi()
+    const polusApi = useMemo(() => new PolusApi(), []);
 
     function startTimer(inf: InvoiceType) {
         const eventTime = Number(inf.expires_at) // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
@@ -761,4 +759,4 @@ export const Main: React.FC<MainProps> = (props: MainProps) => {
             ) : null}
         </Panel>
     )
-}
+})

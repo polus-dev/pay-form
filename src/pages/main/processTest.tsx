@@ -6,7 +6,7 @@ import {
 	Icon28RefreshOutline,
 } from "@vkontakte/icons";
 import { SimpleCell } from "@vkontakte/vkui";
-import React, { useEffect } from "react";
+import React, { memo, useEffect, useMemo } from "react";
 import {
 	useContractWrite,
 	usePrepareContractWrite,
@@ -86,7 +86,7 @@ interface ProcessType
 }
 
 
-const ProcessOne: React.FC<ProcessType> = (props) => {
+const ProcessOne: React.FC<ProcessType> = memo((props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
 	const [firstRenderForNativeToken, setFirstRenderForNativeToken] = React.useState<boolean>(false);
 
@@ -205,9 +205,9 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
 			Approve your tokens
 		</SimpleCell>
 	);
-};
+});
 
-const ProcessTwo: React.FC<ProcessType> = (props) => {
+const ProcessTwo: React.FC<ProcessType> = memo((props) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
 	const isMetaMask = window.ethereum?.isMetaMask;
@@ -424,11 +424,10 @@ const ProcessTwo: React.FC<ProcessType> = (props) => {
 			Sign your tokens
 		</SimpleCell>
 	);
-};
+});
 
-const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
+const ProcessThree: React.FC<ProcessType> = memo((props: ProcessType) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
-	debugger
 	const { config } = usePrepareSendTransaction({
 		request: {
 			to: props.payClass.addressRouter,
@@ -515,9 +514,9 @@ const ProcessThree: React.FC<ProcessType> = (props: ProcessType) => {
 			Sign transaction
 		</SimpleCell>
 	);
-};
+});
 
-export const ProcessAll: React.FC<AllType> = (props: AllType) => {
+export const ProcessAll: React.FC<AllType> = memo((props: AllType) => {
 	const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
 	const [position, setPosition] = React.useState<number>(0);
@@ -544,7 +543,7 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 		callback: props.consoleLog,
 	};
 
-	const [payClass, setPayClass] = React.useState<Payment>(new Payment(config));
+	const payClass: Payment = useMemo(() => new Payment(config), []);
 
 	function reRender(id: number) {
 		if (id === 1) {
@@ -670,4 +669,4 @@ export const ProcessAll: React.FC<AllType> = (props: AllType) => {
 			/>
 		</div>
 	);
-};
+});

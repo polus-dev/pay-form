@@ -6,7 +6,7 @@ import {
     Icon28RefreshOutline
 } from "@vkontakte/icons"
 import { IconButton, SimpleCell } from "@vkontakte/vkui"
-import React, { useEffect } from "react"
+import React, { memo, useEffect } from "react"
 import {
     useContractRead,
     useContractWrite,
@@ -66,7 +66,7 @@ interface ProcessType {
     polusApi: PolusApi
 }
 
-const ProcessOne: React.FC<ProcessType> = (props) => {
+const ProcessOne: React.FC<ProcessType> = memo((props) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
     if (props.isNativeToNative) {
         props.setPosition(1)
@@ -159,11 +159,10 @@ const ProcessOne: React.FC<ProcessType> = (props) => {
             Approve your tokens
         </SimpleCell>
     )
-}
+})
 
-const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
+const ProcessTwo: React.FC<ProcessType> = memo((props: ProcessType) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
-    const [firstRender2, setFirstRender2] = React.useState<boolean>(false)
 
     const [time, setTime] = React.useState<boolean>(false)
 
@@ -191,7 +190,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
         })
     }
 
-    console.log('configForTransaction', configForTransaction)
 
     const { config } = usePrepareSendTransaction(configForTransaction)
     const { data, isLoading, isSuccess, sendTransaction, error, isError } =
@@ -227,9 +225,6 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
         console.log(error)
     }, [error])
     //
-    useEffect(() => {
-        console.log("render")
-    }, [])
 
     return (
         <SimpleCell
@@ -261,9 +256,9 @@ const ProcessTwo: React.FC<ProcessType> = (props: ProcessType) => {
             Sign transaction
         </SimpleCell>
     )
-}
+})
 
-const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
+const ProcessTree: React.FC<ProcessType> = memo((props: ProcessType) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
     useEffect(() => {
@@ -299,9 +294,9 @@ const ProcessTree: React.FC<ProcessType> = (props: ProcessType) => {
             Payment successfull
         </SimpleCell>
     )
-}
+})
 
-export const ProcessAll: React.FC<AllType> = (props) => {
+export const ProcessAll: React.FC<AllType> = memo((props) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
     const [position, setPosition] = React.useState<number>(0)
@@ -411,4 +406,4 @@ export const ProcessAll: React.FC<AllType> = (props) => {
             />
         </div>
     )
-}
+})
