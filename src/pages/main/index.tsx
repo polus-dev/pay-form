@@ -109,18 +109,21 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
     const polusApi = useMemo(() => new PolusApi(), []);
 
+
     function startTimer(inf: InvoiceType) {
-        const eventTime = Number(inf.expires_at) // Timestamp - Sun, 21 Apr 2013 13:00:00 GMT
-        const currentTime = Date.now() / 1000 // Timestamp - Sun, 21 Apr 2013 12:30:00 GMT
-        const diffTime = eventTime - currentTime
-        let duration = moment.duration(diffTime * 1000, "milliseconds")
+        const eventTime = Number(inf.expires_at)
+        const currentTime = Date.now() / 1000
+        let diffTime = eventTime - currentTime - 1;
         const interval = 1000
 
         if (diffTime < 0) return
 
         const interv = setInterval(() => {
-            duration = moment.duration(Number(duration) - interval, "milliseconds")
-            setTimer(`${duration.minutes()}:${duration.seconds()}`)
+            const minutes = Math.floor(diffTime / 60)
+            const seconds = Math.floor(diffTime % 60)
+            if (diffTime <= 0) clearInterval(interv)
+            setTimer(`${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`)
+            diffTime--;
         }, interval)
     }
     // function changeCoin (coin1: TokenPolus, chainID?: number) {
@@ -245,7 +248,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
         setRerender(!reRender)
 
-        if (data.invoice.tron_withdraw_address !== null) props.setAllowTron(true)
 
         if (data.invoice.status === 'in_progress' || data.invoice.status === 'pending') {
             await sleep(5000)
@@ -667,7 +669,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         address={info.invoice.tron_withdraw_address ?? ""}
                                         polusApi={polusApi}
                                         uuid={info.invoice.id}
-                                        amount={info.invoice.tron_asset_amount_decimals ?? ''}
+                                        amount={info.invoice.tron_asset_amount ?? ''}
                                         log={props.consoleLog}
                                     />
                                 ) : null}
