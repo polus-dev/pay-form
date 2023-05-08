@@ -2,23 +2,24 @@ import axios from "axios"
 import { Invoice } from "./types"
 
 export interface InvoiceType {
-	id: string;
-	merchant_id: string;
-	description: string;
-	asset: "usdt" | "usdc" | "weth" | "matic";
-	asset_amount: string;
-	status: "pending" | "in_progress" | "success" | "failed";
-	evm_withdraw_address: `0x${string}`;
-	evm_fee_address: `0x${string}`;
-	tron_withdraw_address: string | undefined;
-	selected_blockchain: null;
-	expires_at: string;
-	created_at: string;
-	asset_amount_without_fee: string | null;
-	asset_amount_decimals: string | null;
-	asset_amount_decimals_without_fee: string | null;
-	fee: string | null;
-	tron_asset_amount_decimals: string | null;
+    id: string;
+    merchant_id: string;
+    description: string;
+    asset: "usdt" | "usdc" | "weth" | "matic";
+    asset_amount: string;
+    status: "pending" | "in_progress" | "success" | "failed";
+    evm_withdraw_address: `0x${string}`;
+    evm_fee_address: `0x${string}`;
+    tron_withdraw_address: string | undefined;
+    selected_blockchain: null;
+    expires_at: string;
+    created_at: string;
+    asset_amount_without_fee: string | null;
+    asset_amount_decimals: string | null;
+    asset_amount_decimals_without_fee: string | null;
+    fee: string | null;
+    tron_asset_amount_decimals: string | null;
+    tron_asset_amount: string
 }
 
 export interface MerchantType {
@@ -41,11 +42,11 @@ export type Info = {
 class PolusApi {
     private _url: string = "https://api.poluspay.com/"
 
-    constructor (url?: string) {
+    constructor(url?: string) {
         if (url) this._url = url
     }
 
-    public async getPaymentInfo (uuid: string): Promise<MerchantType | undefined> {
+    public async getPaymentInfo(uuid: string): Promise<MerchantType | undefined> {
         const res = await axios.post(`${this._url}api/v1/payment/info`, { uuid })
 
         if (res.data.status === "error") {
@@ -57,7 +58,7 @@ class PolusApi {
         return resData
     }
 
-    public async getInfo (uuid: string): Promise<Info | undefined> {
+    public async getInfo(uuid: string): Promise<Info | undefined> {
         try {
             const res = await axios.post(`${this._url}public/payment.take`, { payment_id: uuid })
 
@@ -81,7 +82,7 @@ class PolusApi {
         }
     }
 
-    public async getInfoMerchant (
+    public async getInfoMerchant(
         uuid: string
     ): Promise<MerchantType | undefined> {
         try {
@@ -95,7 +96,7 @@ class PolusApi {
         }
     }
 
-    public async changeBlockchain (
+    public async changeBlockchain(
         uuid: string,
         blockchain: 'evm' | 'tron'
     ): Promise<true | undefined> {
@@ -106,6 +107,10 @@ class PolusApi {
             })
             return true
         } catch (err) {
+            // @ts-ignore
+            if (err.response.data.code === 2012) {
+                return true
+            }
             console.error(err)
             return undefined
         }

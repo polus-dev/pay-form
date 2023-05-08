@@ -57,7 +57,7 @@ export const App: React.FC = () => {
 
     const [tron, setTron] = React.useState<boolean>(false)
 
-    const [allowTron, setAllowTron] = React.useState<boolean>(false)
+    const [allowTron, setAllowTron] = React.useState<boolean>(true)
 
     const { disconnect } = useDisconnect()
 
@@ -354,6 +354,7 @@ export const App: React.FC = () => {
                                             seletcToken={seletcToken}
                                             setSelectToken={setSelectToken}
                                             setAllowTron={setAllowTron}
+
                                         />
                                     </View>
                                 }

@@ -19,14 +19,15 @@ interface AllType {
 export const Tron: React.FC<AllType> = (props: AllType) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
     const [isAvailable, setIsAvailable] = React.useState(false)
+    const [loading, setLoading] = React.useState(true)
 
     useEffect(() => {
         if (!firstRender) {
             setFirstRender(true)
 
-            props.polusApi.changeBlockchain(props.uuid, 'tron').then(status => (isAvailable !== Boolean(status))
-                && setIsAvailable(Boolean(status)))
-            // смена блокчеина для богдана
+            props.polusApi.changeBlockchain(props.uuid, 'tron')
+                .then(status => (isAvailable !== Boolean(status)) && setIsAvailable(Boolean(status)))
+                .then(() => setLoading(false))
         }
     }, [])
 
@@ -40,7 +41,7 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
                         justifyContent: 'center',
                     }}>
                         <span style={{ width: '100%', textAlign: 'center' }}>
-                            This blockchain is not available for this transaction
+                            {loading ? "Loading..." : "This blockchain is not available for this transaction"}
                         </span>
                     </Div>
                 </Card>
@@ -86,11 +87,11 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
                     <FormItem
                         top="Amount">
                         <Input
-                            value={(Number(props.amount) / 10 ** 6)}
+                            value={props.amount}
                             onChange={() => null}
                             style={{ marginBottom: '10px', marginTop: '10px', userSelect: 'all' }}
                             after={
-                                <CopyToClipboard text={(Number(props.amount) / 10 ** 6).toString()}
+                                <CopyToClipboard text={props.amount}
                                     onCopy={() => props.log('Copyed', true)}>
                                     <IconButton hoverMode="opacity" aria-label="Copy">
                                         <Icon16CopyOutline />
@@ -133,7 +134,7 @@ export const Tron: React.FC<AllType> = (props: AllType) => {
                         // flexDirection: 'column'
                     }}>
                         <span style={{ width: '100%' }}>
-                            Check the amount you send in USDT TRON, in case it will be different from {(Number(props.amount) / 10 ** 6)}, funds may be lost
+                            Check the amount you send in USDT TRON, in case it will be different from {props.amount}, funds may be lost
                         </span>
                     </Div>
                 </Card>
