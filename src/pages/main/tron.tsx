@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
-import { Card, CardGrid, Div, FormItem, IconButton, Input, SimpleCell } from "@vkontakte/vkui"
+import { Card, CardGrid, Div, FormItem, IconButton, Input } from "@vkontakte/vkui"
 import React, { useEffect } from "react"
 import { QRCode } from "react-qr-svg"
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { Icon16CopyOutline, Icon28ErrorOutline } from "@vkontakte/icons"
+import { Icon16CopyOutline } from "@vkontakte/icons"
 import usdtLogo from '../../img/usdt.svg'
 import { PolusApi } from "../../logic/api"
 

@@ -36,13 +36,13 @@ import wc from "../../img/wc.svg"
 import { fullListTokens } from "../../logic/tokens"
 import { Invoice } from "../../logic/types"
 import { Info, InvoiceType, PolusApi } from "../../logic/api"
-import { PolusChainId, ProcessAll } from "./processTest"
 
-import { ProcessAll as Process } from "./process"
-import { ListToken, ListTokens, Payment } from "../../logic/payment"
+import { ListToken, ListTokens, Payment, PolusChainId } from "../../logic/payment"
 import { NtoStr, getParameterByName } from "../../logic/utils"
 import { Tron } from "./tron"
 import { TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
+import { ContractStages } from "./contract"
+import { RouterStages } from "./router"
 
 const addressPolus = {
     polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
@@ -606,7 +606,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         {(coin.native && coin.native === coinMerchant.native) ||
                                             coin.address[chain.id as PolusChainId] ===
                                             coinMerchant.address[chain.id as PolusChainId] ? (
-                                            <Process
+                                            <ContractStages
                                                 id={"all1"}
                                                 address={address}
                                                 tokenAddress={coin.address[chain.id as PolusChainId]}
@@ -635,7 +635,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                                 feeRecipient={info.invoice.evm_fee_address}
                                             />
                                         ) : (
-                                            <ProcessAll
+                                            <RouterStages
                                                 id={"all1"}
                                                 address={address}
                                                 uuid={info.invoice.id}
