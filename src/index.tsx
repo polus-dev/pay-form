@@ -13,7 +13,6 @@ import {
   modalConnectors,
   walletConnectProvider,
 } from "@web3modal/ethereum";
-import { Provider } from 'react-redux'
 
 import { Web3Modal } from "@web3modal/react";
 
@@ -23,6 +22,8 @@ import { mainnet, polygon, bsc } from "wagmi/chains";
 
 import { App as Application } from "./App";
 import { store } from "./store/store";
+import { Provider } from "react-redux";
+import { useAppSelector } from "./store/hooks";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -33,11 +34,13 @@ document.body.appendChild(el);
 // })
 
 
+// Wagmi client
+
 
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
-    dsn: 'https://f4c739a8a9994899b24d8ef65e95b721@o1066986.ingest.sentry.io/4505150834737152',
+    dsn: process.env.REACT_APP_SENTRY_DSN,
     integrations: [
       new Sentry.BrowserTracing(),
       new Sentry.Replay({ maskAllText: true, blockAllMedia: false }),
@@ -56,35 +59,42 @@ if (process.env.NODE_ENV === "production") {
 
 // Web3Modal Ethereum Client
 
+
 const ConfigProviderFix: any = ConfigProvider;
 const AdaptivityProviderFix: any = AdaptivityProvider;
 
+const App = () => {
+  const wagmiClient = useAppSelector(state => state.provider.wagmiClient)
+  const chains = useAppSelector(state => state.provider.chains)
 
-const App = () => (
-  <BrowserRouter basename="/">
-    <WagmiConfig client={wagmiClient}>
-      <React.StrictMode>
-        <ConfigProviderFix
-          appearance={"dark"}
-          webviewType={WebviewType.INTERNAL}
-          platform="ios"
-        >
-          <AdaptivityProviderFix>
-            <Application />
-          </AdaptivityProviderFix>
-        </ConfigProviderFix>
-      </React.StrictMode>
-    </WagmiConfig>
-    <Web3Modal
-      projectId="2e6208d8c73f2b1560e96b4e757bb4a1"
-      ethereumClient={ethereumClient}
-    />
-  </BrowserRouter>
-)
+  const ethereumClient = new EthereumClient(wagmiClient, chains);
+
+  return (
+    <BrowserRouter basename="/">
+      <WagmiConfig client={wagmiClient}>
+        <React.StrictMode>
+          <ConfigProviderFix
+            appearance={"dark"}
+            webviewType={WebviewType.INTERNAL}
+            platform="ios"
+          >
+            <AdaptivityProviderFix>
+              <Application />
+            </AdaptivityProviderFix>
+          </ConfigProviderFix>
+        </React.StrictMode>
+      </WagmiConfig>
+      <Web3Modal
+        projectId={process.env.REACT_APP_PROJECT_ID}
+        ethereumClient={ethereumClient}
+      />
+    </BrowserRouter>
+  )
+}
 
 ReactDOM.render(
   <Provider store={store}>
-    <App />,
+    <App />
   </Provider>,
   document.querySelector("#root")
 );

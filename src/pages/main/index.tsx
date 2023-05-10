@@ -126,44 +126,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             diffTime--;
         }, interval)
     }
-    // function changeCoin (coin1: TokenPolus, chainID?: number) {
-    //     setCoin(coin1)
-    //     const chainIdLocal = chain ? chain.id : chainID
-    //     if (!info || !chainIdLocal) {
-    //         console.error('changeCoin: info or chain')
-    //         return und
-    //     const nameCoin = coin1.name.toLowerCase() as ListCurrencies
-
-    //     if (chainIdLocal === 1) {
-    //         setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
-    //         const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
-    //         const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
-    //         setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
-
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-    //     if (chainIdLocal === 137) {
-    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-
-    //     if (chainIdLocal === 56) {
-    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-    //     // console.log('changeCoin:', info.currencies.polygon[nameCoin])
-    //     return true
-    // }
 
     function chCoinNew(token: ListToken, info1: false | Info | undefined = info) {
         setCoin(token)
@@ -533,44 +495,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         Other
                                     </Button>
                                 </div>
-                                {/* <div className="block-tax" style={{ marginTop: '24px' }}>
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'23%'}
-                                >
-                    TAX
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'1,000.00 USDT'}
-                                >
-                    Amount without TAX
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'230.00 USDT'}
-                                >
-                    Total TAX amount
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'1,230.00 USDT'}
-                                >
-                    Amount due
-                                </MiniInfoCell>
-
-                            </div> */}
 
                                 <span className="timer-block">
                                     The invoice is active in {timer}

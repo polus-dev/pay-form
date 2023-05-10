@@ -1,5 +1,5 @@
 import { FC, memo, useEffect, useState } from "react"
-import { useContractRead, useContractWrite, usePrepareContractWrite } from "wagmi"
+import { useContractRead, useContractWrite, usePrepareContractWrite, } from "wagmi"
 import { ProcessType } from "../ProcessType"
 
 
@@ -14,8 +14,6 @@ export const Stage1: FC<ProcessType> = memo((props) => {
     props.setPosition(1)
     return null
   }
-
-
 
   // TODO: check balance of token
 
