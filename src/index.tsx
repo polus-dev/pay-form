@@ -13,6 +13,7 @@ import {
   modalConnectors,
   walletConnectProvider,
 } from "@web3modal/ethereum";
+import { Provider } from 'react-redux'
 
 import { Web3Modal } from "@web3modal/react";
 
@@ -20,7 +21,8 @@ import { configureChains, createClient, WagmiConfig } from "wagmi";
 
 import { mainnet, polygon, bsc } from "wagmi/chains";
 
-import { App } from "./App";
+import { App as Application } from "./App";
+import { store } from "./store/store";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -30,22 +32,6 @@ document.body.appendChild(el);
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [polygon, mainnet, bsc];
-
-// Wagmi client
-const { provider } = configureChains(chains, [
-  walletConnectProvider({ projectId: "2e6208d8c73f2b1560e96b4e757bb4a1" }),
-]);
-const wagmiClient = createClient({
-  autoConnect: true,
-  connectors: modalConnectors({
-    projectId: "2e6208d8c73f2b1560e96b4e757bb4a1",
-    version: "1", // or "2"
-    appName: "Polus Pay",
-    chains,
-  }),
-  provider,
-});
 
 
 
@@ -69,12 +55,12 @@ if (process.env.NODE_ENV === "production") {
 
 
 // Web3Modal Ethereum Client
-const ethereumClient = new EthereumClient(wagmiClient, chains);
 
 const ConfigProviderFix: any = ConfigProvider;
 const AdaptivityProviderFix: any = AdaptivityProvider;
 
-ReactDOM.render(
+
+const App = () => (
   <BrowserRouter basename="/">
     <WagmiConfig client={wagmiClient}>
       <React.StrictMode>
@@ -84,7 +70,7 @@ ReactDOM.render(
           platform="ios"
         >
           <AdaptivityProviderFix>
-            <App />
+            <Application />
           </AdaptivityProviderFix>
         </ConfigProviderFix>
       </React.StrictMode>
@@ -93,6 +79,12 @@ ReactDOM.render(
       projectId="2e6208d8c73f2b1560e96b4e757bb4a1"
       ethereumClient={ethereumClient}
     />
-  </BrowserRouter>,
+  </BrowserRouter>
+)
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />,
+  </Provider>,
   document.querySelector("#root")
 );
