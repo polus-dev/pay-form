@@ -397,7 +397,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             <PanelHeader separator={false} />
 
             {!errorObj && info && coin ? (
-                <div className="pay-block">
+                <div className="pay-block slide-in-bck-center">
                     <div>
                         <div className="domain-block">
                             <div className="domain-amount-block">
@@ -728,7 +728,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : null}
 
             {errorObj ? (
-                <div className="pay-block">
+                <div className="pay-block slide-in-bck-center">
                     <div
                         style={{
                             display: "flex",
