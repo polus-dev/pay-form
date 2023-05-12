@@ -21,13 +21,12 @@ import { BigNumber } from "ethers";
 export const Stage3: FC<ProcessType> = memo((props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
   const { config } = usePrepareSendTransaction({
-    request: {
-      to: props.payClass.addressRouter,
-      data: props.dataTr,
-      value: props.txValue
-        ? BigNumber.from(props.txValue)
-        : BigNumber.from("0"),
-    },
+    to: props.payClass.addressRouter,
+    data: props.dataTr as "0x{string}",
+    value: props.txValue
+      ? BigNumber.from(props.txValue).toBigInt()
+      : BigNumber.from("0").toBigInt(),
+
   });
 
   const { data, isLoading, isSuccess, sendTransaction, error } =
@@ -58,17 +57,15 @@ export const Stage3: FC<ProcessType> = memo((props) => {
   }, [props.dataTr]);
 
   useEffect(() => {
-    if (data) {
+    if (data && isSuccess) {
       console.log("txHash transfer", data);
-      data.wait(1).then(() => {
-        props.setPosition(3);
+      props.setPosition(3);
 
-        props.setPayed(true);
+      props.setPayed(true);
 
-        props.polusApi.changeBlockchain(props.uuid, 'evm') // смена блокчеина для богдана
-      });
+      props.polusApi.changeBlockchain(props.uuid, 'evm') // смена блокчеина для богдана
     }
-  }, [data]);
+  }, [data, isSuccess]);
 
   useEffect(() => {
     if (error) {

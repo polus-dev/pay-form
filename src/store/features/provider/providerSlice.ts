@@ -1,39 +1,27 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { configureChains, createClient, WagmiConfig } from "wagmi";
+import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum';
+import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { mainnet, polygon, bsc } from "wagmi/chains";
-import {
-  EthereumClient,
-  modalConnectors,
-  walletConnectProvider,
-} from "@web3modal/ethereum";
 const chains = [polygon, mainnet, bsc];
 const projectId = process.env.REACT_APP_PROJECT_ID;
 
-// Wagmi client
-const { provider } = configureChains(chains, [
-  walletConnectProvider({ projectId }),
-]);
-const wagmiClient = createClient({
+const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
+const wagmiConfig = createConfig({
   autoConnect: true,
-  connectors: modalConnectors({
-    projectId,
-    version: "1", // or "2"
-    appName: "Polus Pay",
-    chains,
-  }),
-  provider,
-});
-
+  connectors: w3mConnectors({ projectId, version: 1, chains }),
+  publicClient
+})
+const ethereumClient = new EthereumClient(wagmiConfig, chains)
 
 export interface ProviderState {
-  wagmiClient: any;
-  chains: typeof chains;
+  wagmiConfig: any;
+  ethereumClient: EthereumClient;
 }
 
 
 const initialState: ProviderState = {
-  wagmiClient,
-  chains,
+  wagmiConfig,
+  ethereumClient,
 }
 
 export const providerSlice = createSlice({

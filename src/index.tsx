@@ -8,15 +8,9 @@ import {
   ConfigProvider,
 } from "@vkontakte/vkui";
 
-import {
-  EthereumClient,
-  modalConnectors,
-  walletConnectProvider,
-} from "@web3modal/ethereum";
 
 import { Web3Modal } from "@web3modal/react";
 
-import { configureChains, createClient, WagmiConfig } from "wagmi";
 
 import { mainnet, polygon, bsc } from "wagmi/chains";
 
@@ -24,6 +18,7 @@ import { App as Application } from "./App";
 import { store } from "./store/store";
 import { Provider } from "react-redux";
 import { useAppSelector } from "./store/hooks";
+import { WagmiConfig } from "wagmi";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -64,14 +59,13 @@ const ConfigProviderFix: any = ConfigProvider;
 const AdaptivityProviderFix: any = AdaptivityProvider;
 
 const App = () => {
-  const wagmiClient = useAppSelector(state => state.provider.wagmiClient)
-  const chains = useAppSelector(state => state.provider.chains)
+  const wagmiConfig = useAppSelector(state => state.provider.wagmiConfig)
 
-  const ethereumClient = new EthereumClient(wagmiClient, chains);
+  const ethereumClient = useAppSelector(state => state.provider.ethereumClient)
 
   return (
     <BrowserRouter basename="/">
-      <WagmiConfig client={wagmiClient}>
+      <WagmiConfig config={wagmiConfig}>
         <React.StrictMode>
           <ConfigProviderFix
             appearance={"dark"}

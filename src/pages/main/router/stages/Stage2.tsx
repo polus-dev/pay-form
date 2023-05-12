@@ -26,10 +26,13 @@ import { Percent } from "@uniswap/sdk-core";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { Permit2AllowanceType } from "../../../../logic/payment";
 
+// @ts-ignore
+const isMetaMask = window.ethereum?.isMetaMask;
+
+
 export const Stage2: FC<ProcessType> = memo((props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-  const isMetaMask = window.ethereum?.isMetaMask;
 
   const [firstRender2, setFirstRender2] = React.useState<boolean>(false);
 
@@ -58,7 +61,7 @@ export const Stage2: FC<ProcessType> = memo((props) => {
   const sign = useSignTypedData({
     domain: dataForSign.domain,
     types: dataForSign.types,
-    value: dataForSign.value,
+    message: dataForSign.value,
   });
 
 

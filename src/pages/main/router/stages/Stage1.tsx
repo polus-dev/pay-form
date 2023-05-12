@@ -19,12 +19,14 @@ import {
 import { ProcessType } from "../ProcessType";
 import { PolusContractAddress } from "../../../../logic/transactionEncode/types/polusContractAbi";
 
+// @ts-ignore
+const isMetaMask = window.ethereum?.isMetaMask;
+
 
 export const Stage1: FC<ProcessType> = memo((props) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
   const [firstRenderForNativeToken, setFirstRenderForNativeToken] = React.useState<boolean>(false);
 
-  const isMetaMask = window.ethereum?.isMetaMask;
 
   const { payClass } = props;
 

@@ -17,26 +17,26 @@ export const Stage2: FC<ProcessType> = memo(props => {
 
 
 
-  const configForTransaction: Parameters<typeof usePrepareSendTransaction>[0] = { request: { to: props.addressPolus } }
+  const configForTransaction: Parameters<typeof usePrepareSendTransaction>[0] = { to: props.addressPolus }
 
   if (props.isNativeToNative) {
-    configForTransaction!.request!.value = ethers.utils.parseEther(props.amount)
-    configForTransaction!.request!.data = doPayThroughPolusContract({
+    configForTransaction!.value = BigInt(props.amount)
+    configForTransaction!.data = doPayThroughPolusContract({
       uuid: props.uuid.replaceAll("-", ""),
       fee: props.fee,
       merchant: props.addressMerchant,
       merchantAmount: props.asset_amount_decimals_without_fee,
       feeRecipient: props.feeRecipient
-    })
+    }) as '0x{string}';
   } else {
-    configForTransaction!.request!.data = doPayThroughPolusContract({
+    configForTransaction!.data = doPayThroughPolusContract({
       uuid: props.uuid.replaceAll("-", ""),
       fee: props.fee,
       merchant: props.addressMerchant,
       merchantAmount: props.asset_amount_decimals_without_fee,
       tokenAddress: props.tokenAddress,
       feeRecipient: props.feeRecipient,
-    })
+    }) as '0x{string}'
   }
 
 
