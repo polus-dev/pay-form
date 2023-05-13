@@ -173,4 +173,5 @@ export const PolusContractAddress = {
       1: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
       56: "0x25aDCDA8324C7081B0f7Eaa052DF04E076694d62",
       137: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
+      42161: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
 };

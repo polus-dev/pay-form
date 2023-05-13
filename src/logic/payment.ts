@@ -50,12 +50,14 @@ export interface ListToken {
     decimals: {
         1: number,
         56: number,
-        137: number
+        137: number,
+        42161: number
     },
     address: {
         1: string,
         56: string,
-        137: string
+        137: string,
+        42161: string
     },
     price: number,
     native?: boolean,
@@ -98,6 +100,13 @@ export const RPCprovider: RPCproviderType[] = [
         id: 137,
         coin: "MATIC",
         nano: 18
+    },
+    {
+        name: "arbitrum",
+        url: "https://arb1.arbitrum.io/rpc",
+        id: 42161,
+        coin: "ETH",
+        nano: 18
     }
 ]
 
@@ -105,12 +114,14 @@ const PERMIT2_ADDRESS = "0x000000000022d473030f116ddee9f6b43ac78ba3"
 const UNIVERSAL_ROUTER = {
     137: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
     1: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
-    56: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897"
+    56: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897",
+    42161: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
 }
 const ADDRESS_POLUS = {
     polygon: "0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2",
     mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0"
+    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
+    arbitrum: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0"
 }
 
 export class Payment {
@@ -160,6 +171,9 @@ export class Payment {
         } else if (this._networkId === 56) {
             this._addressPolusContract = ADDRESS_POLUS.bsc
             this._networkRpcUrl = RPCprovider[1].url
+        } else if (this._networkId === 42161) {
+            this._addressPolusContract = ADDRESS_POLUS.arbitrum
+            this._networkRpcUrl = RPCprovider[3].url
         } else {
             // сеть не найдена
             this._networkRpcUrl = ""

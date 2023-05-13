@@ -28,7 +28,7 @@ import {
 
 import { useNetwork, useSwitchNetwork, useDisconnect, mainnet } from "wagmi"
 import { Web3Button, useWeb3Modal } from "@web3modal/react"
-import { polygon, bsc } from "wagmi/chains"
+import { polygon, bsc, arbitrum } from "wagmi/chains"
 
 import "@vkontakte/vkui/dist/vkui.css"
 import "./style.css"
@@ -37,7 +37,7 @@ import { fullListTokens } from "./logic/tokens"
 import { Main } from "./pages/main"
 
 import logo from "./img/logo.svg"
-import { ListToken } from "./logic/payment"
+import { ListToken, PolusChainId } from "./logic/payment"
 
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
@@ -49,7 +49,7 @@ export const App: React.FC = () => {
 
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
 
-    const chainsA = [polygon, mainnet, bsc]
+    const chainsA = [polygon, mainnet, bsc, arbitrum]
 
     // const { chain } = useNetwork()
     const { chains, error, isLoading, pendingChainId, switchNetwork } =
@@ -104,7 +104,7 @@ export const App: React.FC = () => {
     function fullFilter(type: 'stable' | 'native' | 'wrap' | 'other') {
         const list = fullListTokens.filter((token) => {
             if (chain) {
-                return token.address[chain.id as 1 | 56 | 137] !== '0'
+                return token.address[chain.id as PolusChainId] !== '0'
             }
             return true
         })

@@ -18,7 +18,7 @@ import { Web3Modal } from "@web3modal/react";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
 
-import { mainnet, polygon, bsc } from "wagmi/chains";
+import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 
 import { App } from "./App";
 
@@ -30,7 +30,7 @@ document.body.appendChild(el);
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [polygon, mainnet, bsc];
+const chains = [polygon, mainnet, bsc, arbitrum];
 
 // Wagmi client
 const { provider } = configureChains(chains, [
