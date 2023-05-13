@@ -1,7 +1,7 @@
 import { FC, memo, useEffect, useState } from "react"
 import { useContractRead, useContractWrite, usePrepareContractWrite } from "wagmi"
 import { ProcessType } from "../ProcessType"
-
+import { fetchBlockNumber } from 'wagmi/actions'
 
 import token_abi from "../../../../token_abi.json"
 import { ethers } from "ethers"
@@ -14,8 +14,6 @@ export const Stage1: FC<ProcessType> = memo((props) => {
     props.setPosition(1)
     return null
   }
-
-
 
   // TODO: check balance of token
 

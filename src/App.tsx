@@ -354,7 +354,6 @@ export const App: React.FC = () => {
                                             seletcToken={seletcToken}
                                             setSelectToken={setSelectToken}
                                             setAllowTron={setAllowTron}
-
                                         />
                                     </View>
                                 }
