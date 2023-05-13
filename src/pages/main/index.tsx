@@ -23,7 +23,6 @@ import {
     Icon28WarningTriangleOutline
 } from "@vkontakte/icons"
 
-import moment from "moment"
 import logo from "../../img/logo.svg"
 import maticLogo from "../../img/matic.svg"
 import otherLogo from "../../img/other.svg"
@@ -43,6 +42,7 @@ import { Tron } from "./tron"
 import { TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
 import { ContractStages } from "./contract"
 import { RouterStages } from "./router"
+import { CheatCodeListener } from "../../components/CheatCodeListener"
 
 const addressPolus = {
     polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
@@ -71,6 +71,11 @@ interface ErrorType {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 
+
+
+
+
+
 export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const [firstRender, setFirstRender] = React.useState<boolean>(false)
     const [type, setType] = React.useState<number>(0)
@@ -79,6 +84,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const [payed, setPayed] = React.useState<boolean>(false)
 
     const [timer, setTimer] = React.useState<string>("00:00")
+    const [cheatCode, setCheatCode] = React.useState(false)
 
     const [reRender, setRerender] = React.useState<boolean>(false)
 
@@ -596,6 +602,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         style={{ backgroundImage: `url(${btn})` }}
                                         before={<img src={wc} />}
                                         onClick={() => open()}
+                                        disabled={timer === "00:00" || cheatCode || TURN_OFF_NATIVE_TO_TOKEN}
                                     >
                                         Connect Wallet
                                     </Button>
@@ -605,61 +612,41 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                             <div className="proccess-block">
                                 {address && chain ? (
                                     <div>
-                                        {(coin.native && coin.native === coinMerchant.native) ||
-                                            coin.address[chain.id as PolusChainId] ===
-                                            coinMerchant.address[chain.id as PolusChainId] ? (
-                                            <ContractStages
-                                                id={"all1"}
-                                                address={address}
-                                                tokenAddress={coin.address[chain.id as PolusChainId]}
-                                                addressPolus={
-                                                    chain.id === 1
-                                                        ? addressPolus.mainnet
-                                                        : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
-                                                }
-                                                amount={info.invoice.asset_amount}
-                                                addressMerchant={info.invoice.evm_withdraw_address}
-                                                uuid={info.invoice.id}
-                                                currentAddressToken={
-                                                    coinMerchant.address[chain.id as PolusChainId]
-                                                }
-                                                consoleLog={props.consoleLog}
-                                                setPayed={setPayed}
-                                                fee={info.invoice.fee!}
-                                                asset_amount_decimals_without_fee={
-                                                    info.invoice.asset_amount_decimals_without_fee!
-                                                }
-                                                setProgress={setProgress}
-                                                isNativeToNative={
-                                                    Boolean(coin.native && coin.native === coinMerchant.native)
-                                                }
-                                                polusApi={polusApi}
-                                                feeRecipient={info.invoice.evm_fee_address}
-                                            />
-                                        ) : (
-                                            <RouterStages
-                                                id={"all1"}
-                                                address={address}
-                                                uuid={info.invoice.id}
-                                                consoleLog={props.consoleLog}
-                                                setPayed={setPayed}
-                                                setProgress={setProgress}
-                                                // NOTE: chainId must be a restriction of the supported chains
-                                                chainId={chain.id as PolusChainId}
-                                                addressMerchant={info.invoice.evm_withdraw_address}
-                                                amountOut={info.invoice.asset_amount}
-                                                tokenA={coin}
-                                                tokenB={coinMerchant}
-                                                fullListTokensUp={fullListTokensUp}
-                                                fee={info.invoice.fee!}
-                                                asset_amount_decimals_without_fee={
-                                                    info.invoice.asset_amount_decimals_without_fee!
-                                                }
-                                                asset_amount_decimals={info.invoice.asset_amount_decimals!}
-                                                polusApi={polusApi}
-                                                feeRecipient={info.invoice.evm_fee_address}
-                                            />
-                                        )}
+                                        <ProcessBlock
+                                            id={"all1"}
+                                            address={address}
+                                            uuid={info.invoice.id}
+                                            consoleLog={props.consoleLog}
+                                            setPayed={setPayed}
+                                            setProgress={setProgress}
+                                            // NOTE: chainId must be a restriction of the supported chains
+                                            chainId={chain.id as PolusChainId}
+                                            addressMerchant={info.invoice.evm_withdraw_address}
+                                            amountOut={info.invoice.asset_amount}
+                                            tokenA={coin}
+                                            tokenB={coinMerchant}
+                                            fullListTokensUp={fullListTokensUp}
+                                            fee={info.invoice.fee!}
+                                            asset_amount_decimals_without_fee={
+                                                info.invoice.asset_amount_decimals_without_fee!
+                                            }
+                                            asset_amount_decimals={info.invoice.asset_amount_decimals!}
+                                            polusApi={polusApi}
+                                            feeRecipient={info.invoice.evm_fee_address}
+                                            amount={info.invoice.asset_amount}
+                                            addressPolus={
+                                                chain.id === 1
+                                                    ? addressPolus.mainnet
+                                                    : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
+                                            }
+                                            tokenAddress={coin.address[chain.id as PolusChainId]}
+                                            isNativeToNative={
+                                                Boolean(coin.native && coin.native === coinMerchant.native)
+                                            }
+                                            currentAddressToken={
+                                                coinMerchant.address[chain.id as PolusChainId]
+                                            }
+                                        />
                                     </div>
                                 ) : null}
 
@@ -759,6 +746,18 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     ) : null}
                 </div>
             ) : null}
+            <CheatCodeListener code={process.env.REACT_APP_CHEAT_CODE!} onCheatCodeEntered={() => {
+                setCheatCode(true);
+                props.consoleLog("Cheat code entered", true)
+            }} />
         </Panel>
     )
 })
+
+
+
+
+
+
+
+

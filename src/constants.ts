@@ -9,3 +9,6 @@ export const UNIVERSAL_ROUTER = "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5";
 
 
 export const TURN_OFF_NATIVE_TO_TOKEN = true;
+export const REACT_APP_TURN_OFF_TIMER = false;
+
+
