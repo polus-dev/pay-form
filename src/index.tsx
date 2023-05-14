@@ -21,6 +21,8 @@ import { configureChains, createClient, WagmiConfig } from "wagmi";
 import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 
 import { App } from "./App";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -39,7 +41,7 @@ const { provider } = configureChains(chains, [
 const wagmiClient = createClient({
   autoConnect: true,
   connectors: modalConnectors({
-    projectId: "2e6208d8c73f2b1560e96b4e757bb4a1",
+    projectId: process.env.REACT_APP_PROJECT_ID,
     version: "1", // or "2"
     appName: "Polus Pay",
     chains,
@@ -75,24 +77,26 @@ const ConfigProviderFix: any = ConfigProvider;
 const AdaptivityProviderFix: any = AdaptivityProvider;
 
 ReactDOM.render(
-  <BrowserRouter basename="/">
-    <WagmiConfig client={wagmiClient}>
-      <React.StrictMode>
-        <ConfigProviderFix
-          appearance={"dark"}
-          webviewType={WebviewType.INTERNAL}
-          platform="ios"
-        >
-          <AdaptivityProviderFix>
-            <App />
-          </AdaptivityProviderFix>
-        </ConfigProviderFix>
-      </React.StrictMode>
-    </WagmiConfig>
-    <Web3Modal
-      projectId="2e6208d8c73f2b1560e96b4e757bb4a1"
-      ethereumClient={ethereumClient}
-    />
-  </BrowserRouter>,
+  <Provider store={store}>
+    <BrowserRouter basename="/">
+      <WagmiConfig client={wagmiClient}>
+        <React.StrictMode>
+          <ConfigProviderFix
+            appearance={"dark"}
+            webviewType={WebviewType.INTERNAL}
+            platform="ios"
+          >
+            <AdaptivityProviderFix>
+              <App />
+            </AdaptivityProviderFix>
+          </ConfigProviderFix>
+        </React.StrictMode>
+      </WagmiConfig>
+      <Web3Modal
+        projectId="2e6208d8c73f2b1560e96b4e757bb4a1"
+        ethereumClient={ethereumClient}
+      />
+    </BrowserRouter>
+  </Provider>,
   document.querySelector("#root")
 );

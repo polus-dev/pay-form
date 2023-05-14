@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.7.2",
+    "@reduxjs/toolkit": "^1.9.5",
     "@sentry/react": "^7.50.0",
     "@types/react-copy-to-clipboard": "^5.0.4",
     "@uniswap/permit2-sdk": "^1.2.0",
@@ -46,6 +47,7 @@
     "react-inlinesvg": "^3.0.0",
     "react-qr-svg": "^2.4.0",
     "react-qrcode-svg": "^0.1.0",
+    "react-redux": "^8.0.5",
     "react-router": "^6.8.1",
     "react-router-dom": "^6.8.1",
     "react-scripts": "5.0.1",
