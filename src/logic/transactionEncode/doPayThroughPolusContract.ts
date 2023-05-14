@@ -13,7 +13,6 @@ export function doPayThroughPolusContract({
   tokenAddress,
   feeRecipient
 }: IPayThroughPolusContract) {
-  debugger
   const polusContract = new ethers.utils.Interface(PolusContractAbi);
   uuid = uuid.replaceAll("-", "")
   if (tokenAddress) {

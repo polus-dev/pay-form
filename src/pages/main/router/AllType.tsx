@@ -17,7 +17,7 @@ export interface AllType {
   feeRecipient: `0x${string}`;
   chainId: PolusChainId;
   addressMerchant: string;
-  amountOut: string | number;
+  amountOut: string;
   asset_amount_decimals_without_fee: string;
   asset_amount_decimals: string;
   fee: string;

@@ -1,13 +1,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { readContract, prepareWriteContract, writeContract, prepareSendTransaction, sendTransaction, signTypedData } from "wagmi/actions"
-import { weiToEthNum } from "../../../logic/utils";
+import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
+import { Percent } from "@uniswap/sdk-core";
+import { ETHToWei, weiToEthNum } from "../../../logic/utils";
 import { ConfigPayment, ListToken as Token, Payment, PolusChainId } from "../../../logic/payment"
 import token_abi from "../../../token_abi.json"
-import { setStage, setStageStatus, setStageText, StageStatus } from "./transactionSlice";
+import { setStage, setStageStatus, setStageText, StageStatus, StageId, DEFAULT_STAGE_TEXT, nextStage } from "./transactionSlice";
 import { TransactionError } from "./TransactionError";
 import { RootState } from "../../../store/store";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { doPayThroughPolusContract } from "../../../logic/transactionEncode/doPayThroughPolusContract";
+import { CustomRouter } from "../../../logic/router";
+import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
+import { encodePay } from "../../../logic/transactionEncode/transactionEncode";
+import { setSmartLineStatus, SmartLineStatus } from "../smartLine/smartLineSlice";
 
 interface IPayload {
   chainId: PolusChainId;
@@ -23,6 +29,7 @@ interface IPayload {
   tokenB: Token;
   consoleLog: Function;
   fee: string;
+  amountOut: string;
 }
 
 
@@ -34,11 +41,16 @@ interface IContext {
 
 type TokenType = "native" | "erc20";
 
-export const startPay = createAsyncThunk(
+
+export interface ThunkConfig {
+  state: RootState;
+}
+
+
+export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   'transaction/pay',
-  async (payload: IPayload, { dispatch, getState, }) => {
+  async (payload, { dispatch, rejectWithValue, getState }) => {
     try {
-      const tempGetStateF = () => <RootState>getState();
       const isMetaMask = window.ethereum?.isMetaMask;
       const config: ConfigPayment = {
         networkId: payload.chainId,
@@ -46,109 +58,185 @@ export const startPay = createAsyncThunk(
         tokenB: payload.tokenB,
         addressUser: payload.userAddress,
         addressMerchant: payload.addressMerchant,
-        amountOut: payload.amountInDecimalsWithFee,
+        amountOut: payload.amountOut,
         callback: payload.consoleLog,
       };
 
       const payClass = new Payment(config);
-
       const context: "universal router" | "polus contract" = (payClass.tokenA.isNative && payClass.tokenB.isNative) || (!payClass.tokenA.isNative && payClass.tokenA.info.address[payload.chainId] === payClass.tokenB.info.address[payload.chainId]) ? "polus contract" : "universal router";
+
+      let permitSign: Permit2Permit | null = null;
+
+      const checkAllowanceDispatch = (stageId: StageId) =>
+        dispatch(setStageText({ stageId, text: "Check allowance to smart contract" }))
+
+      const needApproveDispatch = (stageId: StageId) =>
+        dispatch(setStageText({ stageId, text: "Need approve to smart contract" }))
+
+      const transactionPendingDispatch = (stageId: StageId) =>
+        dispatch(setStageText({ stageId, text: "Transaction pending ..." }))
+
+      const sendTransactionDispatch = (stageId: StageId) =>
+        dispatch(setStageText({ stageId, text: "Send transaction ..." }))
+
+      const currentStage = () => getState().transaction.currentStage;
+
+
+      const checkAndApprove = async (contractType: Parameters<typeof payClass.checkAllowance>[1], allowance: any) => {
+        if (weiToEthNum(allowance, payClass.tokenA.info.decimals[payload.chainId]) < payClass.tokenA.info.amountIn) {
+          needApproveDispatch(getState().transaction.currentStage);
+          const preparedTransaction = await prepareWriteContract({
+            address: payload.tokenAddress as any,
+            abi: token_abi,
+            functionName: "approve",
+            args: [contractType === "permit" ? payClass.addressPermit : contractType === "router" ? payClass.addressRouter : payload.polusContractAddress, ethers.constants.MaxUint256]
+          })
+
+          const { wait } = await writeContract(preparedTransaction)
+          transactionPendingDispatch(currentStage())
+          await wait()
+
+        }
+      }
+
+
 
       /// 1. Approve
 
 
+      dispatch(setStage({ stageId: currentStage(), text: "Chech your balance...", status: StageStatus.LOADING }))
       const balance = await payClass.getBalance("A")
       if (
         weiToEthNum(balance, payClass.tokenA.info.decimals[payload.chainId]) <
         payClass.tokenA.info.amountIn
       ) {
-        throw new TransactionError("Not enough balance", tempGetStateF().transaction.currentStage)
+        throw new TransactionError("Not enough balance", currentStage())
       }
 
+      dispatch(setStageText({ stageId: currentStage(), text: "Sufficient balance" }))
+
       if (context === "polus contract" && !payClass.tokenA.isNative) {
+        checkAllowanceDispatch(currentStage());
         const allowance = await payClass.checkAllowance("A", "polus")
-        if (weiToEthNum(allowance, payClass.tokenA.info.decimals[payload.chainId]) < payClass.tokenA.info.amountIn) {
-          // throw new TransactionError("Not enough allowance", (<RootState>getState()).transaction.currentStage)
-
-
-          const preparedTransaction = await prepareWriteContract({
-            address: payload.tokenAddress as any,
-            abi: token_abi,
-            functionName: "approve",
-            args: [payload.polusContractAddress, ethers.constants.MaxUint256]
-          })
-
-          const { wait } = await writeContract(preparedTransaction)
-          await wait()
-        }
-
-
+        checkAndApprove("polus", allowance)
 
       } else if (context === "universal router" && !payClass.tokenA.isNative) {
         if (isMetaMask) {
+          checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "permit")
-          if (weiToEthNum(allowance, payClass.tokenA.info.decimals[payload.chainId]) < payClass.tokenA.info.amountIn) {
-            // throw new TransactionError("Not enough allowance", (<RootState>getState()).transaction.currentStage)
-
-            const preparedTransaction = await prepareWriteContract({
-              address: payload.tokenAddress as any,
-              abi: token_abi,
-              functionName: "approve",
-              args: [payClass.addressPermit, ethers.constants.MaxUint256]
-            })
-
-            const { wait } = await writeContract(preparedTransaction)
-            await wait()
-
-          }
-          const allowancePermit = await payClass.AllowancePermit("A", "router");
-          if (!allowancePermit ||
-            weiToEthNum(allowancePermit.amount, payClass.tokenA.info.decimals[payload.chainId]) <
-            payClass.tokenA.info.amountIn ||
-            allowancePermit.expiration < Date.now() / 1000) {
-            const dataForSign = payClass.dataForSign(allowancePermit?.nonce ?? 0)
-            const signature = await signTypedData(dataForSign)
-
-            // const isv = verifyTypedData(
-            //   dataForSign.domain,
-            //   dataForSign.types,
-            //   dataForSign.value,
-            //   sign.data
-            // );
-
-
-
-          }
-
+          checkAndApprove("permit", allowance)
         } else {
+          checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "router")
-          if (weiToEthNum(allowance, payClass.tokenA.info.decimals[payload.chainId]) < payClass.tokenA.info.amountIn) {
-            const preparedTransaction = await prepareWriteContract({
-              address: payload.tokenAddress as any,
-              abi: token_abi,
-              functionName: "approve",
-              args: [payClass.addressRouter, ethers.constants.MaxUint256]
-            })
-
-            const { wait } = await writeContract(preparedTransaction)
-            await wait()
-          }
+          checkAndApprove("router", allowance)
         }
       }
+      dispatch(setStage({ stageId: currentStage(), text: "Approve succsess", status: StageStatus.SUCCESS }))
+      dispatch(nextStage())
 
-      dispatch(setStageStatus({ stageId: 0, status: StageStatus.SUCCESS }));
+      if (isMetaMask && context === "universal router") {
+        dispatch(setStage({ stageId: currentStage(), text: "Check permit", status: StageStatus.LOADING }))
+        const allowancePermit = await payClass.AllowancePermit("A", "router");
+        if (!allowancePermit ||
+          weiToEthNum(allowancePermit.amount, payClass.tokenA.info.decimals[payload.chainId]) <
+          payClass.tokenA.info.amountIn ||
+          allowancePermit.expiration < Date.now() / 1000) {
 
+          dispatch(setStageText({ stageId: currentStage(), text: "Need your permit sign" }))
+          const dataForSign = payClass.dataForSign(allowancePermit?.nonce ?? 0)
+          const signature = await signTypedData(dataForSign)
 
-      const contextFromTo: IContext = {
-        from: payClass.tokenA.isNative ? "native" : "erc20",
-        to: payClass.tokenB.isNative ? "native" : "erc20",
+          const valueSigned = {
+            signature
+          } as Permit2Permit
+          permitSign = valueSigned;
+
+          dispatch(setStage({ stageId: currentStage(), text: "Sign transaction succsess", status: StageStatus.SUCCESS }))
+        } else {
+          dispatch(setStage({ stageId: currentStage(), text: "Permit is fresh", status: StageStatus.SUCCESS }))
+        }
+      } else {
+        dispatch(setStage({ stageId: currentStage(), text: "Permit unsupported", status: StageStatus.SUCCESS }))
       }
+      dispatch(nextStage())
+      dispatch(setStageStatus({ stageId: currentStage(), status: StageStatus.LOADING }))
 
-      if (contextFromTo.to === contextFromTo.from) {
+      if (context === "universal router") {
+
+        dispatch(setStage({ stageId: currentStage(), text: "Searching route", status: StageStatus.LOADING }))
+        const amountOut = ETHToWei(payClass.amountOut, payload.tokenB.decimals[payload.chainId]);
+        console.log("amountOut", amountOut);
+
+        const router = new CustomRouter(payload.chainId);
+
+        const path = await router.getRouter(
+          amountOut,
+          payClass.tokenA.erc20,
+          payClass.tokenB.erc20,
+        )
+        dispatch(setStageText({ stageId: currentStage(), text: "Route found" }))
+
+        const deadline = ~~(Date.now() / 1000) + 60 * 32;
+        const swapOptions: SwapOptions = {
+          slippageTolerance: new Percent("90", "100"),
+          deadlineOrPreviousBlockhash: deadline.toString(),
+          recipient: payClass.addressRouter,
+        };
+        if (permitSign) {
+          swapOptions.inputTokenPermit = permitSign;
+        }
+
+        const { calldata, value } = SwapRouter.swapERC20CallParameters(
+          path!.trade,
+          swapOptions
+        );
+
+
+        const isContextFromNative = payClass.tokenA.isNative;
+
+        dispatch(setStageText({ stageId: currentStage(), text: "Encode transaction" }))
+        const encodePayParams: Parameters<typeof encodePay>[0] = {
+          uuid: payload.uuid.replaceAll("-", ""),
+          fee: payload.fee,
+          merchantAmount: payload.amounrInDecimalsWithoutFee,
+          tokenAddress: payClass.tokenB.isNative ? undefined : payClass.tokenB.info.address[payload.chainId],
+          merchant: payload.addressMerchant,
+          asset_amount_decimals: payload.amountInDecimalsWithFee,
+          feeRecipient: payload.feeRecipient,
+          txData: calldata,
+          context: {
+            from: isContextFromNative ? "native" : "erc20",
+            to: payClass.tokenB.isNative ? "native" : "erc20",
+          },
+          universalRouterAddress: payClass.addressRouter,
+        };
+        const encoded = encodePay(encodePayParams);
+        const preparedTransaction = await prepareSendTransaction({
+          request: {
+            to: payClass.addressRouter,
+            data: encoded,
+            value: isContextFromNative
+              ? BigNumber.from(payload.amountInDecimalsWithFee)
+              : BigNumber.from("0"),
+          },
+        })
+
+        sendTransactionDispatch(currentStage())
+        const { wait } = await sendTransaction(preparedTransaction)
+        dispatch(setStageText({ stageId: currentStage(), text: "Wait transaction mine ..." }))
+        await wait()
+        dispatch(setStage({ stageId: currentStage(), text: "Transaction succsess", status: StageStatus.SUCCESS }))
+
+      } else if (context === "polus contract") {
+        const contextFromTo: IContext = {
+          from: payClass.tokenA.isNative ? "native" : "erc20",
+          to: payClass.tokenB.isNative ? "native" : "erc20",
+        }
+
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payload.polusContractAddress,
-            value: payClass.tokenA.isNative ? payClass.tokenA.info.amountIn : 0,
+            value: payClass.tokenA.isNative ? ethers.utils.parseEther(payClass.tokenA.info.amountIn.toString()) : 0,
             data: !(contextFromTo.from === "native" && contextFromTo.from === contextFromTo.to) ? doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
@@ -168,22 +256,32 @@ export const startPay = createAsyncThunk(
           }
         })
 
-        const { wait } = await sendTransaction(preparedTransaction);
-        await wait();
-      } else {
-
+        sendTransactionDispatch(currentStage())
+        const { wait } = await sendTransaction(preparedTransaction)
+        transactionPendingDispatch(currentStage())
+        await wait()
+        dispatch(setStage({ stageId: currentStage(), text: "Transaction succsess", status: StageStatus.SUCCESS }))
+        dispatch(setSmartLineStatus(SmartLineStatus.SUCCSESS))
       }
 
-
     } catch (error) {
-      console.error(error)
-
+      if (error instanceof TransactionError) {
+        dispatch(setStage({ stageId: error.stageid, status: StageStatus.FAILURE, text: DEFAULT_STAGE_TEXT[error.stageid] }))
+        dispatch(setSmartLineStatus(SmartLineStatus.ERROR))
+        payload.consoleLog(error.message)
+      } else {
+        dispatch(setSmartLineStatus(SmartLineStatus.ERROR))
+        payload.consoleLog(error instanceof Error ? error.message : 'unknown error')
+        return rejectWithValue(error)
+      }
     }
   }
 )
 
-
-
-
-
-        // dispatch(setStage({ stageId: 1, text: "Native token", status: StageStatus.SUCCESS }));
+//
+            // const isv = verifyTypedData(
+            //   dataForSign.domain,
+            //   dataForSign.types,
+            //   dataForSign.value,
+            //   sign.data
+            // );

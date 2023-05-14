@@ -6,10 +6,10 @@ interface Props {
 }
 
 export const CheatCodeListener = ({ code, onCheatCodeEntered }: Props) => {
-  const [enteredKeys, setEnteredKeys] = useState<number[]>([]);
+  const [enteredKeys, setEnteredKeys] = useState<string[]>([]);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    setEnteredKeys(keys => [...keys, event.keyCode]);
+    setEnteredKeys(keys => [...keys, event.key.toLowerCase()]);
   };
 
   useEffect(() => {

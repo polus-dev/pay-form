@@ -9,7 +9,7 @@ import {
     Spinner
 } from "@vkontakte/vkui"
 
-import React, { memo, useEffect, useMemo } from "react"
+import React, { memo, useEffect, useMemo, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import { useWeb3Modal } from "@web3modal/react"
@@ -39,10 +39,14 @@ import { Info, InvoiceType, PolusApi } from "../../logic/api"
 import { ListToken, ListTokens, Payment, PolusChainId } from "../../logic/payment"
 import { NtoStr, getParameterByName } from "../../logic/utils"
 import { Tron } from "./tron"
-import { TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
+import { REACT_APP_TURN_OFF_TIMER, TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
 import { ContractStages } from "./contract"
 import { RouterStages } from "./router"
 import { CheatCodeListener } from "../../components/CheatCodeListener"
+import { ProcessBlock } from "../../components/ProcessBlock"
+import { useAppDispatch, useAppSelector } from "../../store/hooks"
+import { ProgressBar } from "../../components/ui/ProgressBar"
+import { setSmartLineStatus, SmartLineStatus } from "../../store/features/smartLine/smartLineSlice"
 
 const addressPolus = {
     polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
@@ -87,12 +91,15 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const [cheatCode, setCheatCode] = React.useState(false)
 
     const [reRender, setRerender] = React.useState<boolean>(false)
+    const smartLineStatus = useAppSelector(state => state.stamrtLine.smartLineStatus)
 
     const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0])
     const [coinInvoice, setCoinInvoice] = React.useState<string>("0")
     const [coinMerchant, setCoinMerchant] = React.useState<ListToken>(
         fullListTokens[0]
     )
+    const abortRef = useRef(() => { })
+    const dispatch = useAppDispatch();
 
     const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
     const { address, isConnected } = useAccount()
@@ -403,8 +410,8 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             <PanelHeader separator={false} />
 
             {!errorObj && info && coin ? (
-                <div className="pay-block slide-in-bck-center">
-                    <div>
+                <div className={`pay-block smart-line ${smartLineStatus}`}>
+                    <div className="slide-in-bck-center">
                         <div className="domain-block">
                             <div className="domain-amount-block">
                                 <span>{info.merchant?.domain.replace("https://", "")}</span>
@@ -421,11 +428,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                             </span>
                         </div>
                     </div>
-                    <Progress
-                        aria-labelledby="progresslabel"
-                        value={progress}
-                        style={{ marginTop: "16px" }}
-                    />
+                    <ProgressBar value={progress} />
                     <div>
                         {type === 0 ? (
                             <div>
@@ -589,6 +592,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         stretched
                                         size="l"
                                         className="btn-connect"
+                                        disabled={!cheatCode && timer === "00:00" || REACT_APP_TURN_OFF_TIMER}
                                         style={{ backgroundImage: `url(${btn})` }}
                                         onClick={() => startPay()}
                                     >
@@ -602,7 +606,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         style={{ backgroundImage: `url(${btn})` }}
                                         before={<img src={wc} />}
                                         onClick={() => open()}
-                                        disabled={timer === "00:00" || cheatCode || TURN_OFF_NATIVE_TO_TOKEN}
+                                        disabled={!cheatCode && timer === "00:00" || REACT_APP_TURN_OFF_TIMER}
                                     >
                                         Connect Wallet
                                     </Button>
@@ -646,6 +650,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                             currentAddressToken={
                                                 coinMerchant.address[chain.id as PolusChainId]
                                             }
+                                            setAbortTransaction={abortRef}
                                         />
                                     </div>
                                 ) : null}
@@ -677,7 +682,11 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         size="l"
                                         className="btn-connect"
                                         style={{ backgroundImage: `url(${btn})` }}
-                                        onClick={() => setType(0)}
+                                        onClick={() => {
+                                            abortRef.current()
+                                            dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT))
+                                            setType(0);
+                                        }}
                                     >
                                         Cancel
                                     </Button>
@@ -701,8 +710,8 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                 </div>
             ) : null}
             {!errorObj && !info ? (
-                <div className="pay-block">
-                    <div
+                <div className={`pay-block  smart-line ${smartLineStatus}`}>
+                    <div className="slide-in-bck-center"
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -715,8 +724,8 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : null}
 
             {errorObj ? (
-                <div className="pay-block slide-in-bck-center">
-                    <div
+                <div className={`pay-block smart-line ${errorObj.code === 1005 || errorObj.code === 1002 ? "smart-line-error-color" : errorObj.code === 1003 ? "smart-line-succsess-color" : "smart-line-loading-color"} `}>
+                    <div className="slide-in-bck-center"
                         style={{
                             display: "flex",
                             alignItems: "center",

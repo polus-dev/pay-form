@@ -44,7 +44,6 @@ export function encodePay({
   universalRouterAddress
 }: IEncodeTransfer): string {
   // assertAmount(amoun);
-  debugger
   if (!tokenAddress)
     tokenAddress = NULL_ADDRESS
   const data = txData.slice(10);

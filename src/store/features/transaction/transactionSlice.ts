@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { startPay } from './transactionThunk';
 
@@ -29,36 +29,56 @@ interface IStage {
 }
 
 
-
+export const DEFAULT_STAGE_TEXT: { [key in StageId]: string } = {
+  0: "Approve your tokens",
+  1: "Sign transaction",
+  2: "Sign your tokens",
+}
 
 const initialState: TransactionState = {
   stages: [
-    { status: StageStatus.PENDING, statusText: "Approve your tokens" },
-    { status: StageStatus.PENDING, statusText: "Sign transaction" },
-    { status: StageStatus.PENDING, statusText: "Sign your tokens" },
+    { status: StageStatus.PENDING, statusText: DEFAULT_STAGE_TEXT[0] },
+    { status: StageStatus.PENDING, statusText: DEFAULT_STAGE_TEXT[1] },
+    { status: StageStatus.PENDING, statusText: DEFAULT_STAGE_TEXT[2] },
   ],
-  currentStage: 1
+  currentStage: 0
 }
+
 
 export const transactionSlice = createSlice({
   name: 'transaction',
   initialState,
   reducers: {
-    setStageText: (state, action: PayloadAction<{ stageId: StageId, text: string }>) => { },
+    setStageText: (state, action: PayloadAction<{ stageId: StageId, text: string }>) => {
+      state.stages[action.payload.stageId].statusText = action.payload.text;
+    },
     setStageStatus: (state, action: PayloadAction<{ stageId: StageId, status: StageStatus }>) => {
       state.stages[action.payload.stageId].status = action.payload.status;
     },
-    setStage: (state, action: PayloadAction<{ stageId: StageId, status: StageStatus, text: string }>) => { },
+    setStage: (state, action: PayloadAction<{ stageId: StageId, status: StageStatus, text: string }>) => {
+      state.stages[action.payload.stageId].status = action.payload.status;
+      state.stages[action.payload.stageId].statusText = action.payload.text;
+    },
+    nextStage: state => {
+      state.currentStage += 1;
+    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(startPay.pending, (state, action) => { })
-      .addCase(startPay.fulfilled, (state, action) => { })
-      .addCase(startPay.rejected, (state, action) => { })
+      // .addCase(startPay.pending, (state, action) => { })
+      .addCase(startPay.fulfilled, (state, action) => {
+        state = initialState;
+      })
+      .addCase(startPay.rejected, (state, action) => {
+        if (action.error.name === 'AbortError') {
+          state = initialState;
+          return;
+        };
+        console.error(action.payload)
 
-
+      })
   }
 })
 
-export const { setStageText, setStageStatus, setStage } = transactionSlice.actions
+export const { setStageText, setStageStatus, setStage, nextStage } = transactionSlice.actions
 export default transactionSlice.reducer
