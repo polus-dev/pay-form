@@ -65,17 +65,16 @@ export const transactionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // .addCase(startPay.pending, (state, action) => { })
-      .addCase(startPay.fulfilled, (state, action) => {
-        state = initialState;
+      .addCase(startPay.pending, state => {
+        state.currentStage = initialState.currentStage;
+        state.stages = initialState.stages;
       })
+      // .addCase(startPay.fulfilled, state => { })
       .addCase(startPay.rejected, (state, action) => {
         if (action.error.name === 'AbortError') {
-          state = initialState;
           return;
         };
         console.error(action.payload)
-
       })
   }
 })

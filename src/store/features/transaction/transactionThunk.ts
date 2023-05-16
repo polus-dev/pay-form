@@ -50,6 +50,8 @@ export interface ThunkConfig {
 export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   'transaction/pay',
   async (payload, { dispatch, rejectWithValue, getState }) => {
+
+    // TODO:  Checking Cancellation Signal
     try {
       const isMetaMask = window.ethereum?.isMetaMask;
       const config: ConfigPayment = {
@@ -265,12 +267,11 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       }
 
     } catch (error) {
+      dispatch(setSmartLineStatus(SmartLineStatus.ERROR))
       if (error instanceof TransactionError) {
         dispatch(setStage({ stageId: error.stageid, status: StageStatus.FAILURE, text: DEFAULT_STAGE_TEXT[error.stageid] }))
-        dispatch(setSmartLineStatus(SmartLineStatus.ERROR))
         payload.consoleLog(error.message)
       } else {
-        dispatch(setSmartLineStatus(SmartLineStatus.ERROR))
         payload.consoleLog(error instanceof Error ? error.message : 'unknown error')
         return rejectWithValue(error)
       }

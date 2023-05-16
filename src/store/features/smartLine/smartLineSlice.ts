@@ -18,7 +18,7 @@ const initialState: SmartLineState = {
 }
 
 export const counterSlice = createSlice({
-  name: 'counter',
+  name: 'smart line',
   initialState,
   reducers: {
     setSmartLineStatus: (state, action: PayloadAction<SmartLineStatus>) => {
