@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { startPay } from './transactionThunk';
+import { init } from '@sentry/browser';
 
 export interface TransactionState {
   stages: [IApproveStage, ISignStage, ISendStage]
@@ -73,7 +74,9 @@ export const transactionSlice = createSlice({
       .addCase(startPay.rejected, (state, action) => {
         if (action.error.name === 'AbortError') {
           return;
-        };
+        }
+        state.stages[state.currentStage].status = StageStatus.FAILURE;
+        state.stages[state.currentStage].statusText = initialState.stages[state.currentStage].statusText;
         console.error(action.payload)
       })
   }
