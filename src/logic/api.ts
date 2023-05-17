@@ -63,7 +63,6 @@ class PolusApi {
             const res = await axios.post(`${this._url}public/payment.take`, { payment_id: uuid })
 
             const resData: InvoiceType = res.data
-            console.log("resData", resData)
             resData.created_at = (Date.parse(resData.created_at) / 1000).toString()
             resData.expires_at = (Date.parse(resData.expires_at) / 1000).toString()
 

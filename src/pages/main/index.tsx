@@ -230,7 +230,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         }
 
         if (type1) {
-            console.log('info===', info)
             setDefaultChain(polygon)
             setInfo(data)
 
@@ -249,8 +248,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         } else if (data.invoice.status === 'success' || data.invoice.status === 'failed') {
             setInfo(data)
         }
-
-        console.log("info", data)
 
         setRerender(!reRender)
 
