@@ -236,7 +236,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
 
         const preparedTransaction = await prepareSendTransaction({
           request: {
-            to: payload.polusContractAddress,
+            to: payClass.addressPolusContract,
             value: payClass.tokenA.isNative ? ethers.utils.parseEther(payClass.tokenA.info.amountIn.toString()) : 0,
             data: !(contextFromTo.from === "native" && contextFromTo.from === contextFromTo.to) ? doPayThroughPolusContract({
               uuid: payload.uuid,

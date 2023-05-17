@@ -3,7 +3,7 @@ import { PolusApi } from "../../../logic/api";
 
 
 
-export interface AllType {
+export interface T2 {
   id: string;
   address: `0x${string}`;
   uuid: string;

@@ -1,9 +1,8 @@
 import { PolusApi } from "../../../logic/api";
 
-export interface AllType {
+export interface T1 {
   id: string;
   tokenAddress: string;
-  addressPolus: string;
   address: `0x${string}`;
   amount: string;
   addressMerchant: string;

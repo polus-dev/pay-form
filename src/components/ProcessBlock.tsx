@@ -1,5 +1,5 @@
-import { AllType as T1 } from "../pages/main/router/AllType"
-import { AllType as T2 } from "../pages/main/contract/AllType"
+import { T1 } from "../pages/main/tempInterfaces/T1"
+import { T2 } from "../pages/main/tempInterfaces/T2"
 
 import { StageStatus } from "store/features/transaction/transactionSlice"
 import { useAppDispatch, useAppSelector } from "../store/hooks"

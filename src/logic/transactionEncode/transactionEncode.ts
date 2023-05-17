@@ -1,8 +1,7 @@
-import { FEE_RECIPIENT, NULL_ADDRESS, UNIVERSAL_ROUTER } from "../../constants";
+import { NULL_ADDRESS } from "../../constants";
 import { ethers } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
-import { PolusContractAbi } from "./types/polusContractAbi";
 import { WrapStatus } from "./types/WrapStatus";
 
 const coder = new ethers.utils.AbiCoder();

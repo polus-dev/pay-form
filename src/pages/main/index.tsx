@@ -40,8 +40,6 @@ import { ListToken, ListTokens, Payment, PolusChainId } from "../../logic/paymen
 import { NtoStr, getParameterByName } from "../../logic/utils"
 import { Tron } from "./tron"
 import { REACT_APP_TURN_OFF_TIMER, TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
-import { ContractStages } from "./contract"
-import { RouterStages } from "./router"
 import { CheatCodeListener } from "../../components/CheatCodeListener"
 import { ProcessBlock } from "../../components/ProcessBlock"
 import { useAppDispatch, useAppSelector } from "../../store/hooks"
