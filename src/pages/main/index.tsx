@@ -32,7 +32,7 @@ import bnbLogo from "../../img/bnb.svg"
 import btn from "../../img/btn.jpg"
 import wc from "../../img/wc.svg"
 
-import { fullListTokens } from "../../logic/tokens"
+import { fullListTokens, supportedChain } from "../../logic/tokens"
 import { Invoice } from "../../logic/types"
 import { Info, InvoiceType, PolusApi } from "../../logic/api"
 
@@ -48,11 +48,6 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks"
 import { ProgressBar } from "../../components/ui/ProgressBar"
 import { setSmartLineStatus, SmartLineStatus } from "../../store/features/smartLine/smartLineSlice"
 
-const addressPolus = {
-    polygon: "0x377F05e398E14f2d2Efd9332cdB17B27048AB266",
-    mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-    bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0"
-}
 
 interface MainProps {
     id: string,
@@ -329,7 +324,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         if (!chain) {
             setReady(false)
             console.error("not found network")
-        } else if (chain.id === 1 || chain.id === 137 || chain.id === 56) {
+        } else if (supportedChain.includes(chain.id as PolusChainId)) {
             setReady(true)
 
             // changeCoin(coin, chain.id)
@@ -638,11 +633,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                             polusApi={polusApi}
                                             feeRecipient={info.invoice.evm_fee_address}
                                             amount={info.invoice.asset_amount}
-                                            addressPolus={
-                                                chain.id === 1
-                                                    ? addressPolus.mainnet
-                                                    : chain.id === 137 ? addressPolus.polygon : addressPolus.bsc
-                                            }
                                             tokenAddress={coin.address[chain.id as PolusChainId]}
                                             isNativeToNative={
                                                 Boolean(coin.native && coin.native === coinMerchant.native)

@@ -115,13 +115,13 @@ const UNIVERSAL_ROUTER = {
     137: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
     1: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
     56: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897",
-    42161: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
+    42161: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
 }
 const ADDRESS_POLUS = {
     polygon: "0x7D45c9Cf1263Db05065Dd446e5C6605adE19fBc2",
     mainnet: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
     bsc: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0",
-    arbitrum: "0x0b89D43B3DD86f75c6010aB45395Cb9430Ff49B0"
+    arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda"
 }
 
 export class Payment {
@@ -182,7 +182,7 @@ export class Payment {
 
         this._provider = new ethers.providers.JsonRpcProvider(this._networkRpcUrl)
 
-        const idNetw: 1 | 56 | 137 = (this._networkId as 1 | 56 | 137) ?? 137
+        const idNetw = (this._networkId as PolusChainId) ?? 137
 
         // console.log("Token A", config.tokenA.address[idNetw])
         // console.log("Token B", config.tokenB.address[idNetw])
@@ -236,6 +236,10 @@ export class Payment {
             time1: BigInt(~~(Date.now() / 1000) + 60 * 30).toString(),
             time2: BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString()
         }
+    }
+
+    get addressPolusContract(): string {
+        return this._addressPolusContract;
     }
 
     public createWrapAltFromNative(AltName: string): Token {

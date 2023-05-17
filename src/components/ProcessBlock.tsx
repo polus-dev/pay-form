@@ -13,7 +13,6 @@ export const ProcessBlock = (props: T1 & T2 & { setAbortTransaction: { current: 
   const dispatch = useAppDispatch();
   useEffect(() => {
     const abortPromise = dispatch(startPay({
-      polusContractAddress: props.addressPolus,
       tokenA: props.tokenA,
       tokenB: props.tokenB,
       userAddress: props.address,

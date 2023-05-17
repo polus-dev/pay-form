@@ -23,7 +23,6 @@ interface IPayload {
   uuid: string;
   amountInDecimalsWithFee: string;
   amounrInDecimalsWithoutFee: string;
-  polusContractAddress: string;
   tokenAddress: string;
   tokenA: Token;
   tokenB: Token;
@@ -91,7 +90,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
             address: payload.tokenAddress as any,
             abi: token_abi,
             functionName: "approve",
-            args: [contractType === "permit" ? payClass.addressPermit : contractType === "router" ? payClass.addressRouter : payload.polusContractAddress, ethers.constants.MaxUint256]
+            args: [contractType === "permit" ? payClass.addressPermit : contractType === "router" ? payClass.addressRouter : payClass.addressPolusContract, ethers.constants.MaxUint256]
           })
 
           const { wait } = await writeContract(preparedTransaction)
