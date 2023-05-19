@@ -39,7 +39,7 @@ import { Info, InvoiceType, PolusApi } from "../../logic/api"
 import { ListToken, ListTokens, Payment, PolusChainId } from "../../logic/payment"
 import { NtoStr, getParameterByName } from "../../logic/utils"
 import { Tron } from "./tron"
-import { REACT_APP_TURN_OFF_TIMER, TURN_OFF_NATIVE_TO_TOKEN } from "../../constants"
+import { REACT_APP_TURN_OFF_TIMER } from "../../constants"
 import { CheatCodeListener } from "../../components/CheatCodeListener"
 import { ProcessBlock } from "../../components/ProcessBlock"
 import { useAppDispatch, useAppSelector } from "../../store/hooks"
@@ -132,44 +132,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
             diffTime--;
         }, interval)
     }
-    // function changeCoin (coin1: TokenPolus, chainID?: number) {
-    //     setCoin(coin1)
-    //     const chainIdLocal = chain ? chain.id : chainID
-    //     if (!info || !chainIdLocal) {
-    //         console.error('changeCoin: info or chain')
-    //         return und
-    //     const nameCoin = coin1.name.toLowerCase() as ListCurrencies
-
-    //     if (chainIdLocal === 1) {
-    //         setCoinInvoice(info.currencies.ethereum[nameCoin] ?? '0')
-    //         const tokenCurrent = tokens.mainnet.find(token => token.name === info.asset.toLowerCase())
-    //         const tokenUser = tokens.mainnet.find(token => token.name === coin1.name)
-    //         setCoinMerchant(tokenCurrent ?? tokens.mainnet[0])
-
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-    //     if (chainIdLocal === 137) {
-    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-
-    //     if (chainIdLocal === 56) {
-    //         setCoinInvoice(info.currencies.polygon[nameCoin] ?? '0')
-
-    //         const tokenCurrent = tokens.polygon.find(token => token.name === info.asset.toLowerCase())
-    //         setCoinMerchant(tokenCurrent ?? tokens.polygon[0])
-
-    //         const tokenUser = tokens.polygon.find(token => token.name === coin1.name)
-    //         if (tokenUser) setCoin(tokenUser)
-    //     }
-    //     // console.log('changeCoin:', info.currencies.polygon[nameCoin])
-    //     return true
-    // }
 
     function chCoinNew(token: ListToken, info1: false | Info | undefined = info) {
         setCoin(token)
@@ -195,7 +157,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     }
 
     async function getInfo(uuid1: string, type1: boolean = true) {
-        // const data = await polusApi.getPaymentInfo(uuid1)
         const data = await polusApi.getInfo(uuid1)
         if (!data) {
             props.consoleLog("Error load info", false)
@@ -478,7 +439,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                 <div className="text-one">Choose currency</div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(0, 3).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
+                                    {fullListTokensUp.slice(0, 3).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
@@ -494,7 +455,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                 </div>
 
                                 <div className="btn-block">
-                                    {fullListTokensUp.slice(3, 4).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
+                                    {fullListTokensUp.slice(3, 4).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"
@@ -508,7 +469,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                         </Button>
                                     ))}
 
-                                    {getSubCoin(fullListTokensUp).filter(token => !(TURN_OFF_NATIVE_TO_TOKEN && token.native && !coinMerchant.native)).map((token, key) => (
+                                    {getSubCoin(fullListTokensUp).map((token, key) => (
                                         <Button
                                             key={key}
                                             size="l"

@@ -49,7 +49,6 @@ export interface ThunkConfig {
 export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   'transaction/pay',
   async (payload, { dispatch, rejectWithValue, getState }) => {
-
     // TODO:  Checking Cancellation Signal
     try {
       const isMetaMask = window.ethereum?.isMetaMask;
@@ -135,7 +134,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       dispatch(setStage({ stageId: currentStage(), text: "Approve succsess", status: StageStatus.SUCCESS }))
       dispatch(nextStage())
 
-      if (isMetaMask && context === "universal router") {
+      if (isMetaMask && context === "universal router" && !payClass.tokenA.isNative) {
         dispatch(setStage({ stageId: currentStage(), text: "Check permit", status: StageStatus.LOADING }))
         const allowancePermit = await payClass.AllowancePermit("A", "router");
         if (!allowancePermit ||
@@ -148,8 +147,9 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           const signature = await signTypedData(dataForSign)
 
           const valueSigned = {
-            signature
-          } as Permit2Permit
+            signature,
+            value: dataForSign.value,
+          } as any as Permit2Permit
           permitSign = valueSigned;
 
           dispatch(setStage({ stageId: currentStage(), text: "Sign transaction succsess", status: StageStatus.SUCCESS }))
@@ -187,7 +187,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           swapOptions.inputTokenPermit = permitSign;
         }
 
-        const { calldata, value } = SwapRouter.swapERC20CallParameters(
+        const { calldata } = SwapRouter.swapERC20CallParameters(
           path!.trade,
           swapOptions
         );
@@ -211,14 +211,12 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           },
           universalRouterAddress: payClass.addressRouter,
         };
-        const encoded = encodePay(encodePayParams);
+        const data = encodePay(encodePayParams);
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressRouter,
-            data: encoded,
-            value: isContextFromNative
-              ? BigNumber.from(payload.amountInDecimalsWithFee)
-              : BigNumber.from("0"),
+            data,
+            value: ethers.utils.parseEther(payClass.tokenA.info.amountIn.toString()),
           },
         })
 

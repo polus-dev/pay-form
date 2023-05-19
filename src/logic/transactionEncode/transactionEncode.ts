@@ -1,5 +1,5 @@
 import { NULL_ADDRESS } from "../../constants";
-import { ethers } from "ethers";
+import { ethers, BigNumber } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
 import { WrapStatus } from "./types/WrapStatus";
@@ -74,11 +74,17 @@ export function encodePay({
     commands = decoded[0] + Command.TRANSFER + Command.TRANSFER + Command.FAKE;
   }
 
-  const inputs = structuredClone<string[]>(decoded[1]);
+  let inputs = structuredClone<string[]>(decoded[1]);
 
   if (wrapStatus === WrapStatus.WRAP) {
-    const wrap = wrapper('0x0000000000000000000000000000000000000002', ethers.utils.parseEther('1'));
-    inputs.unshift(wrap);
+    const types = ["address", "uint256", "uint256", "bytes", "bool"];
+    const data = structuredClone(coder.decode(types, inputs[0]));
+    // @ts-ignore
+    data[4] = false;
+    const wrap = wrapper('0x0000000000000000000000000000000000000002', "0x8000000000000000000000000000000000000000000000000000000000000000");
+    const encodedData = coder.encode(types, data);
+    inputs = [];
+    inputs.unshift(wrap, encodedData);
   } else if (wrapStatus === WrapStatus.UNWRAP) {
     const wrap = wrapper(universalRouterAddress, asset_amount_decimals!);
     inputs.push(wrap);
@@ -102,5 +108,6 @@ export function encodePay({
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");
+  debugger
   return EXECUTE_SELECTOR + out;
 }

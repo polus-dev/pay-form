@@ -41,10 +41,12 @@ export class CustomRouter {
 
     private _builder: Builder
 
-    constructor (chainId: number = 137) {
+    constructor(chainId: number = 137) {
         let rpc = chainId === 1 ? RPCprovider[0] : null
         if (!rpc) rpc = chainId === 56 ? RPCprovider[1] : null
-        if (!rpc) rpc = chainId === 137 ? RPCprovider[2] : RPCprovider[2] // TODO
+        if (!rpc) rpc = chainId === 137 ? RPCprovider[2] : null // TODO
+        if (!rpc) rpc = chainId === 42161 ? RPCprovider[3] : RPCprovider[2] // TODO
+        // это просто пиздец
         this._provider = new Provider(
             rpc,
             chainId
@@ -57,7 +59,7 @@ export class CustomRouter {
         this._builder = new Builder()
     }
 
-    public packSignToWagmi (
+    public packSignToWagmi(
         token: string,
         spender: string,
         signature: string
@@ -86,7 +88,7 @@ export class CustomRouter {
         return this._builder
     }
 
-    public packSignToWagmi2 (value: valuesSign, signature: string): Builder {
+    public packSignToWagmi2(value: valuesSign, signature: string): Builder {
         const signature2 = new Byts(
             Buffer.from(signature.replace("0x", ""), "hex")
         )
@@ -116,7 +118,7 @@ export class CustomRouter {
         return this._builder
     }
 
-    public packSwapWagmi (
+    public packSwapWagmi(
         recipt: string,
         amountOut: bigint,
         maxInput: bigint,
@@ -141,7 +143,7 @@ export class CustomRouter {
         return this._builder
     }
 
-    public static packToWagmi (
+    public static packToWagmi(
         token: string,
         amount: string,
         expiration: string,
@@ -177,7 +179,7 @@ export class CustomRouter {
         return { types, value }
     }
 
-    public packPermitSingleData (
+    public packPermitSingleData(
         token: Address,
         amount: Uint,
         expiration: Uint,
@@ -195,7 +197,7 @@ export class CustomRouter {
         ].map(t => t.toAbiFormat())
 
         const input = this._abi_coder.encode(
-            [ "address", "uint", "uint", "uint", "address", "uint" ],
+            ["address", "uint", "uint", "uint", "address", "uint"],
             value
         )
         // const string = token.replace('0x', '')
@@ -207,18 +209,18 @@ export class CustomRouter {
         return input
     }
 
-    public addressToToken (address: string, decimals: number): Token {
+    public addressToToken(address: string, decimals: number): Token {
         return new Token(this._chainId, address, decimals)
     }
 
-    public static amountToNanoAmount (
+    public static amountToNanoAmount(
         amount: string | number,
         token: Token
     ): BigNumber {
         return ethers.utils.parseUnits(amount.toString(), token.decimals)
     }
 
-    public static amountToCurrencyAmount (
+    public static amountToCurrencyAmount(
         amount: BigNumber | string | number | BigInt,
         tokenTo: Token
     ): CurrencyAmount<Token> {
@@ -229,7 +231,7 @@ export class CustomRouter {
         )
     }
 
-    public static encodeFee (n: number): string {
+    public static encodeFee(n: number): string {
         const bytes: Array<number> = new Array(3).fill(0)
         bytes[0] = (n >> 16) & 0xff
         bytes[1] = (n >> 8) & 0xff
@@ -237,7 +239,7 @@ export class CustomRouter {
         return Buffer.from(bytes).toString("hex")
     }
 
-    public static encodePath (patharr: PathArray): string {
+    public static encodePath(patharr: PathArray): string {
         let encoded = ""
         for (const e of patharr) {
             switch (typeof e) {
@@ -254,7 +256,7 @@ export class CustomRouter {
         return encoded.toLocaleLowerCase()
     }
 
-    public async getRouter (
+    public async getRouter(
         amountOut: string | number | BigNumber | BigInt,
         tokenFrom: Token,
         tokenTo: Token
@@ -325,12 +327,12 @@ export class CustomRouter {
         //     patharr.push(path[i + 1].address)
         // }
 
-    // return patharr.reverse()
+        // return patharr.reverse()
     }
 
-    public async getTransFromData () {}
+    public async getTransFromData() { }
 
-    public get builder (): Builder {
+    public get builder(): Builder {
         return this._builder
     }
 }
