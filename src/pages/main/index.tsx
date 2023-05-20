@@ -28,6 +28,7 @@ import maticLogo from "../../img/matic.svg"
 import otherLogo from "../../img/other.svg"
 import etherLogo from "../../img/weth.svg"
 import bnbLogo from "../../img/bnb.svg"
+import arbitrumLogo from "../../img/arbitrum.svg"
 
 import btn from "../../img/btn.jpg"
 import wc from "../../img/wc.svg"
@@ -419,7 +420,9 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                                             {chain.id === 1 ? <img src={etherLogo} /> : null}
                                             {chain.id === 137 ? <img src={maticLogo} /> : null}
                                             {chain.id === 56 ? <img src={bnbLogo} /> : null}
-                                            {chain.id !== 137 && chain.id !== 1 && chain.id !== 56 ? (
+                                            {chain.id === 42161 ? <img src={arbitrumLogo} /> : null}
+                                            {/* TODO */}
+                                            {chain.id !== 137 && chain.id !== 1 && chain.id !== 56 && chain.id !== 42161 ? (
                                                 <img src={otherLogo} width={24} />
                                             ) : (
                                                 ""
