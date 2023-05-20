@@ -14,6 +14,7 @@ import { CustomRouter } from "../../../logic/router";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { encodePay } from "../../../logic/transactionEncode/transactionEncode";
 import { setSmartLineStatus, SmartLineStatus } from "../smartLine/smartLineSlice";
+import { ethers as ethers_v6 } from "ethers_v6"
 
 interface IPayload {
   chainId: PolusChainId;
@@ -216,7 +217,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           request: {
             to: payClass.addressRouter,
             data,
-            value: isContextFromNative ? ethers.utils.parseUnits(payClass.tokenA.info.amountIn.toString(), decimalPlaces) : 0,
+            value: isContextFromNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,
           },
@@ -237,7 +238,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
-            value: payClass.tokenA.isNative ? ethers.utils.parseUnits(payClass.tokenA.info.amountIn.toString(), decimalPlaces) : 0,
+            value: payClass.tokenA.isNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
             data: !(contextFromTo.from === "native" && contextFromTo.from === contextFromTo.to) ? doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
