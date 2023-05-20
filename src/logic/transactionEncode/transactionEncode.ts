@@ -108,6 +108,5 @@ export function encodePay({
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");
-  debugger
   return EXECUTE_SELECTOR + out;
 }

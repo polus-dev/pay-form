@@ -1,8 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import { readContract, prepareWriteContract, writeContract, prepareSendTransaction, sendTransaction, signTypedData } from "wagmi/actions"
+import { readContract, prepareWriteContract, writeContract, prepareSendTransaction, sendTransaction, signTypedData, fetchFeeData } from "wagmi/actions"
 import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
-import { ETHToWei, weiToEthNum } from "../../../logic/utils";
+import { ETHToWei, toBn, weiToEthNum } from "../../../logic/utils";
 import { ConfigPayment, ListToken as Token, Payment, PolusChainId } from "../../../logic/payment"
 import token_abi from "../../../token_abi.json"
 import { setStage, setStageStatus, setStageText, StageStatus, StageId, DEFAULT_STAGE_TEXT, nextStage } from "./transactionSlice";
@@ -45,7 +45,7 @@ export interface ThunkConfig {
   state: RootState;
 }
 
-
+const decimalPlaces = 18; // TODO
 export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   'transaction/pay',
   async (payload, { dispatch, rejectWithValue, getState }) => {
@@ -80,7 +80,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         dispatch(setStageText({ stageId, text: "Send transaction ..." }))
 
       const currentStage = () => getState().transaction.currentStage;
-
 
       const checkAndApprove = async (contractType: Parameters<typeof payClass.checkAllowance>[1], allowance: any) => {
         if (weiToEthNum(allowance, payClass.tokenA.info.decimals[payload.chainId]) < payClass.tokenA.info.amountIn) {
@@ -160,7 +159,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         dispatch(setStage({ stageId: currentStage(), text: "Permit unsupported", status: StageStatus.SUCCESS }))
       }
       dispatch(nextStage())
-      dispatch(setStageStatus({ stageId: currentStage(), status: StageStatus.LOADING }))
+      dispatch(setStage({ stageId: currentStage(), status: StageStatus.LOADING, text: "Calculate fee" }))
+      const feeData = await fetchFeeData()
 
       if (context === "universal router") {
 
@@ -216,7 +216,9 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           request: {
             to: payClass.addressRouter,
             data,
-            value: ethers.utils.parseEther(payClass.tokenA.info.amountIn.toString()),
+            value: isContextFromNative ? ethers.utils.parseUnits(payClass.tokenA.info.amountIn.toString(), decimalPlaces) : 0,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
+            maxFeePerGas: feeData.maxFeePerGas!,
           },
         })
 
@@ -235,7 +237,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
-            value: payClass.tokenA.isNative ? ethers.utils.parseEther(payClass.tokenA.info.amountIn.toString()) : 0,
+            value: payClass.tokenA.isNative ? ethers.utils.parseUnits(payClass.tokenA.info.amountIn.toString(), decimalPlaces) : 0,
             data: !(contextFromTo.from === "native" && contextFromTo.from === contextFromTo.to) ? doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
@@ -251,7 +253,9 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
               merchant: payload.addressMerchant,
               merchantAmount: payload.amounrInDecimalsWithoutFee,
               asset_amount_decimals: payload.amountInDecimalsWithFee,
-            })
+            }),
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
+            maxFeePerGas: feeData.maxFeePerGas!,
           }
         })
 
