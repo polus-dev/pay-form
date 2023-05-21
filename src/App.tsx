@@ -1,5 +1,4 @@
-import React, { useEffect } from "react"
-
+import React, { useEffect } from "react";
 import {
     AppRoot,
     SplitLayout,
@@ -15,76 +14,76 @@ import {
     PanelHeader,
     CardGrid,
     Card,
-    SimpleCell
-} from "@vkontakte/vkui"
-import { Route, Routes } from "react-router-dom"
+    SimpleCell,
+} from "@vkontakte/vkui";
+import { Route, Routes } from "react-router-dom";
 
 import {
     Icon24Dismiss,
     Icon28CancelCircleFillRed,
     Icon28CheckCircleFill,
-    Icon28DoneOutline
-} from "@vkontakte/icons"
+    Icon28DoneOutline,
+} from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork, useDisconnect, mainnet } from "wagmi"
-import { Web3Button, useWeb3Modal } from "@web3modal/react"
-import { polygon, bsc, arbitrum } from "wagmi/chains"
+import { useNetwork, useSwitchNetwork, useDisconnect, mainnet } from "wagmi";
+import { Web3Button, useWeb3Modal } from "@web3modal/react";
+import { polygon, bsc, arbitrum } from "wagmi/chains";
 
-import "@vkontakte/vkui/dist/vkui.css"
-import "./style.css"
+import "@vkontakte/vkui/dist/vkui.css";
+import "./style.css";
 
-import { fullListTokens } from "./logic/tokens"
-import { Main } from "./pages/main"
+import { fullListTokens } from "./logic/tokens";
+import { Main } from "./pages/main";
 
-import logo from "./img/logo.svg"
-import { ListToken, PolusChainId } from "./logic/payment"
+import logo from "./img/logo.svg";
+import { ListToken, PolusChainId } from "./logic/payment";
 
 export const App: React.FC = () => {
-    const [activeModal, setActiveModal] = React.useState<any>(null)
+    const [activeModal, setActiveModal] = React.useState<any>(null);
 
-    const [snackbar, setSnackbar] = React.useState<any>(null)
+    const [snackbar, setSnackbar] = React.useState<any>(null);
 
-    const [popout, setPopout] = React.useState<any>(null)
-    const { chain } = useNetwork()
+    const [popout, setPopout] = React.useState<any>(null);
+    const { chain } = useNetwork();
 
-    const [firstRender, setFirstRender] = React.useState<boolean>(false)
+    const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-    const chainsA = [polygon, mainnet, bsc, arbitrum]
+    const chainsA = [polygon, mainnet, bsc, arbitrum];
 
     // const { chain } = useNetwork()
     const { chains, error, isLoading, pendingChainId, switchNetwork } =
-        useSwitchNetwork()
+        useSwitchNetwork();
 
-    const [tron, setTron] = React.useState<boolean>(false)
+    const [tron, setTron] = React.useState<boolean>(false);
 
-    const [allowTron, setAllowTron] = React.useState<boolean>(true)
+    const [allowTron, setAllowTron] = React.useState<boolean>(true);
 
-    const { disconnect } = useDisconnect()
+    const { disconnect } = useDisconnect();
 
     const [callback, setCallback] = React.useState<Function | undefined>(
         undefined
-    )
+    );
 
     const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
         undefined
-    )
+    );
 
-    const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
+    const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
 
-    const isDesktop = window.innerWidth >= 800
+    const isDesktop = window.innerWidth >= 800;
 
     function openPop() {
-        setPopout(<ScreenSpinner state="loading" />)
+        setPopout(<ScreenSpinner state="loading" />);
     }
 
     function closePop(type: boolean) {
         if (popout) {
-            if (type) setPopout(<ScreenSpinner state="done" aria-label="Success" />)
-            else setPopout(<ScreenSpinner state="error" aria-label="Error" />)
+            if (type) setPopout(<ScreenSpinner state="done" aria-label="Success" />);
+            else setPopout(<ScreenSpinner state="error" aria-label="Error" />);
 
             setTimeout(() => {
-                setPopout(null)
-            }, 1000)
+                setPopout(null);
+            }, 1000);
         }
     }
 
@@ -98,33 +97,33 @@ export const App: React.FC = () => {
             >
                 {data}
             </Snackbar>
-        )
+        );
     }
 
-    function fullFilter(type: 'stable' | 'native' | 'wrap' | 'other') {
+    function fullFilter(type: "stable" | "native" | "wrap" | "other") {
         const list = fullListTokens.filter((token) => {
             if (chain) {
-                return token.address[chain.id as PolusChainId] !== '0'
+                return token.address[chain.id as PolusChainId] !== "0";
             }
-            return true
-        })
+            return true;
+        });
 
-        return list.filter(token => token.category === type)
+        return list.filter((token) => token.category === type);
     }
 
     useEffect(() => {
         if (!firstRender) {
-            setFirstRender(true)
+            setFirstRender(true);
 
             // checkAuth()
         }
-    }, [])
+    }, []);
 
     useEffect(() => {
         if (tron) {
-            disconnect()
+            disconnect();
         }
-    }, [tron])
+    }, [tron]);
 
     const modalRoot = (
         <ModalRoot activeModal={activeModal}>
@@ -158,30 +157,31 @@ export const App: React.FC = () => {
                                     }
                                     onClick={() => {
                                         if (switchNetwork) {
-                                            switchNetwork(chainLocal.id)
+                                            switchNetwork(chainLocal.id);
                                         } else {
-                                            setDefaultChain(chainLocal)
-                                            open()
+                                            setDefaultChain(chainLocal);
+                                            open();
                                         }
-                                        setActiveModal(null)
+                                        setActiveModal(null);
                                     }}
                                 >
                                     {chainLocal.name}
                                 </SimpleCell>
                             </Card>
                         ))}
-                        {allowTron ?
+                        {allowTron ? (
                             <Card>
                                 <SimpleCell
                                     after={tron ? <Icon28DoneOutline /> : null}
                                     onClick={() => {
-                                        setTron(true)
-                                        setActiveModal(null)
+                                        setTron(true);
+                                        setActiveModal(null);
                                     }}
                                 >
                                     Tron
                                 </SimpleCell>
-                            </Card> : null}
+                            </Card>
+                        ) : null}
                     </CardGrid>
                 </Div>
             </ModalPage>
@@ -209,12 +209,12 @@ export const App: React.FC = () => {
                 <Div>
                     <h3>Stable Coin</h3>
                     <CardGrid size="m">
-                        {fullFilter('stable').map((token, key) => (
+                        {fullFilter("stable").map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
-                                        setSelectToken(token)
-                                        setActiveModal(null)
+                                        setSelectToken(token);
+                                        setActiveModal(null);
                                     }}
                                     after={
                                         seletcToken?.name === token.name ? (
@@ -222,7 +222,11 @@ export const App: React.FC = () => {
                                         ) : null
                                     }
                                     before={
-                                        <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                                        <img
+                                            src={token.icon}
+                                            style={{ marginRight: "12px" }}
+                                            className="logo-cur"
+                                        />
                                     }
                                 >
                                     {token.name.toUpperCase()}
@@ -233,12 +237,12 @@ export const App: React.FC = () => {
 
                     <h3>Native Coin</h3>
                     <CardGrid size="m">
-                        {fullFilter('native').map((token, key) => (
+                        {fullFilter("native").map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
-                                        setSelectToken(token)
-                                        setActiveModal(null)
+                                        setSelectToken(token);
+                                        setActiveModal(null);
                                     }}
                                     after={
                                         seletcToken?.name === token.name ? (
@@ -246,7 +250,11 @@ export const App: React.FC = () => {
                                         ) : null
                                     }
                                     before={
-                                        <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                                        <img
+                                            src={token.icon}
+                                            style={{ marginRight: "12px" }}
+                                            className="logo-cur"
+                                        />
                                     }
                                 >
                                     {token.name.toUpperCase()}
@@ -257,12 +265,12 @@ export const App: React.FC = () => {
 
                     <h3>Wrapped Coin</h3>
                     <CardGrid size="m">
-                        {fullFilter('wrap').map((token, key) => (
+                        {fullFilter("wrap").map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
-                                        setSelectToken(token)
-                                        setActiveModal(null)
+                                        setSelectToken(token);
+                                        setActiveModal(null);
                                     }}
                                     after={
                                         seletcToken?.name === token.name ? (
@@ -270,7 +278,11 @@ export const App: React.FC = () => {
                                         ) : null
                                     }
                                     before={
-                                        <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                                        <img
+                                            src={token.icon}
+                                            style={{ marginRight: "12px" }}
+                                            className="logo-cur"
+                                        />
                                     }
                                 >
                                     {token.name.toUpperCase()}
@@ -281,12 +293,12 @@ export const App: React.FC = () => {
 
                     <h3>Other Coin</h3>
                     <CardGrid size="m">
-                        {fullFilter('other').map((token, key) => (
+                        {fullFilter("other").map((token, key) => (
                             <Card key={key}>
                                 <SimpleCell
                                     onClick={() => {
-                                        setSelectToken(token)
-                                        setActiveModal(null)
+                                        setSelectToken(token);
+                                        setActiveModal(null);
                                     }}
                                     after={
                                         seletcToken?.name === token.name ? (
@@ -294,7 +306,11 @@ export const App: React.FC = () => {
                                         ) : null
                                     }
                                     before={
-                                        <img src={token.icon} style={{ marginRight: "12px" }} className="logo-cur" />
+                                        <img
+                                            src={token.icon}
+                                            style={{ marginRight: "12px" }}
+                                            className="logo-cur"
+                                        />
                                     }
                                 >
                                     {token.name.toUpperCase()}
@@ -305,7 +321,7 @@ export const App: React.FC = () => {
                 </Div>
             </ModalPage>
         </ModalRoot>
-    )
+    );
 
     return (
         <AppRoot>
@@ -365,5 +381,5 @@ export const App: React.FC = () => {
                 {snackbar}
             </SplitLayout>
         </AppRoot>
-    )
-}
+    );
+};

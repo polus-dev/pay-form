@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import * as Sentry from "@sentry/react";
+import { TourProvider } from "@reactour/tour";
 import {
   WebviewType,
   AdaptivityProvider,
@@ -20,9 +21,10 @@ import { configureChains, createClient, WagmiConfig } from "wagmi";
 
 import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 
-import { App } from "./App";
 import { Provider } from "react-redux";
+import { App } from "./App";
 import { store } from "./store/store";
+import { steps } from "./guid/steps";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -49,11 +51,9 @@ const wagmiClient = createClient({
   provider,
 });
 
-
-
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
-    dsn: 'https://f4c739a8a9994899b24d8ef65e95b721@o1066986.ingest.sentry.io/4505150834737152',
+    dsn: "https://f4c739a8a9994899b24d8ef65e95b721@o1066986.ingest.sentry.io/4505150834737152",
     integrations: [
       new Sentry.BrowserTracing(),
       new Sentry.Replay({ maskAllText: true, blockAllMedia: false }),
@@ -67,8 +67,6 @@ if (process.env.NODE_ENV === "production") {
     replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
   });
 }
-
-
 
 // Web3Modal Ethereum Client
 const ethereumClient = new EthereumClient(wagmiClient, chains);
@@ -87,7 +85,17 @@ ReactDOM.render(
             platform="ios"
           >
             <AdaptivityProviderFix>
-              <App />
+              <TourProvider
+                steps={steps}
+                styles={{
+                  popover: (base) => ({
+                    ...base,
+                    backgroundColor: "#18181e",
+                  }),
+                }}
+              >
+                <App />
+              </TourProvider>
             </AdaptivityProviderFix>
           </ConfigProviderFix>
         </React.StrictMode>
