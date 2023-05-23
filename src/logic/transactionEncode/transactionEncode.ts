@@ -30,6 +30,12 @@ function wrapper(address: string, amount: any): string {
   return encoded;
 }
 
+
+interface IReturnType {
+  data: string;
+  path?: string;
+}
+
 export function encodePay({
   uuid: uuid,
   txData,
@@ -41,11 +47,12 @@ export function encodePay({
   fee,
   feeRecipient,
   universalRouterAddress
-}: IEncodeTransfer): string {
+}: IEncodeTransfer): IReturnType {
   // assertAmount(amoun);
   if (!tokenAddress)
     tokenAddress = NULL_ADDRESS
   const data = txData.slice(10);
+  let path: string | undefined;
   const types = ["bytes", "bytes[]", "uint256"];
   const decoded = coder.decode(types, Buffer.from(data, "hex"));
   let commands: string;
@@ -79,6 +86,7 @@ export function encodePay({
   if (wrapStatus === WrapStatus.WRAP) {
     const types = ["address", "uint256", "uint256", "bytes", "bool"];
     const data = structuredClone(coder.decode(types, inputs[0]));
+    path = data[3];
     // @ts-ignore
     data[4] = false;
     const wrap = wrapper('0x0000000000000000000000000000000000000002', "0x8000000000000000000000000000000000000000000000000000000000000000");
@@ -108,5 +116,5 @@ export function encodePay({
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");
-  return EXECUTE_SELECTOR + out;
+  return { data: EXECUTE_SELECTOR + out, path };
 }

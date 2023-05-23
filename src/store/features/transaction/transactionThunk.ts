@@ -192,8 +192,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           path!.trade,
           swapOptions
         );
-
-
         const isContextFromNative = payClass.tokenA.isNative;
 
         dispatch(setStageText({ stageId: currentStage(), text: "Encode transaction" }))
@@ -212,12 +210,19 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           },
           universalRouterAddress: payClass.addressRouter,
         };
-        const data = encodePay(encodePayParams);
+        const { data, path: universalRouterPath } = encodePay(encodePayParams);
+        let value = BigNumber.from(0);
+        if (universalRouterPath && isContextFromNative) {
+          value = await payClass.getValueForSwap(universalRouterPath, payload.amountInDecimalsWithFee);
+        }
+
+
+
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressRouter,
             data,
-            value: isContextFromNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
+            value,
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,
           },

@@ -124,6 +124,8 @@ const ADDRESS_POLUS = {
     arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda"
 }
 
+const QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
+
 export class Payment {
     private _networkId: number
 
@@ -433,6 +435,16 @@ export class Payment {
             types,
             value: values
         }
+    }
+
+    public async getValueForSwap(path: string, amountOut: string): Promise<BigNumber> {
+        const coder = new ethers.utils.AbiCoder();
+        const data = '0x2f80bb1d' + coder.encode(
+            ['bytes', 'uint256'],
+            [path, amountOut]
+        ).replace('0x', '')
+        const result = await this._provider.call({ to: QUOTER_ADDRESS, data })
+        return BigNumber.from(result)
     }
 
     public async getFee(): Promise<ethers.providers.FeeData> {

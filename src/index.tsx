@@ -17,7 +17,7 @@ import {
 import { Web3Modal } from "@web3modal/react";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-
+import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 
 import { App } from "./App";
@@ -36,6 +36,7 @@ const chains = [polygon, mainnet, bsc, arbitrum];
 
 // Wagmi client
 const { provider } = configureChains(chains, [
+  // alchemyProvider({ apiKey: "DMKNDvKbBtkb-CgqZRzThVRgRle88dPL" }),
   walletConnectProvider({ projectId: "2e6208d8c73f2b1560e96b4e757bb4a1" }),
 ]);
 const wagmiClient = createClient({
