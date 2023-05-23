@@ -82,7 +82,7 @@ export interface RPCproviderType {
 export const RPCprovider: RPCproviderType[] = [
     {
         name: "mainnet",
-        url: "https://rpc.ankr.com/eth",
+        url: "https://eth-mainnet.g.alchemy.com/v2/Q59fIJ1Y_uMFPE2Zg7cCdI182EgN9rvD",
         id: 1,
         coin: "ETH",
         nano: 8
@@ -96,14 +96,14 @@ export const RPCprovider: RPCproviderType[] = [
     },
     {
         name: "polygon",
-        url: "https://side-dawn-sea.matic.quiknode.pro/ce9f1f0946472d034b646717ed6b29a175b85dba/",
+        url: "https://polygon-mainnet.g.alchemy.com/v2/jIKi9Sm2Wr8kjGissTbEQlRu_-aWaFM5",
         id: 137,
         coin: "MATIC",
         nano: 18
     },
     {
         name: "arbitrum",
-        url: "https://arb1.arbitrum.io/rpc",
+        url: "https://arb-mainnet.g.alchemy.com/v2/IbMFg1XQzi-eyshgzQ3hTD338aylLB4g",
         id: 42161,
         coin: "ETH",
         nano: 18
@@ -255,6 +255,10 @@ export class Payment {
             wrapAlt.name,
             wrapAlt.name
         )
+    }
+
+    public async fetchFeeData() {
+        return this._provider.getFeeData()
     }
 
     public async checkAllowance(
