@@ -165,7 +165,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       }
       dispatch(nextStage())
       dispatch(setStage({ stageId: currentStage(), status: StageStatus.LOADING, text: "Calculate fee" }))
-      const feeData = await fetchFeeData()
+      const feeData = await payClass.fetchFeeData()
 
       if (context === "universal router") {
 
@@ -219,9 +219,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         if (universalRouterPath && isContextFromNative) {
           value = await payClass.getValueForSwap(universalRouterPath, payload.amountInDecimalsWithFee);
         }
-
-
-
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressRouter,
