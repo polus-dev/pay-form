@@ -49,9 +49,12 @@ export interface ThunkConfig {
 const decimalPlaces = 18; // TODO
 export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   'transaction/pay',
-  async (payload, { dispatch, rejectWithValue, getState }) => {
-    // TODO:  Checking Cancellation Signal
+  async (payload, { dispatch, rejectWithValue, getState, signal }) => {
     try {
+      signal.addEventListener('abort', () => {
+        return rejectWithValue("Aborted");
+      })
+
       const isMetaMask = window.ethereum?.isMetaMask;
       const config: ConfigPayment = {
         networkId: payload.chainId,
@@ -118,6 +121,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       if (context === "polus contract" && !payClass.tokenA.isNative) {
         checkAllowanceDispatch(currentStage());
         const allowance = await payClass.checkAllowance("A", "polus")
+        debugger
         checkAndApprove("polus", allowance)
 
       } else if (context === "universal router" && !payClass.tokenA.isNative) {
@@ -235,30 +239,19 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         dispatch(setStage({ stageId: currentStage(), text: "Transaction succsess", status: StageStatus.SUCCESS }))
 
       } else if (context === "polus contract") {
-        const contextFromTo: IContext = {
-          from: payClass.tokenA.isNative ? "native" : "erc20",
-          to: payClass.tokenB.isNative ? "native" : "erc20",
-        }
-
+        const isNative = payClass.tokenA.isNative && payClass.tokenB.isNative;
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
             value: payClass.tokenA.isNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
-            data: !(contextFromTo.from === "native" && contextFromTo.from === contextFromTo.to) ? doPayThroughPolusContract({
+            data: doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
               fee: payload.fee,
               merchant: payload.addressMerchant,
               merchantAmount: payload.amounrInDecimalsWithoutFee,
               asset_amount_decimals: payload.amountInDecimalsWithFee,
-              tokenAddress: payload.tokenAddress,
-            }) : doPayThroughPolusContract({
-              uuid: payload.uuid,
-              feeRecipient: payload.feeRecipient,
-              fee: payload.fee,
-              merchant: payload.addressMerchant,
-              merchantAmount: payload.amounrInDecimalsWithoutFee,
-              asset_amount_decimals: payload.amountInDecimalsWithFee,
+              tokenAddress: isNative ? "" : payload.tokenAddress,
             }),
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,
