@@ -38,10 +38,12 @@ import { Main } from "./pages/main"
 
 import logo from "./img/logo.svg"
 import { ListToken, PolusChainId } from "./logic/payment"
+import {useAppSelector} from "./store/hooks";
 
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
 
+    const isActiveConnection =  useAppSelector(state => state.connection.isActive)
     const [snackbar, setSnackbar] = React.useState<any>(null)
 
     const [popout, setPopout] = React.useState<any>(null)
@@ -322,7 +324,7 @@ export const App: React.FC = () => {
                                 <img src={logo} />
                             </a>
                         }
-                        after={<Web3Button />}
+                        after={<Web3Button balance="show" />}
                         className="polus-header"
                     />
                 }

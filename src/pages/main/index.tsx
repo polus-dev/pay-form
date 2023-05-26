@@ -54,6 +54,7 @@ import {
   setSmartLineStatus,
   SmartLineStatus,
 } from "../../store/features/smartLine/smartLineSlice";
+import {activateConnection, deactivateConnection} from "../../store/features/connection/connectionSlice.ts";
 
 interface MainProps {
   id: string;
@@ -77,6 +78,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const isActiveConnection =  useAppSelector(state => state.connection.isActive)
+  const dispatch = useAppDispatch();
   const [type, setType] = React.useState<number>(0);
 
   const [ready, setReady] = React.useState<boolean>(false);
@@ -87,7 +90,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const [reRender, setRerender] = React.useState<boolean>(false);
   const smartLineStatus = useAppSelector(
-    (state) => state.stamrtLine.smartLineStatus
+    (state) => state.smartLine.smartLineStatus
   );
 
   const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0]);
@@ -96,7 +99,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     fullListTokens[0]
   );
   const abortRef = useRef(() => {});
-  const dispatch = useAppDispatch();
 
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
   const { address, isConnected } = useAccount();
@@ -124,7 +126,14 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     let diffTime = eventTime - currentTime - 1;
     const interval = 1000;
 
-    if (diffTime < 0) return;
+    if (diffTime <= 0) {
+      if (isActiveConnection)
+        dispatch(deactivateConnection())
+      return;
+    } else {
+      if (!isActiveConnection)
+        dispatch(activateConnection())
+    }
 
     const interv = setInterval(() => {
       const minutes = Math.floor(diffTime / 60);
@@ -561,7 +570,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect"
                     disabled={
-                      (!cheatCode && timer === "00:00") ||
+                      (!cheatCode && isActiveConnection) ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                     style={{ backgroundImage: `url(${btn})` }}
@@ -578,7 +587,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     before={<img src={wc} />}
                     onClick={() => open()}
                     disabled={
-                      (!cheatCode && timer === "00:00") ||
+                      (!cheatCode && isActiveConnection) ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                   >
