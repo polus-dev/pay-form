@@ -1,16 +1,16 @@
 {
   "name": "payments-form",
   "version": "1.0.1",
+  "type": "module",
   "homepage": "/",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server --mode development",
-    "build:copy": "cp -r public/manifest.json build/; cp -r public/favicon.ico build/",
-    "build": "webpack --mode production; yarn build:copy",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build",
+    "dev": "vite serve",
+    "preview": "vite preview",
     "eject": "react-scripts eject",
     "prepare": "install-peers"
   },
@@ -65,6 +65,7 @@
     "@types/webpack-dev-server": "^4.7.2",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "assert": "^2.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.34.0",
@@ -94,6 +95,8 @@
     "url": "^0.11.0",
     "url-loader": "^4.1.1",
     "util": "^0.12.5",
+    "vite": "^4.3.8",
+    "vite-plugin-html": "^3.2.0",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1"
