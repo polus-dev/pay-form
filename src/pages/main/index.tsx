@@ -738,7 +738,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         </div>
       ) : null}
       <CheatCodeListener
-        code={import.meta.VITE_REACT_APP_CHEAT_CODE}
+        code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {
           setCheatCode(true);
           props.consoleLog("Cheat code entered", true);

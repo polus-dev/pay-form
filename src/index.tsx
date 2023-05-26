@@ -32,7 +32,8 @@ document.body.appendChild(el);
 // })
 
 const chains = [polygon, mainnet, bsc, arbitrum];
-const projectId = import.meta.VITE_REACT_APP_PROJECT_ID;
+const projectId = import.meta.env.VITE_REACT_APP_PROJECT_ID;
+console.log(projectId)
 
 // Wagmi client
 const { provider } = configureChains(chains, [
@@ -51,7 +52,7 @@ const wagmiClient = createClient({
 
 if (import.meta.env.PROD) {
   Sentry.init({
-    dsn: import.meta.VITE_REACT_APP_SENTRY_DSN,
+    dsn: import.meta.env.VITE_REACT_APP_SENTRY_DSN,
     integrations: [
       new Sentry.BrowserTracing(),
       new Sentry.Replay({ maskAllText: true, blockAllMedia: false }),

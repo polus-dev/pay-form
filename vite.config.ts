@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: { outDir: "build" },
   server: {
-    https: true,
+    // https: true,
     port: 3000,
   },
 });
