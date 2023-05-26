@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.7.2",
+    "@reactour/tour": "^3.4.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@sentry/react": "^7.50.0",
     "@types/react-copy-to-clipboard": "^5.0.4",

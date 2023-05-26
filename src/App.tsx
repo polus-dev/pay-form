@@ -38,6 +38,7 @@ import { Main } from "./pages/main"
 
 import logo from "./img/logo.svg"
 import { ListToken, PolusChainId } from "./logic/payment"
+import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
 
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
@@ -361,7 +362,7 @@ export const App: React.FC = () => {
                         </Routes>
                     </div>
                 </SplitCol>
-
+                <QuestionButton />
                 {snackbar}
             </SplitLayout>
         </AppRoot>

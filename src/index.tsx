@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { TourProvider } from "@reactour/tour";
 import { BrowserRouter } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import {
@@ -22,6 +23,7 @@ import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 import { App } from "./App";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import { steps } from "./guid/steps";
 
 const el = document.createElement("div");
 document.body.appendChild(el);
@@ -83,7 +85,17 @@ ReactDOM.render(
             platform="ios"
           >
             <AdaptivityProviderFix>
-              <App />
+              <TourProvider
+                steps={steps}
+                styles={{
+                  popover: (base) => ({
+                    ...base,
+                    backgroundColor: "#18181e",
+                  }),
+                }}
+              >
+                <App />
+              </TourProvider>
             </AdaptivityProviderFix>
           </ConfigProviderFix>
         </React.StrictMode>
