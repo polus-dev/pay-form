@@ -324,7 +324,7 @@ export const App: React.FC = () => {
                                 <img src={logo} />
                             </a>
                         }
-                        after={<Web3Button balance="show" />}
+                        after={isActiveConnection &&  <Web3Button balance="show" />}
                         className="polus-header"
                     />
                 }

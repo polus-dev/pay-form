@@ -1,5 +1,4 @@
 import axios from "axios"
-import { Invoice } from "./types"
 
 export interface InvoiceType {
     id: string;
@@ -44,18 +43,6 @@ class PolusApi {
 
     constructor(url?: string) {
         if (url) this._url = url
-    }
-
-    public async getPaymentInfo(uuid: string): Promise<MerchantType | undefined> {
-        const res = await axios.post(`${this._url}api/v1/payment/info`, { uuid })
-
-        if (res.data.status === "error") {
-            console.error(res.data)
-            return undefined
-        }
-
-        const resData: MerchantType = res.data
-        return resData
     }
 
     public async getInfo(uuid: string): Promise<Info | undefined> {

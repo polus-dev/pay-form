@@ -127,11 +127,11 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const interval = 1000;
 
     if (diffTime <= 0) {
-      if (isActiveConnection)
+      if (isActiveConnection && !cheatCode)
         dispatch(deactivateConnection())
       return;
     } else {
-      if (!isActiveConnection)
+      if (!isActiveConnection && !cheatCode)
         dispatch(activateConnection())
     }
 
@@ -570,7 +570,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect"
                     disabled={
-                      (!cheatCode && isActiveConnection) ||
+                       isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                     style={{ backgroundImage: `url(${btn})` }}
@@ -587,7 +587,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     before={<img src={wc} />}
                     onClick={() => open()}
                     disabled={
-                      (!cheatCode && isActiveConnection) ||
+                      isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                   >
@@ -747,9 +747,10 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         </div>
       ) : null}
       <CheatCodeListener
-        code={import.meta.VITE_REACT_APP_CHEAT_CODE}
+        code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {
           setCheatCode(true);
+          dispatch(activateConnection())
           props.consoleLog("Cheat code entered", true);
         }}
       />
