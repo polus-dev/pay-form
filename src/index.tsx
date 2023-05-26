@@ -17,7 +17,6 @@ import {
 import { Web3Modal } from "@web3modal/react";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
 
 import { App } from "./App";
@@ -33,15 +32,16 @@ document.body.appendChild(el);
 // })
 
 const chains = [polygon, mainnet, bsc, arbitrum];
+const projectId = import.meta.VITE_REACT_APP_PROJECT_ID;
 
 // Wagmi client
 const { provider } = configureChains(chains, [
-  walletConnectProvider({ projectId: "2e6208d8c73f2b1560e96b4e757bb4a1" }),
+  walletConnectProvider({ projectId }),
 ]);
 const wagmiClient = createClient({
   autoConnect: true,
   connectors: modalConnectors({
-    projectId: process.env.REACT_APP_PROJECT_ID,
+    projectId,
     version: "1", // or "2"
     appName: "Polus Pay",
     chains,
@@ -49,11 +49,9 @@ const wagmiClient = createClient({
   provider,
 });
 
-
-
-if (process.env.NODE_ENV === "production") {
+if (import.meta.env.PROD) {
   Sentry.init({
-    dsn: 'https://f4c739a8a9994899b24d8ef65e95b721@o1066986.ingest.sentry.io/4505150834737152',
+    dsn: import.meta.VITE_REACT_APP_SENTRY_DSN,
     integrations: [
       new Sentry.BrowserTracing(),
       new Sentry.Replay({ maskAllText: true, blockAllMedia: false }),
@@ -67,8 +65,6 @@ if (process.env.NODE_ENV === "production") {
     replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
   });
 }
-
-
 
 // Web3Modal Ethereum Client
 const ethereumClient = new EthereumClient(wagmiClient, chains);
@@ -92,10 +88,7 @@ ReactDOM.render(
           </ConfigProviderFix>
         </React.StrictMode>
       </WagmiConfig>
-      <Web3Modal
-        projectId="2e6208d8c73f2b1560e96b4e757bb4a1"
-        ethereumClient={ethereumClient}
-      />
+      <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
     </BrowserRouter>
   </Provider>,
   document.querySelector("#root")
