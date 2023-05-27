@@ -2,10 +2,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
   Button,
-  Div,
   Panel,
   PanelHeader,
-  Progress,
   Spinner,
 } from "@vkontakte/vkui";
 
@@ -91,17 +89,16 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   );
 
   const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0]);
-  const [coinInvoice, setCoinInvoice] = React.useState<string>("0");
   const [coinMerchant, setCoinMerchant] = React.useState<ListToken>(
     fullListTokens[0]
   );
   const abortRef = useRef(() => {});
 
-  const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
+  const { open, close, setDefaultChain } = useWeb3Modal();
   const { address, isConnected } = useAccount();
 
   const { chain } = useNetwork();
-  const { chains, error, isLoading, pendingChainId, switchNetwork } =
+  const {  error, isLoading, pendingChainId, switchNetwork } =
     useSwitchNetwork();
 
   const [info, setInfo] = React.useState<Info | undefined | false>(undefined);
@@ -248,13 +245,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
     setType(1);
 
-    if (!chain || !address) {
-      return false;
-    }
-    // const PolusUtils = new PolusTokenUtils(coin, chain.id, address)
-    // PolusUtils.isApprove()
-
-    return true;
+    return !(!chain || !address);
   }
 
   function generatedUrlRedirect(status: string) {
@@ -279,7 +270,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }
 
   useEffect(() => {
-    if (isLoading === false) {
+    if (!isLoading) {
       if (error) {
         console.log(error);
         props.consoleLog("Error network change", false);
@@ -302,7 +293,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     } else if (supportedChain.includes(chain.id as PolusChainId)) {
       setReady(true);
 
-      // changeCoin(coin, chain.id)
     } else {
       setReady(false);
       // swithNet('polygon')
@@ -320,8 +310,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   useEffect(() => {
     if (info) {
-      // chCoinNew(fullListTokensUp[0])
-      // changeCoin(tokens.polygon[0], 137)
     }
   }, [info]);
 
@@ -339,10 +327,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
       const uuid1 = getParameterByName("uuid");
       if (uuid1 && uuid1 !== "") {
-        // setUuid(uuid1)
         getInfo(uuid1);
 
-        // setInterval(() => getInfo(uuid1), 10000)
       } else {
         setErrorObj({
           text: "Invalid uuid param",
@@ -401,35 +387,14 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           <div>
             {type === 0 ? (
               <div>
-                {/* <SegmentedControl
-                                style={{ marginTop: '24px' }}
-                                size="l"
-                                onChange={e => swithNet(e)}
-                                value={chain?.id === 1 ? 'ethereum' : 'polygon'}
-                                options={[
-                                    {
-                                        label: 'Ethereum',
-                                        value: 'ethereum',
-                                        'aria-label': 'Ethereum'
-                                    },
-                                    {
-                                        label: 'Polygon',
-                                        value: 'polygon',
-                                        'aria-label': 'Polygon'
-                                    }
-                                ]}
-                            /> */}
+
 
                 <div className="text-one">Choose network</div>
 
                 <div
                   className="selector"
                   onClick={() => {
-                    // if (isConnected) {
                     props.setActiveModal("network");
-                    // } else {
-                    //     open();
-                    // }
                   }}
                 >
                   {chain ? (
@@ -516,44 +481,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     Other
                   </Button>
                 </div>
-                {/* <div className="block-tax" style={{ marginTop: '24px' }}>
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'23%'}
-                                >
-                    TAX
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'1,000.00 USDT'}
-                                >
-                    Amount without TAX
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'230.00 USDT'}
-                                >
-                    Total TAX amount
-                                </MiniInfoCell>
-                                <Separator />
-                                <MiniInfoCell
-                                    before={null}
-                                    textWrap="full"
-                                    textLevel="primary"
-                                    after={'1,230.00 USDT'}
-                                >
-                    Amount due
-                                </MiniInfoCell>
 
-                            </div> */}
 
                 <span className="timer-block">
                   The invoice is active in {timer}
@@ -735,7 +663,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               size="l"
               className="btn-connect"
               style={{ backgroundImage: `url(${btn})` }}
-              // onClick={() => startPay()}
               href={generatedUrlRedirect("error")}
             >
               Back to store

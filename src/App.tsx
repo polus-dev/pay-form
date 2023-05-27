@@ -57,8 +57,7 @@ export const App: React.FC = () => {
 
     const chainsA = [polygon, mainnet, bsc, arbitrum]
 
-    // const { chain } = useNetwork()
-    const { chains, error, isLoading, pendingChainId, switchNetwork } =
+    const { switchNetwork } =
         useSwitchNetwork()
 
     const [tron, setTron] = React.useState<boolean>(false)
@@ -67,15 +66,13 @@ export const App: React.FC = () => {
 
     const { disconnect } = useDisconnect()
 
-    const [callback, setCallback] = React.useState<Function | undefined>(
-        undefined
-    )
+
 
     const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
         undefined
     )
 
-    const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
+    const { open, setDefaultChain } = useWeb3Modal()
 
     const isDesktop = window.innerWidth >= 800
 
@@ -332,9 +329,7 @@ export const App: React.FC = () => {
                         className="polus-header"
                     />
                 }
-            // header={
-            //     <HeaderBlock />
-            // }
+
             >
                 <SplitCol
                     animate={false}
