@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, lazy, Suspense } from "react";
 
 import {
     AppRoot,
@@ -34,11 +34,13 @@ import "@vkontakte/vkui/dist/vkui.css"
 import "./style.css"
 
 import { fullListTokens } from "./logic/tokens"
-import { Main } from "./pages/main"
 
 import logo from "./img/logo.svg"
 import { ListToken, PolusChainId } from "./logic/payment"
 import {useAppSelector} from "./store/hooks";
+
+
+const MainLazyComponent = lazy(() => import("./pages/main"))
 
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
@@ -344,7 +346,9 @@ export const App: React.FC = () => {
                                 path="/"
                                 element={
                                     <View activePanel={"main1"} id="view">
-                                        <Main
+                                        <span id="main1">
+                                        <Suspense  fallback={<ScreenSpinner state="loading" />}>
+                                        <MainLazyComponent
                                             id="main1"
                                             setActiveModal={setActiveModal}
                                             consoleLog={consoleLog}
@@ -357,6 +361,8 @@ export const App: React.FC = () => {
                                             setSelectToken={setSelectToken}
                                             setAllowTron={setAllowTron}
                                         />
+                                        </Suspense>
+                                        </span>
                                     </View>
                                 }
                             />
