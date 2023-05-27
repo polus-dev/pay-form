@@ -1,15 +1,16 @@
 import s from "./QuestionButton.module.css"
-export const QuestionButton = () => {
+interface Props {
+  onClick: () => void
+}
+export const QuestionButton = (props: Props) => {
   const visible = true;
-
-  const handleClick = () => {};
 
   return (
     <div
-      className={`${s.appBack} ${visible ? s.appBackVisible : "s"}`}
-      onClick={handleClick}
+      className={`${s.appBack} ${visible ? s.appBackVisible : ""}`}
+      onClick={props.onClick}
     >
-      ?
+      Help
     </div>
   );
 };
