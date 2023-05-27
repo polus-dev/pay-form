@@ -37,13 +37,15 @@ import { fullListTokens } from "./logic/tokens"
 
 import logo from "./img/logo.svg"
 import { ListToken, PolusChainId } from "./logic/payment"
+import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
+import { useTour } from "@reactour/tour";
 import {useAppSelector} from "./store/hooks";
-
 
 const MainLazyComponent = lazy(() => import("./pages/main"))
 
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
+    const {setIsOpen} = useTour();
 
     const isActiveConnection =  useAppSelector(state => state.connection.isActive)
     const [snackbar, setSnackbar] = React.useState<any>(null)
@@ -369,7 +371,7 @@ export const App: React.FC = () => {
                         </Routes>
                     </div>
                 </SplitCol>
-
+                <QuestionButton onClick={() => setIsOpen(true)}/>
                 {snackbar}
             </SplitLayout>
         </AppRoot>

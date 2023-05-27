@@ -1,0 +1,43 @@
+.appBack {
+    display: none;
+    position: fixed;
+    top: 15%;
+    left: 0;
+    align-items: center;
+    padding: 0 0 0 46px;
+    height: 46px;
+    color: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0;
+    font-weight: 600;
+    background-color: #1F1F1F;
+    line-height: 46px;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    transition: color 0.2s, font-size 0.2s, padding 0.2s;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.appBack:hover {
+    padding: 0 16px 0 40px;
+    color: #FFFFFF;
+    font-size: 16px;
+    transition: color 0.2s, font-size 0.2s, padding 0.2s;
+}
+
+.appBack::after {
+    content: '';
+    position: absolute;
+    top: 11px;
+    left: 11px;
+    width: 24px;
+    height: 24px;
+    /**/
+    background-image: url('https://polus-app-git-dev-biton.vercel.app/images/arrow.png');
+    background-repeat: no-repeat;
+}
+
+.appBackVisible {
+    display: inline;
+}
