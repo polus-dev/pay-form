@@ -570,7 +570,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect"
                     disabled={
-                       isActiveConnection ||
+                       !isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                     style={{ backgroundImage: `url(${btn})` }}
@@ -587,7 +587,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     before={<img src={wc} />}
                     onClick={() => open()}
                     disabled={
-                      isActiveConnection ||
+                      !isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                   >

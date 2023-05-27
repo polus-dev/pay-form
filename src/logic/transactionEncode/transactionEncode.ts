@@ -1,5 +1,5 @@
 import { NULL_ADDRESS } from "../../constants";
-import { ethers, BigNumber } from "ethers";
+import { ethers} from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
 import { WrapStatus } from "./types/WrapStatus";
@@ -108,11 +108,11 @@ export function encodePay({
 
   const commisionTransfer = encodeTransfer(tokenAddress, feeRecipient, fee);
 
-  const uiid_encoded = coder.encode(
+  const uuid_encoded = coder.encode(
     ["uint256", "bytes"],
     ["0x" + uuid, "0x00"]
   );
-  inputs.push(...[merchantTransfer, commisionTransfer, uiid_encoded]);
+  inputs.push(...[merchantTransfer, commisionTransfer, uuid_encoded]);
   const out = coder
     .encode(types, [commands, inputs, deadline])
     .replace("0x", "");

@@ -122,17 +122,17 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         checkAllowanceDispatch(currentStage());
         const allowance = await payClass.checkAllowance("A", "polus")
         debugger
-        checkAndApprove("polus", allowance)
+        await checkAndApprove("polus", allowance)
 
       } else if (context === "universal router" && !payClass.tokenA.isNative) {
         if (isMetaMask) {
           checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "permit")
-          checkAndApprove("permit", allowance)
+          await checkAndApprove("permit", allowance)
         } else {
           checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "router")
-          checkAndApprove("router", allowance)
+          await checkAndApprove("router", allowance)
         }
       }
       dispatch(setStage({ stageId: currentStage(), text: "Approve succsess", status: StageStatus.SUCCESS }))
@@ -259,7 +259,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const { wait } = await sendTransaction(preparedTransaction)
         transactionPendingDispatch(currentStage())
         await wait()
-        dispatch(setStage({ stageId: currentStage(), text: "Transaction succsess", status: StageStatus.SUCCESS }))
+        dispatch(setStage({ stageId: currentStage(), text: "Transaction success", status: StageStatus.SUCCESS }))
         dispatch(setSmartLineStatus(SmartLineStatus.SUCCSESS))
       }
 
