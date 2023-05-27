@@ -14,7 +14,6 @@ import { CustomRouter } from "../../../logic/router";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { encodePay } from "../../../logic/transactionEncode/transactionEncode";
 import { setSmartLineStatus, SmartLineStatus } from "../smartLine/smartLineSlice";
-import { ethers as ethers_v6 } from "ethers_v6"
 
 interface IPayload {
   chainId: PolusChainId;
@@ -240,7 +239,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
-            value: payClass.tokenA.isNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
+            value: payClass.tokenA.isNative ? ethers.utils.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
             data: doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
