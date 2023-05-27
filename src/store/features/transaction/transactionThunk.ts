@@ -14,7 +14,6 @@ import { CustomRouter } from "../../../logic/router";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { encodePay } from "../../../logic/transactionEncode/transactionEncode";
 import { setSmartLineStatus, SmartLineStatus } from "../smartLine/smartLineSlice";
-import { ethers as ethers_v6 } from "ethers_v6"
 
 interface IPayload {
   chainId: PolusChainId;
@@ -122,17 +121,17 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         checkAllowanceDispatch(currentStage());
         const allowance = await payClass.checkAllowance("A", "polus")
         debugger
-        checkAndApprove("polus", allowance)
+        await checkAndApprove("polus", allowance)
 
       } else if (context === "universal router" && !payClass.tokenA.isNative) {
         if (isMetaMask) {
           checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "permit")
-          checkAndApprove("permit", allowance)
+          await checkAndApprove("permit", allowance)
         } else {
           checkAllowanceDispatch(currentStage());
           const allowance = await payClass.checkAllowance("A", "router")
-          checkAndApprove("router", allowance)
+          await checkAndApprove("router", allowance)
         }
       }
       dispatch(setStage({ stageId: currentStage(), text: "Approve succsess", status: StageStatus.SUCCESS }))
@@ -240,7 +239,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
-            value: payClass.tokenA.isNative ? ethers_v6.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
+            value: payClass.tokenA.isNative ? ethers.utils.parseEther(parseFloat(payClass.tokenA.info.amountIn.toString()).toFixed(decimalPlaces).toString()) : 0,
             data: doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
@@ -259,7 +258,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const { wait } = await sendTransaction(preparedTransaction)
         transactionPendingDispatch(currentStage())
         await wait()
-        dispatch(setStage({ stageId: currentStage(), text: "Transaction succsess", status: StageStatus.SUCCESS }))
+        dispatch(setStage({ stageId: currentStage(), text: "Transaction success", status: StageStatus.SUCCESS }))
         dispatch(setSmartLineStatus(SmartLineStatus.SUCCSESS))
       }
 

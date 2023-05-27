@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import smartLineSlice from './features/smartLine/smartLineSlice'
 import transactionSlice from './features/transaction/transactionSlice'
+import connectionSlice from "./features/connection/connectionSlice";
 
 export const store = configureStore({
   reducer: {
     transaction: transactionSlice,
-    stamrtLine: smartLineSlice,
+    smartLine: smartLineSlice,
+    connection: connectionSlice,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
 })

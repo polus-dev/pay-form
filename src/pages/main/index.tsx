@@ -10,7 +10,6 @@ import {
 } from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 
 import { useWeb3Modal } from "@web3modal/react";
 
@@ -19,7 +18,6 @@ import { polygon } from "wagmi/chains";
 import {
   Icon28CheckCircleFill,
   Icon28ChevronDownOutline,
-  Icon28DoneOutline,
   Icon28WarningTriangleOutline,
 } from "@vkontakte/icons";
 
@@ -34,7 +32,6 @@ import btn from "../../img/btn.jpg";
 import wc from "../../img/wc.svg";
 
 import { fullListTokens, supportedChain } from "../../logic/tokens";
-import { Invoice } from "../../logic/types";
 import { Info, InvoiceType, PolusApi } from "../../logic/api";
 
 import {
@@ -54,6 +51,7 @@ import {
   setSmartLineStatus,
   SmartLineStatus,
 } from "../../store/features/smartLine/smartLineSlice";
+import {activateConnection, deactivateConnection} from "../../store/features/connection/connectionSlice";
 
 interface MainProps {
   id: string;
@@ -75,8 +73,10 @@ interface ErrorType {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export const Main: React.FC<MainProps> = memo((props: MainProps) => {
+const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
+  const isActiveConnection =  useAppSelector(state => state.connection.isActive)
+  const dispatch = useAppDispatch();
   const [type, setType] = React.useState<number>(0);
 
   const [ready, setReady] = React.useState<boolean>(false);
@@ -87,7 +87,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const [reRender, setRerender] = React.useState<boolean>(false);
   const smartLineStatus = useAppSelector(
-    (state) => state.stamrtLine.smartLineStatus
+    (state) => state.smartLine.smartLineStatus
   );
 
   const [coin, setCoin] = React.useState<ListToken>(fullListTokens[0]);
@@ -96,7 +96,6 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     fullListTokens[0]
   );
   const abortRef = useRef(() => {});
-  const dispatch = useAppDispatch();
 
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal();
   const { address, isConnected } = useAccount();
@@ -124,7 +123,14 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
     let diffTime = eventTime - currentTime - 1;
     const interval = 1000;
 
-    if (diffTime < 0) return;
+    if (diffTime <= 0) {
+      if (isActiveConnection && !cheatCode)
+        dispatch(deactivateConnection())
+      return;
+    } else {
+      if (!isActiveConnection && !cheatCode)
+        dispatch(activateConnection())
+    }
 
     const interv = setInterval(() => {
       const minutes = Math.floor(diffTime / 60);
@@ -561,7 +567,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect"
                     disabled={
-                      (!cheatCode && timer === "00:00") ||
+                       !isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                     style={{ backgroundImage: `url(${btn})` }}
@@ -578,7 +584,7 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     before={<img src={wc} />}
                     onClick={() => open()}
                     disabled={
-                      (!cheatCode && timer === "00:00") ||
+                      !isActiveConnection ||
                       REACT_APP_TURN_OFF_TIMER
                     }
                   >
@@ -738,12 +744,15 @@ export const Main: React.FC<MainProps> = memo((props: MainProps) => {
         </div>
       ) : null}
       <CheatCodeListener
-        code={import.meta.VITE_REACT_APP_CHEAT_CODE}
+        code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {
           setCheatCode(true);
+          dispatch(activateConnection())
           props.consoleLog("Cheat code entered", true);
         }}
       />
     </Panel>
   );
 });
+
+export default Main;
