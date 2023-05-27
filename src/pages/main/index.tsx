@@ -392,7 +392,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                 <div className="text-one">Choose network</div>
 
                 <div
-                  className="selector"
+                  className="selector guid__step--2"
                   onClick={() => {
                     props.setActiveModal("network");
                   }}
@@ -425,7 +425,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                 </div>
 
                 <div className="text-one">Choose currency</div>
-
+                <span className="guid__step--3">
                 <div className="btn-block">
                   {fullListTokensUp.slice(0, 3).map((token, key) => (
                     <Button
@@ -473,6 +473,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
                   <Button
                     size="l"
+                    className="guid__step--4"
                     stretched
                     onClick={() => props.setActiveModal("coins")}
                     mode={"outline"}
@@ -482,7 +483,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   </Button>
                 </div>
 
-
+                </span>
                 <span className="timer-block">
                   The invoice is active in {timer}
                 </span>
@@ -507,7 +508,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   <Button
                     stretched
                     size="l"
-                    className="btn-connect"
+                    className="btn-connect guid__step--1"
                     style={{ backgroundImage: `url(${btn})` }}
                     before={<img src={wc} />}
                     onClick={() => open()}
