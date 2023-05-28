@@ -46,6 +46,7 @@ const MainLazyComponent = lazy(() => import("./pages/main"))
 export const App: React.FC = () => {
     const [activeModal, setActiveModal] = React.useState<any>(null)
     const {setIsOpen} = useTour();
+    const isGuideButtonVisible = useAppSelector(state => state.guide.isVisible)
 
     const isActiveConnection =  useAppSelector(state => state.connection.isActive)
     const [snackbar, setSnackbar] = React.useState<any>(null)
@@ -366,7 +367,7 @@ export const App: React.FC = () => {
                         </Routes>
                     </div>
                 </SplitCol>
-                <QuestionButton onClick={() => setIsOpen(true)}/>
+                <QuestionButton visible={isGuideButtonVisible} onClick={() => setIsOpen(true)}/>
                 {snackbar}
             </SplitLayout>
         </AppRoot>

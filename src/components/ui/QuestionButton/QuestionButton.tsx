@@ -1,13 +1,13 @@
 import s from "./QuestionButton.module.css"
 interface Props {
-  onClick: () => void
+  onClick: () => void;
+  visible: boolean;
 }
 export const QuestionButton = (props: Props) => {
-  const visible = true;
 
   return (
     <div
-      className={`${s.appBack} ${visible ? s.appBackVisible : ""}`}
+      className={`${s.appBack} ${props.visible ? s.appBackVisible : ""}`}
       onClick={props.onClick}
     >
       Help

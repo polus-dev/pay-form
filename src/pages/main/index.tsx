@@ -50,6 +50,8 @@ import {
   SmartLineStatus,
 } from "../../store/features/smartLine/smartLineSlice";
 import {activateConnection, deactivateConnection} from "../../store/features/connection/connectionSlice";
+import { useTour } from "@reactour/tour";
+import { setVisibleGuideButton } from "../../store/features/guide/guideSlice";
 
 interface MainProps {
   id: string;
@@ -74,7 +76,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
   const isActiveConnection =  useAppSelector(state => state.connection.isActive)
+  const isVisibleGuideButton =  useAppSelector(state => state.guide.isVisible)
   const dispatch = useAppDispatch();
+  const {setCurrentStep} = useTour();
   const [type, setType] = React.useState<number>(0);
 
   const [ready, setReady] = React.useState<boolean>(false);
@@ -121,12 +125,18 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     const interval = 1000;
 
     if (diffTime <= 0) {
-      if (isActiveConnection && !cheatCode)
+      // if (isVisibleGuideButton) {
+      //   dispatch(setVisibleGuideButton(false))
+      // }
+      if (isActiveConnection && !cheatCode) {
         dispatch(deactivateConnection())
+      }
       return;
     } else {
-      if (!isActiveConnection && !cheatCode)
+      if (!isActiveConnection && !cheatCode) {
         dispatch(activateConnection())
+        dispatch(setVisibleGuideButton(true))
+      }
     }
 
     const interv = setInterval(() => {
@@ -359,6 +369,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       }
     }
   }, [info, props.tron]);
+
+  useEffect(() => {
+    if (isConnected) {
+      setCurrentStep(1)
+    }
+  }, [isConnected])
 
   return (
     <Panel id={reRender ? props.id : "render"}>
