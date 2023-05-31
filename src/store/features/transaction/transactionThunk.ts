@@ -170,7 +170,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       if (context === "polus contract" && !payClass.tokenA.isNative) {
         checkAllowanceDispatch(currentStage());
         const allowance = await payClass.checkAllowance("A", "polus");
-        debugger;
         await checkAndApprove("polus", allowance);
       } else if (context === "universal router" && !payClass.tokenA.isNative) {
         if (isMetaMask) {
@@ -375,19 +374,17 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
               uuid: payload.uuid,
               feeRecipient: payload.feeRecipient,
               fee: ethers.utils
-                .parseUnits(
-                  String(
-                    +payload.asset_amount - +payload.asset_amount_without_fee
-                  ),
-                  tokenDecimals
+                .parseUnits(payload.asset_amount, tokenDecimals)
+                .sub(
+                  ethers.utils.parseUnits(
+                    payload.asset_amount_without_fee,
+                    tokenDecimals
+                  )
                 )
                 .toString(),
               merchant: payload.addressMerchant,
               merchantAmount: ethers.utils
                 .parseUnits(payload.asset_amount_without_fee, tokenDecimals)
-                .toString(),
-              asset_amount_decimals: ethers.utils
-                .parseUnits(payload.asset_amount, tokenDecimals)
                 .toString(),
               tokenAddress: isNative ? "" : payload.tokenAddress,
             }),

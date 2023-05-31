@@ -327,15 +327,15 @@ export class Payment {
   /**
    * getDecimals
    */
-  public async getDecimals(): Promise<BigNumber> {
+  public async getDecimals(): Promise<number> {
     let contr = this._tokenA.contract;
 
     if (this.tokenA.isNative) {
-      return BigNumber.from(18);
+      return 18;
     }
 
     if (!contr) throw new Error("getDecimals:contract is undefined");
-    const decimals: BigNumber = await contr.decimals();
+    const decimals: number = await contr.decimals();
     return decimals;
   }
 
