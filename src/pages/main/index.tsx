@@ -1,11 +1,6 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/naming-convention */
-import {
-  Button,
-  Panel,
-  PanelHeader,
-  Spinner,
-} from "@vkontakte/vkui";
+import { Button, Panel, PanelHeader, Spinner } from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef } from "react";
 
@@ -49,7 +44,10 @@ import {
   setSmartLineStatus,
   SmartLineStatus,
 } from "../../store/features/smartLine/smartLineSlice";
-import {activateConnection, deactivateConnection} from "../../store/features/connection/connectionSlice";
+import {
+  activateConnection,
+  deactivateConnection,
+} from "../../store/features/connection/connectionSlice";
 import { useTour } from "@reactour/tour";
 import { setVisibleGuideButton } from "../../store/features/guide/guideSlice";
 
@@ -75,10 +73,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
-  const isActiveConnection =  useAppSelector(state => state.connection.isActive)
-  const isVisibleGuideButton =  useAppSelector(state => state.guide.isVisible)
+  const isActiveConnection = useAppSelector(
+    (state) => state.connection.isActive
+  );
+  const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
   const dispatch = useAppDispatch();
-  const {setCurrentStep} = useTour();
+  const { setCurrentStep } = useTour();
   const [type, setType] = React.useState<number>(0);
 
   const [ready, setReady] = React.useState<boolean>(false);
@@ -102,7 +102,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const { address, isConnected } = useAccount();
 
   const { chain } = useNetwork();
-  const {  error, isLoading, pendingChainId, switchNetwork } =
+  const { error, isLoading, pendingChainId, switchNetwork } =
     useSwitchNetwork();
 
   const [info, setInfo] = React.useState<Info | undefined | false>(undefined);
@@ -129,13 +129,13 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       //   dispatch(setVisibleGuideButton(false))
       // }
       if (isActiveConnection && !cheatCode) {
-        dispatch(deactivateConnection())
+        dispatch(deactivateConnection());
       }
       return;
     } else {
       if (!isActiveConnection && !cheatCode) {
-        dispatch(activateConnection())
-        dispatch(setVisibleGuideButton(true))
+        dispatch(activateConnection());
+        dispatch(setVisibleGuideButton(true));
       }
     }
 
@@ -302,7 +302,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       console.error("not found network");
     } else if (supportedChain.includes(chain.id as PolusChainId)) {
       setReady(true);
-
     } else {
       setReady(false);
       // swithNet('polygon')
@@ -338,7 +337,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       const uuid1 = getParameterByName("uuid");
       if (uuid1 && uuid1 !== "") {
         getInfo(uuid1);
-
       } else {
         setErrorObj({
           text: "Invalid uuid param",
@@ -372,9 +370,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   useEffect(() => {
     if (isConnected) {
-      setCurrentStep(1)
+      setCurrentStep(1);
     }
-  }, [isConnected])
+  }, [isConnected]);
 
   return (
     <Panel id={reRender ? props.id : "render"}>
@@ -403,8 +401,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           <div>
             {type === 0 ? (
               <div>
-
-
                 <div className="text-one">Choose network</div>
 
                 <div
@@ -442,63 +438,62 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
                 <div className="text-one">Choose currency</div>
                 <span className="guid__step--3">
-                <div className="btn-block">
-                  {fullListTokensUp.slice(0, 3).map((token, key) => (
+                  <div className="btn-block">
+                    {fullListTokensUp.slice(0, 3).map((token, key) => (
+                      <Button
+                        key={key}
+                        size="l"
+                        stretched
+                        className="fix-forpadding"
+                        onClick={() => chCoinNew(token)}
+                        mode={coin.name === token.name ? "primary" : "outline"}
+                        before={<img src={token.icon} className="logo-cur" />}
+                      >
+                        {token.name.toUpperCase()}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="btn-block">
+                    {fullListTokensUp.slice(3, 4).map((token, key) => (
+                      <Button
+                        key={key}
+                        size="l"
+                        stretched
+                        className="fix-forpadding"
+                        onClick={() => chCoinNew(token)}
+                        mode={coin.name === token.name ? "primary" : "outline"}
+                        before={<img src={token.icon} className="logo-cur" />}
+                      >
+                        {token.name.toUpperCase()}
+                      </Button>
+                    ))}
+
+                    {getSubCoin(fullListTokensUp).map((token, key) => (
+                      <Button
+                        key={key}
+                        size="l"
+                        stretched
+                        className="fix-forpadding"
+                        onClick={() => chCoinNew(token)}
+                        mode={coin.name === token.name ? "primary" : "outline"}
+                        before={<img src={token.icon} className="logo-cur" />}
+                      >
+                        {token.name.toUpperCase()}
+                      </Button>
+                    ))}
+
                     <Button
-                      key={key}
                       size="l"
+                      className="guid__step--4"
                       stretched
-                      className="fix-forpadding"
-                      onClick={() => chCoinNew(token)}
-                      mode={coin.name === token.name ? "primary" : "outline"}
-                      before={<img src={token.icon} className="logo-cur" />}
+                      onClick={() => props.setActiveModal("coins")}
+                      mode={"outline"}
+                      before={<img src={otherLogo} width={24} />}
                     >
-                      {token.name.toUpperCase()}
+                      Other
                     </Button>
-                  ))}
-                </div>
-
-                <div className="btn-block">
-                  {fullListTokensUp.slice(3, 4).map((token, key) => (
-                    <Button
-                      key={key}
-                      size="l"
-                      stretched
-                      className="fix-forpadding"
-                      onClick={() => chCoinNew(token)}
-                      mode={coin.name === token.name ? "primary" : "outline"}
-                      before={<img src={token.icon} className="logo-cur" />}
-                    >
-                      {token.name.toUpperCase()}
-                    </Button>
-                  ))}
-
-                  {getSubCoin(fullListTokensUp).map((token, key) => (
-                    <Button
-                      key={key}
-                      size="l"
-                      stretched
-                      className="fix-forpadding"
-                      onClick={() => chCoinNew(token)}
-                      mode={coin.name === token.name ? "primary" : "outline"}
-                      before={<img src={token.icon} className="logo-cur" />}
-                    >
-                      {token.name.toUpperCase()}
-                    </Button>
-                  ))}
-
-                  <Button
-                    size="l"
-                    className="guid__step--4"
-                    stretched
-                    onClick={() => props.setActiveModal("coins")}
-                    mode={"outline"}
-                    before={<img src={otherLogo} width={24} />}
-                  >
-                    Other
-                  </Button>
-                </div>
-
+                  </div>
                 </span>
                 <span className="timer-block">
                   The invoice is active in {timer}
@@ -511,10 +506,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     stretched
                     size="l"
                     className="btn-connect"
-                    disabled={
-                       !isActiveConnection ||
-                      REACT_APP_TURN_OFF_TIMER
-                    }
+                    disabled={!isActiveConnection || REACT_APP_TURN_OFF_TIMER}
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
@@ -528,10 +520,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     style={{ backgroundImage: `url(${btn})` }}
                     before={<img src={wc} />}
                     onClick={() => open()}
-                    disabled={
-                      !isActiveConnection ||
-                      REACT_APP_TURN_OFF_TIMER
-                    }
+                    disabled={!isActiveConnection || REACT_APP_TURN_OFF_TIMER}
                   >
                     Connect Wallet
                   </Button>
@@ -573,6 +562,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                         coinMerchant.address[chain.id as PolusChainId]
                       }
                       setAbortTransaction={abortRef}
+                      asset_amount_without_fee={
+                        info.invoice.asset_amount_without_fee!
+                      }
                     />
                   </div>
                 ) : null}
@@ -691,7 +683,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
         code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {
           setCheatCode(true);
-          dispatch(activateConnection())
+          dispatch(activateConnection());
           props.consoleLog("Cheat code entered", true);
         }}
       />

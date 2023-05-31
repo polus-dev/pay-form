@@ -8,7 +8,11 @@ import { useEffect, useLayoutEffect } from "react";
 import { startPay } from "../store/features/transaction/transactionThunk";
 
 export const ProcessBlock = (
-  props: T1 & T2 & { setAbortTransaction: { current: any | null } }
+  props: T1 &
+    T2 & {
+      setAbortTransaction: { current: any | null };
+      asset_amount_without_fee: string;
+    }
 ) => {
   const stages = useAppSelector((state) => state.transaction.stages);
   const dispatch = useAppDispatch();
@@ -28,6 +32,8 @@ export const ProcessBlock = (
         uuid: props.uuid,
         fee: props.fee,
         amountOut: props.amountOut,
+        asset_amount: props.amount,
+        asset_amount_without_fee: props.asset_amount_without_fee,
       })
     );
     props.setAbortTransaction.current = abortPromise.abort;
