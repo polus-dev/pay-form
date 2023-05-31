@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { startPay } from './transactionThunk';
-import { init } from '@sentry/browser';
 
 export interface TransactionState {
   stages: [IApproveStage, ISignStage, ISendStage]
