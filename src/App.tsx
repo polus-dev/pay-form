@@ -58,7 +58,7 @@ export const App: React.FC = () => {
 
   const [firstRender, setFirstRender] = React.useState<boolean>(false);
 
-  const chainsA = [polygon, mainnet, bsc, arbitrum];
+  const chainsA = [polygon, mainnet, arbitrum];
 
   const { switchNetwork } = useSwitchNetwork();
 

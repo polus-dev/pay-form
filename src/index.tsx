@@ -18,7 +18,7 @@ import {
 import { Web3Modal } from "@web3modal/react";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { mainnet, polygon, bsc, arbitrum } from "wagmi/chains";
+import { mainnet, polygon, arbitrum } from "wagmi/chains";
 
 import { App } from "./App";
 import { Provider } from "react-redux";
@@ -33,9 +33,9 @@ document.body.appendChild(el);
 //     tool: [ 'console', 'elements' ]
 // })
 
-const chains = [polygon, mainnet, bsc, arbitrum];
+const chains = [polygon, mainnet, arbitrum];
 const projectId = import.meta.env.VITE_REACT_APP_PROJECT_ID;
-console.log(projectId)
+console.log(projectId);
 
 // Wagmi client
 const { provider } = configureChains(chains, [
