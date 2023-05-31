@@ -360,16 +360,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       } else if (context === "polus contract") {
         const isNative = payClass.tokenA.isNative && payClass.tokenB.isNative;
         const tokenDecimals = await payClass.getDecimals();
-        debugger;
-        const calc = ethers.utils
-          .parseUnits(payload.asset_amount, tokenDecimals)
-          .sub(
-            ethers.utils.parseUnits(
-              payload.asset_amount_without_fee,
-              tokenDecimals
-            )
-          )
-          .toString();
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: payClass.addressPolusContract,
