@@ -25,19 +25,10 @@ import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { steps } from "./guid/steps";
 
-const el = document.createElement("div");
-document.body.appendChild(el);
-
-// eruda.init({
-//     container: el,
-//     tool: [ 'console', 'elements' ]
-// })
-
 const chains = [polygon, mainnet, arbitrum];
 const projectId = import.meta.env.VITE_REACT_APP_PROJECT_ID;
 console.log(projectId);
 
-// Wagmi client
 const { provider } = configureChains(chains, [
   walletConnectProvider({ projectId }),
 ]);

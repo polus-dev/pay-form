@@ -76,7 +76,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       signal.addEventListener("abort", () => {
         return rejectWithValue("Aborted");
       });
-
+    debugger
       const isMetaMask = window.ethereum?.isMetaMask;
       const config: ConfigPayment = {
         networkId: payload.chainId,

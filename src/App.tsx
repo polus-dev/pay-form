@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, lazy, Suspense, useState } from "react";
 
 import {
   AppRoot,
@@ -40,13 +40,46 @@ import { ListToken, PolusChainId } from "./logic/payment";
 import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
 import { useTour } from "@reactour/tour";
 import { useAppSelector } from "./store/hooks";
+import { useLazyGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
+import { getBlockchains, getParameterByName } from "./logic/utils";
 
 const MainLazyComponent = lazy(() => import("./pages/main"));
+
+const blockchains = {
+  polygon,
+  bsc,
+  arbitrum,
+  ethereum: mainnet,
+};
 
 export const App: React.FC = () => {
   const [activeModal, setActiveModal] = React.useState<any>(null);
   const { setIsOpen } = useTour();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
+
+  const [getPaymentInfo] = useLazyGetPaymentByPaymentIdQuery();
+
+  const [chains, setChains] = useState<any[] | undefined>();
+
+  useEffect(() => {
+    const paymentId = getParameterByName("uuid");
+    if (paymentId) {
+      getPaymentInfo({ payment_id: paymentId })
+        .unwrap()
+        .then((payment) =>
+          // @ts-ignore
+          setChains(
+            getBlockchains(payment)
+              .map(
+                (chain) => (
+                  chain === "tron" && setAllowTron(true), blockchains[chain]
+                )
+              )
+              .filter(Boolean)
+          )
+        );
+    }
+  }, []);
 
   const isActiveConnection = useAppSelector(
     (state) => state.connection.isActive
@@ -56,15 +89,11 @@ export const App: React.FC = () => {
   const [popout, setPopout] = React.useState<any>(null);
   const { chain } = useNetwork();
 
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
-
-  const chainsA = [polygon, mainnet, arbitrum];
-
   const { switchNetwork } = useSwitchNetwork();
 
   const [tron, setTron] = React.useState<boolean>(false);
 
-  const [allowTron, setAllowTron] = React.useState<boolean>(true);
+  const [allowTron, setAllowTron] = React.useState<boolean>(false);
 
   const { disconnect } = useDisconnect();
 
@@ -116,14 +145,6 @@ export const App: React.FC = () => {
   }
 
   useEffect(() => {
-    if (!firstRender) {
-      setFirstRender(true);
-
-      // checkAuth()
-    }
-  }, []);
-
-  useEffect(() => {
     if (tron) {
       disconnect();
     }
@@ -153,26 +174,31 @@ export const App: React.FC = () => {
       >
         <Div>
           <CardGrid size="l">
-            {chainsA.map((chainLocal, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  after={
-                    chain?.id === chainLocal.id ? <Icon28DoneOutline /> : null
-                  }
-                  onClick={() => {
-                    if (switchNetwork) {
-                      switchNetwork(chainLocal.id);
-                    } else {
-                      setDefaultChain(chainLocal);
-                      open();
-                    }
-                    setActiveModal(null);
-                  }}
-                >
-                  {chainLocal.name}
-                </SimpleCell>
-              </Card>
-            ))}
+            {chains &&
+              chains.map((chainLocal, key) => {
+                return (
+                  <Card key={key}>
+                    <SimpleCell
+                      after={
+                        chain?.id === chainLocal.id ? (
+                          <Icon28DoneOutline />
+                        ) : null
+                      }
+                      onClick={() => {
+                        if (switchNetwork) {
+                          switchNetwork(chainLocal.id);
+                        } else {
+                          setDefaultChain(chainLocal);
+                          open();
+                        }
+                        setActiveModal(null);
+                      }}
+                    >
+                      {chainLocal.name}
+                    </SimpleCell>
+                  </Card>
+                );
+              })}
             {allowTron ? (
               <Card>
                 <SimpleCell

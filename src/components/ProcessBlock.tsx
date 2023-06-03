@@ -17,6 +17,7 @@ export const ProcessBlock = (
   const stages = useAppSelector((state) => state.transaction.stages);
   const dispatch = useAppDispatch();
   useEffect(() => {
+    debugger;
     const abortPromise = dispatch(
       startPay({
         tokenA: props.tokenA,

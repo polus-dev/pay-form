@@ -25,7 +25,7 @@ import btn from "../../img/btn.jpg";
 import wc from "../../img/wc.svg";
 
 import { fullListTokens, supportedChain } from "../../logic/tokens";
-import { Info, InvoiceType, PolusApi } from "../../logic/api";
+import { PolusApi } from "../../logic/api";
 
 import {
   ListToken,
@@ -33,7 +33,13 @@ import {
   Payment,
   PolusChainId,
 } from "../../logic/payment";
-import { NtoStr, getParameterByName } from "../../logic/utils";
+import {
+  NtoStr,
+  getParameterByName,
+  getAsset,
+  getMerchantAddress,
+  getPaymentFee,
+} from "../../logic/utils";
 import { Tron } from "./tron";
 import { REACT_APP_TURN_OFF_TIMER } from "../../constants";
 import { CheatCodeListener } from "../../components/CheatCodeListener";
@@ -50,6 +56,11 @@ import {
 } from "../../store/features/connection/connectionSlice";
 import { useTour } from "@reactour/tour";
 import { setVisibleGuideButton } from "../../store/features/guide/guideSlice";
+import { useLazyGetPaymentByPaymentIdQuery } from "../../store/api/endpoints/payment/Payment";
+import { IPayment } from "../../store/api/endpoints/payment/Payment.interface";
+import { IMerchant } from "../../store/api/endpoints/merchant/Merchant.interface";
+import { useLazyGetMerchantByIdQuery } from "../../store/api/endpoints/merchant/Merchant";
+import { ethers } from "ethers";
 
 interface MainProps {
   id: string;
@@ -76,6 +87,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const isActiveConnection = useAppSelector(
     (state) => state.connection.isActive
   );
+
+  const [getPaymentInfo] = useLazyGetPaymentByPaymentIdQuery();
+  const [getMerchantInfo] = useLazyGetMerchantByIdQuery();
   const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
   const dispatch = useAppDispatch();
   const { setCurrentStep } = useTour();
@@ -105,7 +119,13 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const { error, isLoading, pendingChainId, switchNetwork } =
     useSwitchNetwork();
 
-  const [info, setInfo] = React.useState<Info | undefined | false>(undefined);
+  const [paymentInfo, setPaymentInfo] = React.useState<
+    IPayment | undefined | false
+  >(undefined);
+
+  const [merchantInfo, setMerchantInfo] = React.useState<IMerchant | undefined>(
+    undefined
+  );
 
   const [errorObj, setErrorObj] = React.useState<ErrorType | undefined>(
     undefined
@@ -118,8 +138,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const polusApi = useMemo(() => new PolusApi(), []);
 
-  function startTimer(inf: InvoiceType) {
-    const eventTime = Number(inf.expires_at);
+  function startTimer(inf: IPayment) {
+    const eventTime = new Date(inf.expires_at).getTime() / 1000;
     const currentTime = Date.now() / 1000;
     let diffTime = eventTime - currentTime - 1;
     const interval = 1000;
@@ -152,11 +172,14 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     }, interval);
   }
 
-  function chCoinNew(token: ListToken, info1: false | Info | undefined = info) {
+  function chCoinNew(
+    token: ListToken,
+    info1: false | IPayment | undefined = paymentInfo
+  ) {
     setCoin(token);
     if (info1) {
       const merchantToken = fullListTokensUp.filter(
-        (t) => t.name.toLowerCase() === info1.invoice.asset.toLowerCase()
+        (t) => t.name.toLowerCase() === getAsset(info1).asset.toLowerCase()
       )[0];
       setCoinMerchant(merchantToken);
       console.log("Select merchant", merchantToken);
@@ -176,10 +199,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }
 
   async function getInfo(uuid1: string, type1: boolean = true) {
-    const data = await polusApi.getInfo(uuid1);
-    if (!data) {
+    const payment = await getPaymentInfo({ payment_id: uuid1 }).then(
+      (response) => response.data
+    );
+    if (!payment) {
       props.consoleLog("Error load info", false);
-      setInfo(false);
+      setPaymentInfo(false);
       setErrorObj({
         text: "Error load data invoice",
         code: 1002,
@@ -187,38 +212,45 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       return undefined;
     }
 
-    if (data.invoice.status === "success") {
+    const merchant = await getMerchantInfo({
+      merchant_id: payment.merchant_id,
+    }).unwrap();
+    setMerchantInfo(merchant);
+    if (payment.status === "success") {
       setErrorObj({
         text: "Paid",
         code: 1003,
       });
     }
-    if (data.invoice.status === "in_progress") {
+    if (payment.status === "in_progress") {
       setErrorObj({
         text: "Invoice in progress",
         code: 1004,
       });
     }
-    if (data.invoice.status === "failed") {
+    if (payment.status === "failed") {
       setErrorObj({
         text: "Failed",
         code: 1005,
       });
     }
     if (type1) {
-      startTimer(data.invoice);
+      startTimer(payment);
     }
 
     if (type1) {
       setDefaultChain(polygon);
-      setInfo(data);
+      setPaymentInfo(payment);
 
       const currentT = fullListTokens.filter(
-        (t) => t.name.toLowerCase() === data.invoice.asset.toLowerCase()
+        (t) => t.name.toLowerCase() === getAsset(payment).asset
       )[0];
-
       const fullList = await Payment.getAllAmountIn(
-        data.invoice.asset_amount.toString(),
+        // @ts-ignore
+        (
+          getAsset(payment).amount *
+          10 ** -currentT.decimals[chain?.id ?? 137]
+        ).toFixed(2),
         currentT
       );
 
@@ -226,21 +258,15 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
       chCoinNew(
         fullList.filter((t) => t.namePrice === coin.namePrice)[0],
-        data
+        payment
       ); // update amountIn
-    } else if (
-      data.invoice.status === "success" ||
-      data.invoice.status === "failed"
-    ) {
-      setInfo(data);
+    } else if (payment.status === "success" || payment.status === "failed") {
+      setPaymentInfo(payment);
     }
 
     setRerender(!reRender);
 
-    if (
-      data.invoice.status === "in_progress" ||
-      data.invoice.status === "pending"
-    ) {
+    if (payment.status === "pending") {
       await sleep(5000);
       getInfo(uuid1, false);
     }
@@ -259,11 +285,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }
 
   function generatedUrlRedirect(status: string) {
-    if (info) {
-      if (status === "sucess") {
-        return info.merchant?.success_redirect_url ?? undefined;
+    if (paymentInfo) {
+      if (status === "success") {
+        return merchantInfo?.success_redirect_url ?? undefined;
       }
-      return info.merchant?.fail_redirect_url ?? undefined;
+      return merchantInfo?.fail_redirect_url ?? undefined;
     }
     return undefined;
   }
@@ -318,11 +344,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [props.seletcToken]);
 
   useEffect(() => {
-    if (info) {
-    }
-  }, [info]);
-
-  useEffect(() => {
     if (isConnected) {
       setProgress(25);
     } else {
@@ -342,7 +363,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           text: "Invalid uuid param",
           code: 1001,
         });
-        setInfo(false);
+        setPaymentInfo(false);
       }
     }
   }, []);
@@ -358,15 +379,17 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [coin]);
 
   useEffect(() => {
-    if (info) {
-      if (info.invoice.tron_withdraw_address === null && props.tron) {
+    if (paymentInfo) {
+      // @ts-ignore
+      if (paymentInfo.assets?.tron === null && props.tron) {
         setType(0);
-      } else if (info.invoice.tron_withdraw_address && props.tron) {
+        // @ts-ignore
+      } else if (paymentInfo.assets?.tron && props.tron) {
         setType(1);
         setCoin(fullListTokens[0]);
       }
     }
-  }, [info, props.tron]);
+  }, [paymentInfo, props.tron]);
 
   useEffect(() => {
     if (isConnected) {
@@ -378,12 +401,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     <Panel id={reRender ? props.id : "render"}>
       <PanelHeader separator={false} />
 
-      {!errorObj && info && coin ? (
+      {!errorObj && paymentInfo && coin ? (
         <div className={`pay-block smart-line ${smartLineStatus}`}>
           <div className="slide-in-bck-center">
             <div className="domain-block">
               <div className="domain-amount-block">
-                <span>{info.merchant?.domain.replace("https://", "")}</span>
+                <span>{merchantInfo?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
                   {NtoStr(coin.amountIn)}
                   <span>{coin.name.toUpperCase()}</span>
@@ -393,7 +416,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                 className="opacity-block"
                 style={{ marginTop: "10px", display: "block" }}
               >
-                {info.invoice.description}
+                {paymentInfo.description}
               </span>
             </div>
           </div>
@@ -533,28 +556,46 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     <ProcessBlock
                       id={"all1"}
                       address={address}
-                      uuid={info.invoice.id}
+                      uuid={paymentInfo.id}
                       consoleLog={props.consoleLog}
                       setPayed={setPayed}
                       setProgress={setProgress}
                       // NOTE: chainId must be a restriction of the supported chains
                       chainId={chain.id as PolusChainId}
-                      addressMerchant={info.invoice.evm_withdraw_address}
-                      amountOut={info.invoice.asset_amount}
+                      addressMerchant={getMerchantAddress(paymentInfo)}
+                      amountOut={getAsset(paymentInfo).amount}
                       tokenA={coin}
                       tokenB={coinMerchant}
                       fullListTokensUp={fullListTokensUp}
-                      fee={info.invoice.fee!}
+                      fee={getPaymentFee(paymentInfo)}
                       asset_amount_decimals_without_fee={
-                        info.invoice.asset_amount_decimals_without_fee!
+                        getAsset(paymentInfo).amount
                       }
-                      asset_amount_decimals={
-                        info.invoice.asset_amount_decimals!
-                      }
+                      asset_amount_decimals={(
+                        BigInt(getAsset(paymentInfo).amount) +
+                        BigInt(getPaymentFee(paymentInfo))
+                      ).toString()}
                       polusApi={polusApi}
-                      feeRecipient={info.invoice.evm_fee_address}
-                      amount={info.invoice.asset_amount}
-                      tokenAddress={coin.address[chain.id as PolusChainId]}
+                      feeRecipient={
+                        paymentInfo.evm_fee_address as `0x${string}`
+                      }
+                      amount={(
+                        parseFloat(
+                          ethers.utils.formatUnits(
+                            getAsset(paymentInfo).amount,
+                            coinMerchant.decimals[chain.id as PolusChainId]
+                          )
+                        ) +
+                        parseFloat(
+                          ethers.utils.formatUnits(
+                            getAsset(paymentInfo).fee,
+                            coinMerchant.decimals[chain.id as PolusChainId]
+                          )
+                        )
+                      ).toString()}
+                      tokenAddress={
+                        coinMerchant.address[chain.id as PolusChainId]
+                      }
                       isNativeToNative={Boolean(
                         coin.native && coin.native === coinMerchant.native
                       )}
@@ -562,9 +603,10 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                         coinMerchant.address[chain.id as PolusChainId]
                       }
                       setAbortTransaction={abortRef}
-                      asset_amount_without_fee={
-                        info.invoice.asset_amount_without_fee!
-                      }
+                      asset_amount_without_fee={ethers.utils.formatUnits(
+                        getAsset(paymentInfo).amount,
+                        coinMerchant.decimals[chain.id as PolusChainId]
+                      )}
                     />
                   </div>
                 ) : null}
@@ -572,10 +614,10 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                 {props.tron ? (
                   <Tron
                     id="tron1"
-                    address={info.invoice.tron_withdraw_address ?? ""}
+                    address={"0x0"}
                     polusApi={polusApi}
-                    uuid={info.invoice.id}
-                    amount={info.invoice.tron_asset_amount ?? ""}
+                    uuid={paymentInfo.id}
+                    amount={"0"}
                     log={props.consoleLog}
                   />
                 ) : null}
@@ -623,7 +665,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           </div>
         </div>
       ) : null}
-      {!errorObj && !info ? (
+      {!errorObj && !paymentInfo ? (
         <div className={`pay-block  smart-line ${smartLineStatus}`}>
           <div
             className="slide-in-bck-center"
@@ -666,7 +708,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : null}
             <span style={{ margin: "16px 0" }}>{errorObj.text}</span>
           </div>
-          {info ? (
+          {paymentInfo ? (
             <Button
               stretched
               size="l"
