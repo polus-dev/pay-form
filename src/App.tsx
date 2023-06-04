@@ -39,9 +39,14 @@ import logo from "./img/logo.svg";
 import { ListToken, PolusChainId } from "./logic/payment";
 import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
 import { useTour } from "@reactour/tour";
-import { useAppSelector } from "./store/hooks";
-import { useLazyGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import {
+  useGetPaymentByPaymentIdQuery,
+  useLazyGetPaymentByPaymentIdQuery,
+} from "./store/api/endpoints/payment/Payment";
 import { getBlockchains, getParameterByName } from "./logic/utils";
+import { ChainId } from "./store/api/endpoints/types";
+import { ViewVariant, setView } from "./store/features/view/viewSlice";
 
 const MainLazyComponent = lazy(() => import("./pages/main"));
 
@@ -55,31 +60,12 @@ const blockchains = {
 export const App: React.FC = () => {
   const [activeModal, setActiveModal] = React.useState<any>(null);
   const { setIsOpen } = useTour();
+  const dispatch = useAppDispatch();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
 
-  const [getPaymentInfo] = useLazyGetPaymentByPaymentIdQuery();
-
-  const [chains, setChains] = useState<any[] | undefined>();
-
-  useEffect(() => {
-    const paymentId = getParameterByName("uuid");
-    if (paymentId) {
-      getPaymentInfo({ payment_id: paymentId })
-        .unwrap()
-        .then((payment) =>
-          // @ts-ignore
-          setChains(
-            getBlockchains(payment)
-              .map(
-                (chain) => (
-                  chain === "tron" && setAllowTron(true), blockchains[chain]
-                )
-              )
-              .filter(Boolean)
-          )
-        );
-    }
-  }, []);
+  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery({
+    payment_id: getParameterByName("uuid")!,
+  });
 
   const isActiveConnection = useAppSelector(
     (state) => state.connection.isActive
@@ -90,12 +76,6 @@ export const App: React.FC = () => {
   const { chain } = useNetwork();
 
   const { switchNetwork } = useSwitchNetwork();
-
-  const [tron, setTron] = React.useState<boolean>(false);
-
-  const [allowTron, setAllowTron] = React.useState<boolean>(false);
-
-  const { disconnect } = useDisconnect();
 
   const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
     undefined
@@ -144,12 +124,6 @@ export const App: React.FC = () => {
     return list.filter((token) => token.category === type);
   }
 
-  useEffect(() => {
-    if (tron) {
-      disconnect();
-    }
-  }, [tron]);
-
   const modalRoot = (
     <ModalRoot activeModal={activeModal}>
       <ModalPage
@@ -174,44 +148,37 @@ export const App: React.FC = () => {
       >
         <Div>
           <CardGrid size="l">
-            {chains &&
-              chains.map((chainLocal, key) => {
+            {paymentInfo &&
+              paymentInfo.blockchains.map((chainLocal, key) => {
                 return (
                   <Card key={key}>
                     <SimpleCell
                       after={
-                        chain?.id === chainLocal.id ? (
+                        chain?.id === ChainId[chainLocal] ? (
                           <Icon28DoneOutline />
                         ) : null
                       }
                       onClick={() => {
+                        // REFACTOR
+                        if (chainLocal === "tron") {
+                          dispatch(setView(ViewVariant.TRON));
+                          setActiveModal(null);
+                          return;
+                        }
                         if (switchNetwork) {
-                          switchNetwork(chainLocal.id);
+                          switchNetwork(ChainId[chainLocal]);
                         } else {
-                          setDefaultChain(chainLocal);
+                          setDefaultChain(polygon);
                           open();
                         }
                         setActiveModal(null);
                       }}
                     >
-                      {chainLocal.name}
+                      {chainLocal}
                     </SimpleCell>
                   </Card>
                 );
               })}
-            {allowTron ? (
-              <Card>
-                <SimpleCell
-                  after={tron ? <Icon28DoneOutline /> : null}
-                  onClick={() => {
-                    setTron(true);
-                    setActiveModal(null);
-                  }}
-                >
-                  Tron
-                </SimpleCell>
-              </Card>
-            ) : null}
           </CardGrid>
         </Div>
       </ModalPage>
@@ -394,11 +361,8 @@ export const App: React.FC = () => {
                           isDesktop={isDesktop}
                           openPop={openPop}
                           closePop={closePop}
-                          setTron={setTron}
-                          tron={tron}
                           seletcToken={seletcToken}
                           setSelectToken={setSelectToken}
-                          setAllowTron={setAllowTron}
                         />
                       </Suspense>
                     </span>

@@ -1,4 +1,5 @@
 import { IPagination } from "../../types";
+import { Asset_t, Blockchain_t, ChainId } from "../types";
 
 export interface IPayment {
   id: string;
@@ -6,7 +7,6 @@ export interface IPayment {
   description: string;
   assets: IAssets;
   evm_fee_address: string;
-  // TODO: make types
   status: PaymentStatus;
   transaction?: ITransaction;
   // TODO: make types
@@ -28,37 +28,15 @@ interface ITransaction {
   notification_delivered: boolean;
 }
 
-export type Blockchain_t = "arbitrum" | "bsc" | "ethereum" | "polygon" | "tron";
-type Asset_t =
-  | "usdt"
-  | "usdc"
-  | "dai"
-  | "busd"
-  | "matic"
-  | "eth"
-  | "bnb"
-  | "trx"
-  | "wbtc"
-  | "weth"
-  | "wmatic";
-
-export interface ICreatePaymentRequest {
-  description: string;
-  merchant_id: string;
-  assets: IAssets;
-}
-
-interface IAssets {
-  // todo: make types
-  // @ts-ignore
+type IAssets = {
   [key in Blockchain_t]: {
     [key in Asset_t]: {
-      amount: string | number;
+      amount: string;
       address: string;
-      fee: string
+      fee: string;
     };
   };
-}
+};
 
 export interface IGetPaymentByMerchantId extends IPagination {
   merchant_id: string;
@@ -68,6 +46,6 @@ export interface IGetPaymentByPaymentId {
   payment_id: string;
 }
 
-export type ICreatePaymentResponse = IPayment;
-
-export type IGetPaymentsResponse = IPayment[];
+export type IGetPaymentsResponse = IPayment & {
+  blockchains: Blockchain_t[];
+};

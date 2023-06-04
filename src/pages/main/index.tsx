@@ -60,7 +60,9 @@ import { useLazyGetPaymentByPaymentIdQuery } from "../../store/api/endpoints/pay
 import { IPayment } from "../../store/api/endpoints/payment/Payment.interface";
 import { IMerchant } from "../../store/api/endpoints/merchant/Merchant.interface";
 import { useLazyGetMerchantByIdQuery } from "../../store/api/endpoints/merchant/Merchant";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
+import { ViewVariant, setView } from "../../store/features/view/viewSlice";
+import { useGetAssetsQuery } from "../../store/api/endpoints/asset/Asset";
 
 interface MainProps {
   id: string;
@@ -69,11 +71,8 @@ interface MainProps {
   isDesktop: boolean;
   openPop: Function;
   closePop: Function;
-  setTron: Function;
-  tron: boolean;
   seletcToken: ListToken | undefined;
   setSelectToken: Function;
-  setAllowTron: Function;
 }
 
 interface ErrorType {
@@ -91,6 +90,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [getPaymentInfo] = useLazyGetPaymentByPaymentIdQuery();
   const [getMerchantInfo] = useLazyGetMerchantByIdQuery();
   const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
+  const currentView = useAppSelector((state) => state.view.currentView);
   const dispatch = useAppDispatch();
   const { setCurrentStep } = useTour();
   const [type, setType] = React.useState<number>(0);
@@ -369,27 +369,21 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, []);
 
   useEffect(() => {
-    if (type === 0) {
-      props.setTron(false);
-    }
-  }, [type]);
-
-  useEffect(() => {
     props.setSelectToken(coin);
   }, [coin]);
 
-  useEffect(() => {
-    if (paymentInfo) {
-      // @ts-ignore
-      if (paymentInfo.assets?.tron === null && props.tron) {
-        setType(0);
-        // @ts-ignore
-      } else if (paymentInfo.assets?.tron && props.tron) {
-        setType(1);
-        setCoin(fullListTokens[0]);
-      }
-    }
-  }, [paymentInfo, props.tron]);
+  // useEffect(() => {
+  //   if (paymentInfo) {
+  //     // @ts-ignore
+  //     if (paymentInfo.assets?.tron === null && props.tron) {
+  //       setType(0);
+  //       // @ts-ignore
+  //     } else if (paymentInfo.assets?.tron && props.tron) {
+  //       setType(1);
+  //       setCoin(fullListTokens[0]);
+  //     }
+  //   }
+  // }, [paymentInfo]);
 
   useEffect(() => {
     if (isConnected) {
@@ -422,7 +416,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           </div>
           <ProgressBar value={progress} />
           <div>
-            {type === 0 ? (
+            {currentView === ViewVariant.SELECT ? (
               <div>
                 <div className="text-one">Choose network</div>
 
@@ -551,76 +545,77 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               </div>
             ) : (
               <div className="proccess-block">
-                {address && chain ? (
-                  <div>
-                    <ProcessBlock
-                      id={"all1"}
-                      address={address}
-                      uuid={paymentInfo.id}
-                      consoleLog={props.consoleLog}
-                      setPayed={setPayed}
-                      setProgress={setProgress}
-                      // NOTE: chainId must be a restriction of the supported chains
-                      chainId={chain.id as PolusChainId}
-                      addressMerchant={getMerchantAddress(paymentInfo)}
-                      amountOut={getAsset(paymentInfo).amount}
-                      tokenA={coin}
-                      tokenB={coinMerchant}
-                      fullListTokensUp={fullListTokensUp}
-                      fee={getPaymentFee(paymentInfo)}
-                      asset_amount_decimals_without_fee={
-                        getAsset(paymentInfo).amount
-                      }
-                      asset_amount_decimals={(
-                        BigInt(getAsset(paymentInfo).amount) +
-                        BigInt(getPaymentFee(paymentInfo))
-                      ).toString()}
-                      polusApi={polusApi}
-                      feeRecipient={
-                        paymentInfo.evm_fee_address as `0x${string}`
-                      }
-                      amount={(
-                        parseFloat(
-                          ethers.utils.formatUnits(
-                            getAsset(paymentInfo).amount,
-                            coinMerchant.decimals[chain.id as PolusChainId]
+                {address &&
+                  chain &&
+                  currentView === ViewVariant.PROCESS_BLOCK && (
+                    <div>
+                      <ProcessBlock
+                        id={"all1"}
+                        address={address}
+                        uuid={paymentInfo.id}
+                        consoleLog={props.consoleLog}
+                        setPayed={setPayed}
+                        setProgress={setProgress}
+                        // NOTE: chainId must be a restriction of the supported chains
+                        chainId={chain.id as PolusChainId}
+                        addressMerchant={getMerchantAddress(paymentInfo)}
+                        amountOut={getAsset(paymentInfo).amount}
+                        tokenA={coin}
+                        tokenB={coinMerchant}
+                        fullListTokensUp={fullListTokensUp}
+                        fee={getPaymentFee(paymentInfo)}
+                        asset_amount_decimals_without_fee={
+                          getAsset(paymentInfo).amount
+                        }
+                        asset_amount_decimals={(
+                          BigInt(getAsset(paymentInfo).amount) +
+                          BigInt(getPaymentFee(paymentInfo))
+                        ).toString()}
+                        polusApi={polusApi}
+                        feeRecipient={
+                          paymentInfo.evm_fee_address as `0x${string}`
+                        }
+                        amount={(
+                          parseFloat(
+                            ethers.utils.formatUnits(
+                              getAsset(paymentInfo).amount,
+                              coinMerchant.decimals[chain.id as PolusChainId]
+                            )
+                          ) +
+                          parseFloat(
+                            ethers.utils.formatUnits(
+                              getAsset(paymentInfo).fee,
+                              coinMerchant.decimals[chain.id as PolusChainId]
+                            )
                           )
-                        ) +
-                        parseFloat(
-                          ethers.utils.formatUnits(
-                            getAsset(paymentInfo).fee,
-                            coinMerchant.decimals[chain.id as PolusChainId]
-                          )
-                        )
-                      ).toString()}
-                      tokenAddress={
-                        coinMerchant.address[chain.id as PolusChainId]
-                      }
-                      isNativeToNative={Boolean(
-                        coin.native && coin.native === coinMerchant.native
-                      )}
-                      currentAddressToken={
-                        coinMerchant.address[chain.id as PolusChainId]
-                      }
-                      setAbortTransaction={abortRef}
-                      asset_amount_without_fee={ethers.utils.formatUnits(
-                        getAsset(paymentInfo).amount,
-                        coinMerchant.decimals[chain.id as PolusChainId]
-                      )}
-                    />
-                  </div>
-                ) : null}
+                        ).toString()}
+                        tokenAddress={
+                          coinMerchant.address[chain.id as PolusChainId]
+                        }
+                        isNativeToNative={Boolean(
+                          coin.native && coin.native === coinMerchant.native
+                        )}
+                        currentAddressToken={
+                          coinMerchant.address[chain.id as PolusChainId]
+                        }
+                        setAbortTransaction={abortRef}
+                        asset_amount_without_fee={ethers.utils.formatUnits(
+                          getAsset(paymentInfo).amount,
+                          coinMerchant.decimals[chain.id as PolusChainId]
+                        )}
+                      />
+                    </div>
+                  )}
 
-                {props.tron ? (
+                {currentView === ViewVariant.TRON && (
                   <Tron
                     id="tron1"
-                    address={"0x0"}
-                    polusApi={polusApi}
+                    address={paymentInfo.assets.tron.usdt.address}
                     uuid={paymentInfo.id}
-                    amount={"0"}
+                    amount={paymentInfo.assets.tron.usdt.amount}
                     log={props.consoleLog}
                   />
-                ) : null}
+                )}
 
                 {payed ? (
                   <Button
@@ -641,7 +636,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     onClick={() => {
                       abortRef.current();
                       dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT));
-                      setType(0);
+                      dispatch(setView(ViewVariant.SELECT));
                     }}
                   >
                     Cancel
