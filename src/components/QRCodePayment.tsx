@@ -7,35 +7,62 @@ import {
   IconButton,
   Input,
 } from "@vkontakte/vkui";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { QRCode } from "react-qr-svg";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { Icon16CopyOutline } from "@vkontakte/icons";
-import usdtLogo from "../../img/usdt.svg";
-import { PolusApi } from "../../logic/api";
-import { useGetAssetsQuery } from "../../store/api/endpoints/asset/Asset";
+import usdtLogo from "../img/usdt.svg";
+import bitcoin from "../img/btc.svg";
+import dogecoin from "../img/Dogecoin.svg";
+import litecoin from "../img/litecoin.svg";
+import { useGetAssetsQuery } from "../store/api/endpoints/asset/Asset";
 import { ethers } from "ethers";
+import { Asset_t, Blockchain_t } from "../store/api/endpoints/types";
+import { useAppSelector } from "../store/hooks";
+import { Payment } from "../store/api/endpoints/payment/Payment.interface";
 
 interface AllType {
   id: string;
-  address: string;
-  uuid: string;
-  amount: string;
   log: Function;
+  payment: Payment;
 }
 
-export const Tron = (props: AllType) => {
+const getPaymentAssetInfo = (payment: Payment, blockchain: Blockchain_t) => {
+  const assetName = Object.keys(payment.assets[blockchain])[0] as Asset_t;
+  const paymentInfo = payment.assets[blockchain][assetName];
+  return { assetName, paymentInfo };
+};
+
+interface PaymentState {
+  amount: string | number;
+  assetName: Asset_t;
+  address: string;
+}
+
+export const QRCodePayment = (props: AllType) => {
   const { data: availableAssets, isLoading } = useGetAssetsQuery();
-  const [amount, setAmount] = useState("-");
+  const currentBlockchain = useAppSelector(
+    (state) => state.connection.currentBlockchain
+  );
+  const [paymentInfoState, setPaymentInfoState] = useState<PaymentState>({
+    address: "",
+    amount: "-",
+    assetName: "usdt",
+  });
 
   useEffect(() => {
-    if (availableAssets)
-      setAmount(
-        ethers.utils.formatUnits(
-          props.amount,
-          availableAssets.usdt.tron.decimals
-        )
+    if (availableAssets) {
+      const {
+        assetName,
+        paymentInfo: { amount: amountInDecimals, address },
+      } = getPaymentAssetInfo(props.payment, currentBlockchain);
+
+      const amount = ethers.utils.formatUnits(
+        amountInDecimals,
+        availableAssets[assetName][currentBlockchain].decimals
       );
+      setPaymentInfoState({ address, amount, assetName });
+    }
   }, [availableAssets]);
 
   if (isLoading)
@@ -68,7 +95,21 @@ export const Tron = (props: AllType) => {
           marginTop: "12px",
         }}
       >
-        Send USDT <img src={usdtLogo} />
+        Send ${paymentInfoState.assetName.toUpperCase()}{" "}
+        <img
+          style={{ height: "25px" }}
+          src={
+            paymentInfoState.assetName === "usdt"
+              ? usdtLogo
+              : paymentInfoState.assetName === "btc"
+              ? bitcoin
+              : paymentInfoState.assetName === "ltc"
+              ? litecoin
+              : paymentInfoState.assetName === "doge"
+              ? dogecoin
+              : ""
+          }
+        />
       </h2>
       <div
         style={{
@@ -89,13 +130,13 @@ export const Tron = (props: AllType) => {
             borderRadius: "16px",
             background: "#fff",
           }}
-          value={`tron:${props.address}?value=${amount}`}
+          value={`tron:${paymentInfoState.address}?value=${paymentInfoState.amount}`}
         />
 
         <div>
           <FormItem top="Amount">
             <Input
-              value={amount}
+              value={paymentInfoState.amount}
               onChange={() => null}
               style={{
                 marginBottom: "10px",
@@ -104,7 +145,7 @@ export const Tron = (props: AllType) => {
               }}
               after={
                 <CopyToClipboard
-                  text={amount}
+                  text={paymentInfoState.amount.toString()}
                   onCopy={() => props.log("Copyed", true)}
                 >
                   <IconButton hoverMode="opacity" aria-label="Copy">
@@ -117,12 +158,12 @@ export const Tron = (props: AllType) => {
 
           <FormItem top="Address">
             <Input
-              value={props.address}
+              value={paymentInfoState.address}
               onChange={() => null}
               style={{ marginBottom: "10px", userSelect: "all" }}
               after={
                 <CopyToClipboard
-                  text={props.address}
+                  text={paymentInfoState.address}
                   onCopy={() => props.log("Copyed", true)}
                 >
                   <IconButton hoverMode="opacity" aria-label="Copy">
@@ -145,8 +186,8 @@ export const Tron = (props: AllType) => {
             }}
           >
             <span style={{ width: "100%" }}>
-              Check the amount you send in USDT TRON, in case it will be
-              different from {amount}, funds may be lost
+              {`Check the amount you send in ${paymentInfoState.assetName.toUpperCase()} ${currentBlockchain.toUpperCase()}, in case it will be
+                different from ${paymentInfoState.amount}, funds may be lost`}
             </span>
           </Div>
         </Card>

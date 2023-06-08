@@ -1,3 +1,6 @@
+import { TokenImagesType } from "../../../../img/TokenImages";
+import { Asset_t, Blockchain_t } from "../types";
+
 export const enum Asset {
   BTC = "btc",
   DAI = "dai",
@@ -10,8 +13,6 @@ export const enum Asset {
   WMATIC = "wmatic",
 }
 
-// type Asset = 'btc' | 'dai' | 'eth' | 'matic' | 'usdc' | 'usdt' | 'wbtc' | 'weth' | 'wmatic';
-
 export const enum Blockchain {
   BITCOIN = "bitcoin",
   ARBITRUM = "arbitrum",
@@ -21,16 +22,18 @@ export const enum Blockchain {
   TRON = "tron",
 }
 
-type TokenEntity = {
+export interface TokenEntity {
   is_native: boolean;
-  contract: any;
+  contract: string;
   decimals: number;
   min_amount: string;
   is_seeded_amount: boolean;
-};
+}
 
 export type IAssetsResponse = {
-  [key in Asset]: {
-    [key in Blockchain]: TokenEntity;
+  [key in Asset_t]: {
+    [key in Blockchain_t]: TokenEntity;
   };
 };
+
+export type IAssets = Required<IAssetsResponse>;

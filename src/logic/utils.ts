@@ -2,31 +2,24 @@
 import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 
-import { ListTokens } from "./payment";
+import { ListToken, ListTokens } from "./payment";
 import { fullListTokens } from "./tokens";
 
-export async function getPriceToken(
-  tokensList: ListTokens
-): Promise<ListTokens> {
+export async function getPriceToken(token: string): Promise<ListTokens> {
   const _listTokens = fullListTokens;
   const listNamed = [];
-  for (let i = 0; i < tokensList.length; i++) {
-    listNamed.push(tokensList[i].namePrice);
-  }
 
   try {
     const data = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${listNamed.join(
-        ","
-      )}&vs_currencies=usd`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${token}&vs_currencies=usd`
     );
+    debugger;
     if (!data) return _listTokens;
     if (!data.data) return _listTokens;
 
     window.localStorage.setItem("price", JSON.stringify(data.data));
 
     for (let i = 0; i < _listTokens.length; i++) {
-      // console.log(data.data[_listTokens[i][i2].namePrice])
       if (data.data[_listTokens[i].namePrice]) {
         _listTokens[i].price = data.data[_listTokens[i].namePrice].usd;
       } else {
@@ -178,9 +171,10 @@ export const getAsset = (payment: IPayment, human = false) => {
   let amount = assets[blockchain][asset].amount;
   const address = assets[blockchain][asset].address;
   const fee = assets[blockchain][asset].fee;
-  return { asset, amount, address, fee};
+  return { asset, amount, address, fee };
 };
 
-export const getMerchantAddress = (payment: IPayment) =>  getAsset(payment).address
+export const getMerchantAddress = (payment: IPayment) =>
+  getAsset(payment).address;
 
-export const getPaymentFee = (payment: IPayment) => getAsset(payment).fee
+export const getPaymentFee = (payment: IPayment) => getAsset(payment).fee;

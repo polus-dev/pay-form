@@ -1,5 +1,5 @@
 import { IPagination } from "../../types";
-import { Asset_t, Blockchain_t, ChainId } from "../types";
+import { Asset_t, Blockchain_t } from "../types";
 
 export interface IPayment {
   id: string;
@@ -49,3 +49,5 @@ export interface IGetPaymentByPaymentId {
 export type IGetPaymentsResponse = IPayment & {
   blockchains: Blockchain_t[];
 };
+
+export type Payment = IGetPaymentsResponse;

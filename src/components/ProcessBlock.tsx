@@ -1,10 +1,10 @@
-import { T1 } from "../pages/main/tempInterfaces/T1";
-import { T2 } from "../pages/main/tempInterfaces/T2";
+import { T1 } from "../pages/tempInterfaces/T1";
+import { T2 } from "../pages/tempInterfaces/T2";
 
 import { StageStatus } from "../store/features/transaction/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Stage } from "./Stage";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect} from "react";
 import { startPay } from "../store/features/transaction/transactionThunk";
 
 export const ProcessBlock = (
@@ -17,7 +17,6 @@ export const ProcessBlock = (
   const stages = useAppSelector((state) => state.transaction.stages);
   const dispatch = useAppDispatch();
   useEffect(() => {
-    debugger;
     const abortPromise = dispatch(
       startPay({
         tokenA: props.tokenA,

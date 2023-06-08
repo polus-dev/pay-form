@@ -1,5 +1,5 @@
-import { ListToken, ListTokens, PolusChainId } from "../../../logic/payment";
-import { PolusApi } from "../../../logic/api";
+import { ListToken, ListTokens, PolusChainId } from "../../logic/payment";
+import { PolusApi } from "../../logic/api";
 
 
 

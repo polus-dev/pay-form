@@ -5,18 +5,26 @@ import { Token } from "@uniswap/sdk-core";
 
 import permit2 from "../permit_abi.json";
 import token_abi from "../token_abi.json";
-import { fullListTokens } from "./tokens";
+import { WrapAlt, fullListTokens } from "./tokens";
 import { getPriceToken } from "./utils";
 import { CustomRouter } from "./router";
 import { NULL_ADDRESS } from "../constants";
+import { Asset_t, Blockchain_t } from "../store/api/endpoints/types";
+import { ChainId } from "../store/api/endpoints/types";
+import {
+  Blockchain,
+  IAssets,
+} from "../store/api/endpoints/asset/Asset.interface";
+import { findAsset } from "../store/api/utils/findAsset";
 
 export interface ConfigPayment {
-  networkId: number;
+  blockchain: Blockchain_t;
   tokenA: ListToken;
   tokenB: ListToken;
   addressUser: string;
   addressMerchant: string;
   amountOut: string;
+  assets: IAssets;
   callback: Function;
 }
 
@@ -45,25 +53,13 @@ interface TokenClass {
 }
 
 export interface ListToken {
-  name: string;
+  name: Asset_t;
   icon: any;
-  decimals: {
-    1: number;
-    56: number;
-    137: number;
-    42161: number;
-  };
-  address: {
-    1: string;
-    56: string;
-    137: string;
-    42161: string;
-  };
-  price: number;
-  native?: boolean;
-  wrapAlt?: string;
-  namePrice: string;
+  decimals: number;
+  address: string;
   amountIn: number;
+  namePrice: string;
+  isNative: boolean;
   category: "stable" | "native" | "wrap" | "other";
 }
 
@@ -112,14 +108,14 @@ export const RPCprovider: RPCproviderType[] = [
 
 const PERMIT2_ADDRESS = "0x000000000022d473030f116ddee9f6b43ac78ba3";
 const UNIVERSAL_ROUTER = {
-  137: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
-  1: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
-  56: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897",
-  42161: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
+  polygon: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
+  ethereum: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
+  bsc: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897",
+  arbitrum: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
 };
 const ADDRESS_POLUS = {
   polygon: "0x377f05e398e14f2d2efd9332cdb17b27048ab266",
-  mainnet: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
+  ethereum: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
   bsc: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
   arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda",
 };
@@ -127,7 +123,7 @@ const ADDRESS_POLUS = {
 const QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 
 export class Payment {
-  private _networkId: number;
+  private blockchain: Blockchain_t;
 
   private _tokenA: TokenClass;
 
@@ -155,25 +151,28 @@ export class Payment {
 
   private _contractPermit: ethers.Contract;
 
+  private assets: IAssets;
+
   constructor(config: ConfigPayment) {
-    this._networkId = config.networkId;
+    this.blockchain = config.blockchain;
     this._addressUser = config.addressUser;
     this._addressMerchant = config.addressMerchant;
     this._amountOut = config.amountOut;
 
     this._addressPermit = PERMIT2_ADDRESS;
-    this._addressRouter = UNIVERSAL_ROUTER[this._networkId as PolusChainId];
+    this._addressRouter = UNIVERSAL_ROUTER[this.blockchain];
+    this.assets = config.assets;
 
-    if (this._networkId === 137) {
+    if (this.blockchain === "polygon") {
       this._addressPolusContract = ADDRESS_POLUS.polygon;
       this._networkRpcUrl = RPCprovider[2].url;
-    } else if (this._networkId === 1) {
-      this._addressPolusContract = ADDRESS_POLUS.mainnet;
+    } else if (this.blockchain === "ethereum") {
+      this._addressPolusContract = ADDRESS_POLUS.ethereum;
       this._networkRpcUrl = RPCprovider[0].url;
-    } else if (this._networkId === 56) {
+    } else if (this.blockchain === "bsc") {
       this._addressPolusContract = ADDRESS_POLUS.bsc;
       this._networkRpcUrl = RPCprovider[1].url;
-    } else if (this._networkId === 42161) {
+    } else if (this.blockchain === "arbitrum") {
       this._addressPolusContract = ADDRESS_POLUS.arbitrum;
       this._networkRpcUrl = RPCprovider[3].url;
     } else {
@@ -184,23 +183,20 @@ export class Payment {
 
     this._provider = new ethers.providers.JsonRpcProvider(this._networkRpcUrl);
 
-    const idNetw = (this._networkId as PolusChainId) ?? 137;
-
     this._tokenA = {
       info: config.tokenA,
-
       contract: new ethers.Contract(
-        config.tokenA.native ? NULL_ADDRESS : config.tokenA.address[idNetw],
+        config.tokenA.isNative ? NULL_ADDRESS : config.tokenA.address,
         token_abi,
         this._provider
       ),
-      isNative: Boolean(config.tokenA.native),
-      erc20: config.tokenA.native
-        ? this.createWrapAltFromNative(config.tokenA.wrapAlt!)
+      isNative: config.tokenA.isNative,
+      erc20: config.tokenA.isNative
+        ? this.createWrapAltFromNative(config.tokenA.name)
         : new Token(
-            this._networkId,
-            config.tokenA.address[idNetw],
-            config.tokenA.decimals[idNetw],
+            ChainId[this.blockchain],
+            config.tokenA.address,
+            config.tokenA.decimals,
             config.tokenA.name,
             config.tokenA.name
           ),
@@ -208,18 +204,18 @@ export class Payment {
     this._tokenB = {
       info: config.tokenB,
       contract: new ethers.Contract(
-        config.tokenA.native ? NULL_ADDRESS : config.tokenA.address[idNetw],
+        config.tokenA.isNative ? NULL_ADDRESS : config.tokenA.address,
         token_abi,
         this._provider
       ),
-      isNative: Boolean(config.tokenB.native),
+      isNative: config.tokenB.isNative,
 
-      erc20: config.tokenB.native
-        ? this.createWrapAltFromNative(config.tokenB.wrapAlt!)
+      erc20: config.tokenB.isNative
+        ? this.createWrapAltFromNative(config.tokenB.name)
         : new Token(
-            this._networkId,
-            config.tokenB.address[idNetw],
-            config.tokenB.decimals[idNetw],
+            ChainId[this.blockchain],
+            config.tokenB.address,
+            config.tokenB.decimals,
             config.tokenB.name,
             config.tokenB.name
           ),
@@ -243,17 +239,19 @@ export class Payment {
     return this._addressPolusContract;
   }
 
-  public createWrapAltFromNative(AltName: string): Token {
-    const wrapAlt = fullListTokens.find((item) => item.name === AltName);
+  public createWrapAltFromNative(sourceToken: Asset_t): Token {
+    const wrapAltName = WrapAlt[sourceToken];
+    if (!wrapAltName)
+      throw new Error("createWrapAltFromNative:wrapAlt is undefined");
+    const wrapAlt = findAsset(this.assets, wrapAltName, this.blockchain);
     if (!wrapAlt)
       throw new Error("createWrapAltFromNative:wrapAlt is undefined");
-    const idNetw = this._networkId as PolusChainId;
     return new Token(
-      this._networkId,
-      wrapAlt.address[idNetw],
-      wrapAlt.decimals[idNetw],
-      wrapAlt.name,
-      wrapAlt.name
+      ChainId[this.blockchain],
+      wrapAlt.contract,
+      wrapAlt.decimals,
+      wrapAltName,
+      wrapAltName
     );
   }
 
@@ -455,7 +453,7 @@ export class Payment {
     const { domain, types, values } = AllowanceTransfer.getPermitData(
       valuesAny,
       this._addressPermit,
-      this._networkId
+      ChainId[this.blockchain]
     );
     return {
       domain,
@@ -482,7 +480,7 @@ export class Payment {
   }
 
   public get networkId(): number {
-    return this._networkId;
+    return ChainId[this.blockchain];
   }
 
   public get tokenA(): TokenClass {
@@ -507,5 +505,36 @@ export class Payment {
 
   public get amountOut(): string {
     return this._amountOut;
+  }
+}
+
+export class CustomProvider {
+  private provider: ethers.providers.JsonRpcProvider;
+  constructor(blockchain: Blockchain_t) {
+    let networkRpcUrl: string;
+    if (blockchain === "polygon") {
+      networkRpcUrl = RPCprovider[2].url;
+    } else if (blockchain === "ethereum") {
+      networkRpcUrl = RPCprovider[0].url;
+    } else if (blockchain === "bsc") {
+      networkRpcUrl = RPCprovider[1].url;
+    } else if (blockchain === "arbitrum") {
+      networkRpcUrl = RPCprovider[3].url;
+    } else {
+      throw new Error("CustomProvider:networkRpcUrl is undefined");
+    }
+    this.provider = new ethers.providers.JsonRpcProvider(networkRpcUrl);
+  }
+
+  public async getValueForSwap(
+    path: string,
+    amountOut: string
+  ): Promise<BigNumber> {
+    const coder = new ethers.utils.AbiCoder();
+    const data =
+      "0x2f80bb1d" +
+      coder.encode(["bytes", "uint256"], [path, amountOut]).replace("0x", "");
+    const result = await this.provider.call({ to: QUOTER_ADDRESS, data });
+    return BigNumber.from(result);
   }
 }

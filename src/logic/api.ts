@@ -41,30 +41,6 @@ interface ITransaction {
   notification_delivered: boolean;
 }
 
-export type Blockchain_t = "arbitrum" | "bsc" | "ethereum" | "polygon" | "tron";
-export type Asset_t =
-  | "usdt"
-  | "usdc"
-  | "dai"
-  | "busd"
-  | "matic"
-  | "eth"
-  | "bnb"
-  | "trx"
-  | "wbtc"
-  | "weth"
-  | "wmatic";
-
-interface IAssets {
-  // @ts-ignore
-  [key in Blockchain_t]?: {
-    [key in Asset_t]: {
-      amount: string | number;
-      address: string;
-    };
-  };
-}
-
 export type Info = {
   merchant: MerchantType | undefined;
   invoice: IPayment;

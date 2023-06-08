@@ -5,6 +5,9 @@ export const enum ViewVariant {
   SELECT,
   PROCESS_BLOCK,
   TRON,
+  BITCOIN,
+  LITECOIN,
+  DOGECOIN,
 }
 
 export interface ViewState {

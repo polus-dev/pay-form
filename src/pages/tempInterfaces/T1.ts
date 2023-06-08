@@ -1,4 +1,4 @@
-import { PolusApi } from "../../../logic/api";
+import { PolusApi } from "../../logic/api";
 
 export interface T1 {
   id: string;

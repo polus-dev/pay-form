@@ -8,7 +8,7 @@ import usdt from "./usdt.svg";
 import weth from "./weth.svg";
 import { Asset_t } from "../store/api/endpoints/types";
 
-type TokenImagesType = {
+export type TokenImagesType = {
   [key in Asset_t]: string;
 };
 
@@ -20,9 +20,9 @@ export const TokenImages: Readonly<TokenImagesType> = {
   usdc,
   usdt,
   btc,
-  eth: "",
+  eth: weth,
   trx: "",
-  wbtc: "",
-  weth: "",
-  wmatic: "",
+  wbtc: btc,
+  weth,
+  wmatic: matic,
 };

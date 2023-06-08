@@ -47,4 +47,8 @@ export const enum ResponseApiCode {
     BadTronAddress = 4003,
     BadURL = 4004,
     NothingToUpdate = 4005,
+
+
+    // Self code
+    InvalidUUID = 6001
 }
