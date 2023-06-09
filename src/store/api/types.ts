@@ -22,4 +22,5 @@ export interface Token extends TokenEntity {
   //   decimals: number;
   image: any;
   type: TokenType;
+  wrapped?: Token;
 }

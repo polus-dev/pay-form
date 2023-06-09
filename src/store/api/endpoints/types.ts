@@ -44,3 +44,15 @@ export const ChainIdToName: { [key in ChainIdEnumUnion]: Blockchain_t } = {
   "-2": "tron",
   "-1": "bitcoin",
 };
+
+export const WrappedToken: { [key in Asset_t]?: Asset_t } = {
+  btc: "wbtc",
+  eth: "weth",
+  matic: "wmatic",
+};
+
+export const WrappedTokenToToken: { [key in Asset_t]?: Asset_t } = {
+  wbtc: "btc",
+  weth: "eth",
+  wmatic: "matic",
+};

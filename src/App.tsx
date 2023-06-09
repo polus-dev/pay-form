@@ -14,7 +14,7 @@ import {
   SimpleCell,
   SplitCol,
   SplitLayout,
-  View
+  View,
 } from "@vkontakte/vkui";
 import { Route, Routes } from "react-router-dom";
 
@@ -38,6 +38,7 @@ import { setCurrentBlockchain } from "./store/features/connection/connectionSlic
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
 import { Token } from "./store/api/types";
+import { switchNetwork } from "wagmi/dist/actions";
 
 const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
 const isDesktop = window.innerWidth >= 800;
@@ -51,7 +52,7 @@ export const App: React.FC = () => {
   const { data: paymentInfo } = useGetPaymentByPaymentIdQuery({
     payment_id: getParameterByName("uuid")!,
   });
-
+  const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
 
   const [userToken, setUserToken] = useState<Token>();
@@ -63,7 +64,6 @@ export const App: React.FC = () => {
 
   const [popout, setPopout] = React.useState<any>(null);
   const { chain } = useNetwork();
-
 
   const { open } = useWeb3Modal();
 
@@ -128,11 +128,23 @@ export const App: React.FC = () => {
                         ) : null
                       }
                       onClick={() => {
-                        if (chainLocal === "bitcoin" ||  chainLocal === "tron" ||  chainLocal === "litecoin" ||  chainLocal === "dogecoin") {
-                          dispatch(setView(ViewVariant.QRCODE))
-                          dispatch(setCurrentBlockchain(chainLocal))
-                        } else if (chainLocal === "bsc" || chainLocal === "polygon" || chainLocal === "ethereum" || chainLocal === "arbitrum") {
-                          dispatch(setView(ViewVariant.EVM))
+                        if (
+                          chainLocal === "bitcoin" ||
+                          chainLocal === "tron" ||
+                          chainLocal === "litecoin" ||
+                          chainLocal === "dogecoin"
+                        ) {
+                          dispatch(setView(ViewVariant.QRCODE));
+                          dispatch(setCurrentBlockchain(chainLocal));
+                        } else if (
+                          (chainLocal === "bsc" ||
+                            chainLocal === "polygon" ||
+                            chainLocal === "ethereum" ||
+                            chainLocal === "arbitrum") &&
+                          switchNetwork
+                        ) {
+                          switchNetwork(ChainId[chainLocal]);
+                          dispatch(setView(ViewVariant.EVM));
                           dispatch(setCurrentBlockchain(chainLocal));
                         } else {
                           open();

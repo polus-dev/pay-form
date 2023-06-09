@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useGetAssetsQuery } from "../../../store/api/endpoints/asset/Asset";
-import { Asset_t, Blockchain_t } from "../../../store/api/endpoints/types";
+import {
+  Asset_t,
+  Blockchain_t,
+  WrappedToken,
+  WrappedTokenToToken,
+} from "../../../store/api/endpoints/types";
 import { useAppSelector } from "../../../store/hooks";
 import { IAssets } from "../../../store/api/endpoints/asset/Asset.interface";
 import { Token } from "../../../store/api/types";
@@ -33,13 +38,18 @@ export const useAvailableTokens = () => {
               image: assets[name].image,
               type: assets[name][currentBlockchain].is_native
                 ? "Native"
-                : name.startsWith("w")
+                : WrappedToken[name]
                 ? "Wrapped"
                 : name.includes("usdc") ||
                   name.includes("usdt") ||
                   name.includes("dai")
                 ? "Stable"
                 : "Other",
+              wrapped: WrappedToken[name]
+                ? assets[WrappedToken[name]][currentBlockchain]
+                : WrappedTokenToToken[name]
+                ? assets[WrappedTokenToToken[name]][currentBlockchain]
+                : undefined,
             };
           })
       );

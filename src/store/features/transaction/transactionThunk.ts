@@ -1,74 +1,56 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  readContract,
-  prepareWriteContract,
-  writeContract,
   prepareSendTransaction,
+  prepareWriteContract,
   sendTransaction,
   signTypedData,
-  fetchFeeData,
+  writeContract,
 } from "wagmi/actions";
-import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
+import { SwapOptions, SwapRouter, UniswapTrade} from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
-import { ETHToWei, toBn, weiToEthNum } from "../../../logic/utils";
-import {
-  ConfigPayment,
-  ListToken as Token,
-  Payment,
-  PolusChainId,
-} from "../../../logic/payment";
+import { ETHToWei, weiToEthNum } from "../../../logic/utils";
+import { PaymentHelper } from "../../../logic/payment";
 import token_abi from "../../../token_abi.json";
 import {
-  setStage,
-  setStageStatus,
-  setStageText,
-  StageStatus,
-  StageId,
   DEFAULT_STAGE_TEXT,
   nextStage,
+  setStage,
+  setStageText,
+  StageId,
+  StageStatus,
 } from "./transactionSlice";
 import { TransactionError } from "./TransactionError";
 import { RootState } from "../../../store/store";
 import { BigNumber, ethers } from "ethers";
 import { doPayThroughPolusContract } from "../../../logic/transactionEncode/doPayThroughPolusContract";
-import { CustomRouter } from "../../../logic/router";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 import { encodePay } from "../../../logic/transactionEncode/transactionEncode";
 import {
   setSmartLineStatus,
   SmartLineStatus,
 } from "../smartLine/smartLineSlice";
+import { Token } from "../../api/types";
+import { Blockchain_t } from "../../api/endpoints/types";
 
 interface IPayload {
-  chainId: PolusChainId;
-  userAddress: string;
-  addressMerchant: string;
-  feeRecipient: string;
+  userToken: Token;
+  merchantToken: Token;
+  consoleLog: (message: any, type?: boolean) => void;
+  blockchain: Blockchain_t;
   uuid: string;
-  amountInDecimalsWithFee: string;
-  amounrInDecimalsWithoutFee: string;
-  tokenAddress: string;
-  tokenA: Token;
-  tokenB: Token;
-  consoleLog: Function;
+  userAddress: string;
+  amount: string;
   fee: string;
-  amountOut: string;
-  asset_amount: string;
-  asset_amount_without_fee: string;
+  merchantAddress: string;
+  feeAddress: string;
+  merchantAmount: string;
 }
 
-interface IContext {
-  from: TokenType;
-  to: TokenType;
-}
-
-type TokenType = "native" | "erc20";
 
 export interface ThunkConfig {
   state: RootState;
 }
 
-const decimalPlaces = 18; // TODO
 export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   "transaction/pay",
   async (payload, { dispatch, rejectWithValue, getState, signal }) => {
@@ -77,24 +59,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         return rejectWithValue("Aborted");
       });
       const isMetaMask = window.ethereum?.isMetaMask;
-      const config: ConfigPayment = {
-        networkId: payload.chainId,
-        tokenA: payload.tokenA,
-        tokenB: payload.tokenB,
-        addressUser: payload.userAddress,
-        addressMerchant: payload.addressMerchant,
-        amountOut: payload.asset_amount,
-        callback: payload.consoleLog,
-      };
 
-      const payClass = new Payment(config);
-      const context: "universal router" | "polus contract" =
-        (payClass.tokenA.isNative && payClass.tokenB.isNative) ||
-        (!payClass.tokenA.isNative &&
-          payClass.tokenA.info.address[payload.chainId] ===
-            payClass.tokenB.info.address[payload.chainId])
-          ? "polus contract"
-          : "universal router";
+      const helper = new PaymentHelper(payload.blockchain, payload.userToken, payload.merchantToken, payload.userAddress);
 
       let permitSign: Permit2Permit | null = null;
 
@@ -117,26 +83,23 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       const currentStage = () => getState().transaction.currentStage;
 
       const checkAndApprove = async (
-        contractType: Parameters<typeof payClass.checkAllowance>[1],
-        allowance: any
+        contractType: Parameters<typeof helper.checkAllowanceToUserToken>[0],
+        allowance: BigNumber
       ) => {
         if (
-          weiToEthNum(
-            allowance,
-            payClass.tokenA.info.decimals[payload.chainId]
-          ) < payClass.tokenA.info.amountIn
+            allowance.lt(BigNumber.from(payload.amount))
         ) {
           needApproveDispatch(getState().transaction.currentStage);
           const preparedTransaction = await prepareWriteContract({
-            address: payload.tokenAddress as any,
+            address: payload.userToken.contract as `0x${string}`,
             abi: token_abi,
             functionName: "approve",
             args: [
               contractType === "permit"
-                ? payClass.addressPermit
+                ? helper.PermitAddress
                 : contractType === "router"
-                ? payClass.addressRouter
-                : payClass.addressPolusContract,
+                ? helper.RouterAddress
+                : helper.PolusAddress,
               ethers.constants.MaxUint256,
             ],
           });
@@ -150,14 +113,13 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       dispatch(
         setStage({
           stageId: currentStage(),
-          text: "Chech your balance...",
+          text: "Check your balance...",
           status: StageStatus.LOADING,
         })
       );
-      const balance = await payClass.getBalance("A");
+      const balance = await helper.getBalance();
       if (
-        weiToEthNum(balance, payClass.tokenA.info.decimals[payload.chainId]) <
-        payClass.tokenA.info.amountIn
+       balance.lt(BigNumber.from(payload.amount))
       ) {
         throw new TransactionError("Not enough balance", currentStage());
       }
@@ -166,25 +128,25 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         setStageText({ stageId: currentStage(), text: "Sufficient balance" })
       );
 
-      if (context === "polus contract" && !payClass.tokenA.isNative) {
+      if (helper.Context === "polus contract" && !helper.userToken.is_native) {
         checkAllowanceDispatch(currentStage());
-        const allowance = await payClass.checkAllowance("A", "polus");
+        const allowance = await helper.checkAllowanceToUserToken("polus");
         await checkAndApprove("polus", allowance);
-      } else if (context === "universal router" && !payClass.tokenA.isNative) {
+      } else if (helper.Context === "universal router" && !helper.userToken.is_native) {
         if (isMetaMask) {
           checkAllowanceDispatch(currentStage());
-          const allowance = await payClass.checkAllowance("A", "permit");
+          const allowance = await helper.checkAllowanceToUserToken("permit");
           await checkAndApprove("permit", allowance);
         } else {
           checkAllowanceDispatch(currentStage());
-          const allowance = await payClass.checkAllowance("A", "router");
+          const allowance = await helper.checkAllowanceToUserToken("router");
           await checkAndApprove("router", allowance);
         }
       }
       dispatch(
         setStage({
           stageId: currentStage(),
-          text: "Approve succsess",
+          text: "Approve success",
           status: StageStatus.SUCCESS,
         })
       );
@@ -192,8 +154,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
 
       if (
         isMetaMask &&
-        context === "universal router" &&
-        !payClass.tokenA.isNative
+        helper.Context === "universal router" &&
+        !helper.userToken.is_native
       ) {
         dispatch(
           setStage({
@@ -202,13 +164,11 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
             status: StageStatus.LOADING,
           })
         );
-        const allowancePermit = await payClass.AllowancePermit("A", "router");
+        const allowancePermit = await helper.checkPermit("router");
         if (
           !allowancePermit ||
-          weiToEthNum(
-            allowancePermit.amount,
-            payClass.tokenA.info.decimals[payload.chainId]
-          ) < payClass.tokenA.info.amountIn ||
+            allowancePermit.amount
+           < BigInt(payload.amount) ||
           allowancePermit.expiration < Date.now() / 1000
         ) {
           dispatch(
@@ -217,19 +177,18 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
               text: "Need your permit sign",
             })
           );
-          const dataForSign = payClass.dataForSign(allowancePermit?.nonce ?? 0);
+          const dataForSign = helper.dataForSign(allowancePermit?.nonce ?? 0);
           const signature = await signTypedData(dataForSign);
 
-          const valueSigned = {
+          permitSign = {
             signature,
             value: dataForSign.value,
           } as any as Permit2Permit;
-          permitSign = valueSigned;
 
           dispatch(
             setStage({
               stageId: currentStage(),
-              text: "Sign transaction succsess",
+              text: "Sign transaction success",
               status: StageStatus.SUCCESS,
             })
           );
@@ -259,9 +218,9 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           text: "Calculate fee",
         })
       );
-      const feeData = await payClass.fetchFeeData();
+      const feeData = await helper.fetchFeeData();
 
-      if (context === "universal router") {
+      if (helper.Context === "universal router") {
         dispatch(
           setStage({
             stageId: currentStage(),
@@ -269,38 +228,32 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
             status: StageStatus.LOADING,
           })
         );
-        const amountOut = ETHToWei(
-          payClass.amountOut,
-          payload.tokenB.decimals[payload.chainId]
-        );
-        console.log("amountOut", amountOut);
 
-        const router = new CustomRouter(payload.chainId);
-
-        const path = await router.getRouter(
-          amountOut,
-          payClass.tokenA.erc20,
-          payClass.tokenB.erc20
-        );
+        debugger
+        const path = await helper.getSwapPath(payload.amount);
+        if (!path) {
+          throw new TransactionError("Route not found", currentStage());
+        }
         dispatch(
           setStageText({ stageId: currentStage(), text: "Route found" })
         );
+
 
         const deadline = ~~(Date.now() / 1000) + 60 * 32;
         const swapOptions: SwapOptions = {
           slippageTolerance: new Percent("90", "100"),
           deadlineOrPreviousBlockhash: deadline.toString(),
-          recipient: payClass.addressRouter,
+          recipient: helper.RouterAddress,
         };
         if (permitSign) {
           swapOptions.inputTokenPermit = permitSign;
         }
-
+        debugger
         const { calldata } = SwapRouter.swapERC20CallParameters(
-          path!.trade,
+          path.trade,
           swapOptions
         );
-        const isContextFromNative = payClass.tokenA.isNative;
+        const isContextFromNative = helper.userToken.is_native;
 
         dispatch(
           setStageText({ stageId: currentStage(), text: "Encode transaction" })
@@ -308,31 +261,29 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const encodePayParams: Parameters<typeof encodePay>[0] = {
           uuid: payload.uuid.replaceAll("-", ""),
           fee: payload.fee,
-          merchantAmount: payload.amounrInDecimalsWithoutFee,
-          tokenAddress: payClass.tokenB.isNative
-            ? undefined
-            : payClass.tokenB.info.address[payload.chainId],
-          merchant: payload.addressMerchant,
-          asset_amount_decimals: payload.amountInDecimalsWithFee,
-          feeRecipient: payload.feeRecipient,
+          merchantAmount: (BigInt(payload.amount) - BigInt(payload.fee)).toString(),
+          tokenAddress: helper.userToken.address,
+          merchant: payload.merchantAddress,
+          asset_amount_decimals: payload.amount,
+          feeRecipient: payload.feeAddress,
           txData: calldata,
           context: {
             from: isContextFromNative ? "native" : "erc20",
-            to: payClass.tokenB.isNative ? "native" : "erc20",
+            to: helper.merchantToken.isNative ? "native" : "erc20",
           },
-          universalRouterAddress: payClass.addressRouter,
+          universalRouterAddress: helper.RouterAddress,
         };
         const { data, path: universalRouterPath } = encodePay(encodePayParams);
         let value = BigNumber.from(0);
         if (universalRouterPath && isContextFromNative) {
-          value = await payClass.getValueForSwap(
+          value = await helper.getValueForSwap(
             universalRouterPath,
-            payload.amountInDecimalsWithFee
+            payload.amount
           );
         }
         const preparedTransaction = await prepareSendTransaction({
           request: {
-            to: payClass.addressRouter,
+            to: helper.RouterAddress,
             data,
             value,
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
@@ -356,36 +307,21 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
             status: StageStatus.SUCCESS,
           })
         );
-      } else if (context === "polus contract") {
-        const isNative = payClass.tokenA.isNative && payClass.tokenB.isNative;
-        const tokenDecimals = await payClass.getDecimals();
+      } else if (helper.Context === "polus contract") {
+        const isNative = helper.userToken.isNative && helper.merchantToken.isNative;
         const preparedTransaction = await prepareSendTransaction({
           request: {
-            to: payClass.addressPolusContract,
-            value: payClass.tokenA.isNative
-              ? ethers.utils.parseEther(
-                  parseFloat(payClass.tokenA.info.amountIn.toString())
-                    .toFixed(decimalPlaces)
-                    .toString()
-                )
+            to: helper.PolusAddress,
+            value: helper.userToken.isNative
+              ? payload.amount
               : 0,
             data: doPayThroughPolusContract({
               uuid: payload.uuid,
-              feeRecipient: payload.feeRecipient,
-              fee: ethers.utils
-                .parseUnits(payload.asset_amount, tokenDecimals)
-                .sub(
-                  ethers.utils.parseUnits(
-                    payload.asset_amount_without_fee,
-                    tokenDecimals
-                  )
-                )
-                .toString(),
-              merchant: payload.addressMerchant,
-              merchantAmount: ethers.utils
-                .parseUnits(payload.asset_amount_without_fee, tokenDecimals)
-                .toString(),
-              tokenAddress: isNative ? "" : payload.tokenAddress,
+              feeRecipient: payload.feeAddress,
+              fee: payload.fee,
+              merchant: payload.merchantAddress,
+              merchantAmount: (BigInt(payload.amount) - BigInt(payload.fee)).toString(),
+              tokenAddress: isNative ? "" : payload.userToken.contract,
             }),
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,

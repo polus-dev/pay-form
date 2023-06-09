@@ -1,39 +1,44 @@
-import { T1 } from "../pages/tempInterfaces/T1";
-import { T2 } from "../pages/tempInterfaces/T2";
-
 import { StageStatus } from "../store/features/transaction/transactionSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Stage } from "./Stage";
-import { useEffect} from "react";
+import { useEffect } from "react";
 import { startPay } from "../store/features/transaction/transactionThunk";
+import { Token } from "../store/api/types";
+import { Blockchain_t } from "../store/api/endpoints/types";
 
-export const ProcessBlock = (
-  props: T1 &
-    T2 & {
-      setAbortTransaction: { current: any | null };
-      asset_amount_without_fee: string;
-    }
-) => {
+interface ProcessBlockProps {
+  id: string
+  setAbortTransaction: { current: any | null };
+  userToken: Token;
+  merchantToken: Token;
+  consoleLog: (message: any, type?: boolean) => void;
+  uuid: string;
+  blockchain: Blockchain_t
+  userAddress: string
+  amount: string
+  fee: string;
+  feeAddress: string;
+  merchantAddress: string;
+  merchantAmount: string;
+}
+
+export const ProcessBlock = ({merchantToken, userToken, consoleLog, uuid, userAddress, blockchain, amount, feeAddress,fee, merchantAddress,merchantAmount, ...props}: ProcessBlockProps) => {
   const stages = useAppSelector((state) => state.transaction.stages);
   const dispatch = useAppDispatch();
   useEffect(() => {
     const abortPromise = dispatch(
       startPay({
-        tokenA: props.tokenA,
-        tokenB: props.tokenB,
-        userAddress: props.address,
-        tokenAddress: props.tokenAddress,
-        chainId: props.chainId,
-        consoleLog: props.consoleLog,
-        amountInDecimalsWithFee: props.asset_amount_decimals,
-        addressMerchant: props.addressMerchant,
-        amounrInDecimalsWithoutFee: props.asset_amount_decimals_without_fee,
-        feeRecipient: props.feeRecipient,
-        uuid: props.uuid,
-        fee: props.fee,
-        amountOut: props.amountOut,
-        asset_amount: props.amount,
-        asset_amount_without_fee: props.asset_amount_without_fee,
+        merchantToken,
+        userToken,
+        consoleLog,
+        uuid,
+        blockchain,
+        userAddress,
+        amount,
+        fee,
+        feeAddress,
+        merchantAddress,
+        merchantAmount
       })
     );
     props.setAbortTransaction.current = abortPromise.abort;

@@ -45,6 +45,7 @@ export const useTokenPrice = (
       );
       router.getRouter(amountOut, tokenA, tokenB).then((res) => {
         if (res) {
+          debugger;
           const provider = new CustomProvider(currentBlockchain);
           const deadline = ~~(Date.now() / 1000) + 60 * 32;
           const swapOptions: SwapOptions = {

@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Button, Panel, PanelHeader, Spinner, Text} from "@vkontakte/vkui";
+import { Button, Panel, PanelHeader, Spinner, Text } from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -27,7 +27,6 @@ import { fullListTokens, supportedChain } from "../../logic/tokens";
 
 import { ListToken, ListTokens, PolusChainId } from "../../logic/payment";
 import { getParameterByName, getAsset } from "../../logic/utils";
-import { Tron } from "../Tron";
 import { REACT_APP_TURN_OFF_TIMER } from "../../constants";
 import { CheatCodeListener } from "../../components/CheatCodeListener";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -42,21 +41,20 @@ import {
 } from "../../store/features/connection/connectionSlice";
 import { useTour } from "@reactour/tour";
 import { setVisibleGuideButton } from "../../store/features/guide/guideSlice";
-import { IPayment } from "../../store/api/endpoints/payment/Payment.interface";
 import { ViewVariant, setView } from "../../store/features/view/viewSlice";
 import { useGetAssetsQuery } from "../../store/api/endpoints/asset/Asset";
-import { Bitcoin } from "../Bitcoin";
 import { ChainId } from "../../store/api/endpoints/types";
 import { usePaymentInfo } from "./hooks/usePaymentInfo";
 import { useAvailableTokens } from "./hooks/useAvailableTokens";
 import { Token } from "../../store/api/types";
 import { QRCodePayment } from "../../components/QRCodePayment";
 import { useTokenPrice } from "./hooks/useTokenPrice";
+import { ProcessBlock } from "../../components/ProcessBlock";
 
 interface MainProps {
   id: string;
   setActiveModal: Function;
-  consoleLog: Function;
+  consoleLog: (message: string, type?: boolean) => void;
   isDesktop: boolean;
   openPop: Function;
   closePop: Function;
@@ -70,17 +68,27 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   );
 
   /// NEW CODE START
-  const { error, isExpired, isLoading, info, timer, merchantToken , amountInMerchantToken} = usePaymentInfo(
-    getParameterByName("uuid")
+  const {
+    error,
+    isExpired,
+    isLoading,
+    info,
+    timer,
+    merchantToken,
+    amountInMerchantToken,
+    fee, merchantAmount, merchantAddress
+  } = usePaymentInfo(getParameterByName("uuid"));
+  const { amount, isLoading: isTokenPriceLoading } = useTokenPrice(
+    props.userToken,
+    merchantToken,
+    amountInMerchantToken
   );
-  const {amount, isLoading: isTokenPriceLoading} = useTokenPrice(props.userToken, merchantToken, amountInMerchantToken)
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
   /// NEW CODE END
 
-
   useEffect(() => {
-    console.log(isTokenPriceLoading)
-  }, [isTokenPriceLoading])
+    console.log(isTokenPriceLoading);
+  }, [isTokenPriceLoading]);
 
   const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
   const currentView = useAppSelector((state) => state.view.currentView);
@@ -133,16 +141,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     dispatch(setView(ViewVariant.PROCESS_BLOCK));
   }
 
-  function generatedUrlRedirect(status: string) {
-    if (paymentInfo) {
-      if (status === "success") {
-        return merchantInfo?.success_redirect_url ?? undefined;
-      }
-      return merchantInfo?.fail_redirect_url ?? undefined;
-    }
-    return undefined;
-  }
-
   useEffect(() => {
     console.log(isSwitchNetworkLoading, pendingChainId, switchNetworkError);
   }, [isSwitchNetworkLoading, pendingChainId, switchNetworkError]);
@@ -192,8 +190,15 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  {isTokenPriceLoading ? <span className="animate__animated animate__flash animate__infinite">calculate</span>  :
-                  <span>{`${amount} ${props.userToken?.name.toUpperCase() ?? ""}`}</span>}
+                  {isTokenPriceLoading ? (
+                    <span className="animate__animated animate__flash animate__infinite">
+                      calculate
+                    </span>
+                  ) : (
+                    <span>{`${amount} ${
+                      props.userToken?.name.toUpperCase() ?? ""
+                    }`}</span>
+                  )}
                 </div>
               </div>
               <span
@@ -312,7 +317,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     className="btn-connect"
                     disabled={
                       !isActiveConnection ||
-                      REACT_APP_TURN_OFF_TIMER ||
+                      isTokenPriceLoading ||
                       !Object.keys(info.payment.assets).some(
                         (c) => ChainId[c] === chain?.id
                       )
@@ -320,7 +325,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
-                    {/* Pay {NtoStr(coin.amountIn)} {coin.name.toUpperCase()} */}
+                    {isTokenPriceLoading ? <Spinner  size="regular"/> : `Pay ${amount} ${props.userToken?.name.toUpperCase() ?? ""}`}
                   </Button>
                 ) : (
                   <Button
@@ -332,7 +337,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     onClick={() => open()}
                     disabled={
                       !isActiveConnection ||
-                      REACT_APP_TURN_OFF_TIMER ||
+                      isTokenPriceLoading ||
                       !Object.keys(info.payment.assets).some(
                         (c) => ChainId[c] === chain?.id
                       )
@@ -344,68 +349,29 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               </div>
             ) : (
               <div className="proccess-block">
-                {/* {address &&
+                {address &&
                   chain &&
-                  currentView === ViewVariant.PROCESS_BLOCK && (
+                  merchantToken &&
+                  props.userToken &&
+                  currentView === ViewVariant.PROCESS_BLOCK ? (
                     <div>
                       <ProcessBlock
                         id={"all1"}
-                        address={address}
-                        uuid={paymentInfo.id}
                         consoleLog={props.consoleLog}
-                        setPayed={setPayed}
-                        setProgress={setProgress}
-                        // NOTE: chainId must be a restriction of the supported chains
-                        chainId={chain.id as PolusChainId}
-                        addressMerchant={getMerchantAddress(paymentInfo)}
-                        amountOut={getAsset(paymentInfo).amount}
-                        tokenA={coin}
-                        tokenB={coinMerchant}
-                        fullListTokensUp={fullListTokensUp}
-                        fee={getPaymentFee(paymentInfo)}
-                        asset_amount_decimals_without_fee={
-                          getAsset(paymentInfo).amount
-                        }
-                        asset_amount_decimals={(
-                          BigInt(getAsset(paymentInfo).amount) +
-                          BigInt(getPaymentFee(paymentInfo))
-                        ).toString()}
-                        polusApi={polusApi}
-                        feeRecipient={
-                          paymentInfo.evm_fee_address as `0x${string}`
-                        }
-                        amount={(
-                          parseFloat(
-                            ethers.utils.formatUnits(
-                              getAsset(paymentInfo).amount,
-                              coinMerchant.decimals[chain.id as PolusChainId]
-                            )
-                          ) +
-                          parseFloat(
-                            ethers.utils.formatUnits(
-                              getAsset(paymentInfo).fee,
-                              coinMerchant.decimals[chain.id as PolusChainId]
-                            )
-                          )
-                        ).toString()}
-                        tokenAddress={
-                          coinMerchant.address[chain.id as PolusChainId]
-                        }
-                        isNativeToNative={Boolean(
-                          coin.native && coin.native === coinMerchant.native
-                        )}
-                        currentAddressToken={
-                          coinMerchant.address[chain.id as PolusChainId]
-                        }
+                        fee={fee}
+                        amount={+fee + +merchantAmount + ""}
+                        merchantAmount={merchantAmount}
+                        feeAddress={info.payment.evm_fee_address}
+                        merchantAddress={merchantAddress}
+                        merchantToken={merchantToken}
+                        userToken={props.userToken}
+                        uuid={info.payment.id}
+                        blockchain={currentBlockchain}
+                        userAddress={address}
                         setAbortTransaction={abortRef}
-                        asset_amount_without_fee={ethers.utils.formatUnits(
-                          getAsset(paymentInfo).amount,
-                          coinMerchant.decimals[chain.id as PolusChainId]
-                        )}
                       />
                     </div>
-                  )} */}
-
+                  ) : <Text>Something went wrong</Text>}
 
                 {currentView === ViewVariant.QRCODE && (
                   <QRCodePayment
@@ -421,7 +387,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect fix-padding"
                     style={{ backgroundImage: `url(${btn})` }}
-                    href={generatedUrlRedirect("success")}
+                    href={info.merchant.success_redirect_url}
                   >
                     Back to store
                   </Button>
@@ -507,7 +473,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               size="l"
               className="btn-connect"
               style={{ backgroundImage: `url(${btn})` }}
-              href={generatedUrlRedirect("error")}
+              href={info.merchant.success_redirect_url}
             >
               Back to store
             </Button>
