@@ -510,7 +510,7 @@ export class Payment {
 
 export class CustomProvider {
   private provider: ethers.providers.JsonRpcProvider;
-  constructor(blockchain: Blockchain_t) {
+  constructor(private blockchain: Blockchain_t) {
     let networkRpcUrl: string;
     if (blockchain === "polygon") {
       networkRpcUrl = RPCprovider[2].url;
@@ -536,5 +536,12 @@ export class CustomProvider {
       coder.encode(["bytes", "uint256"], [path, amountOut]).replace("0x", "");
     const result = await this.provider.call({ to: QUOTER_ADDRESS, data });
     return BigNumber.from(result);
+  }
+
+  get RouterAddress() {
+    // @ts-ignore
+    const address =  UNIVERSAL_ROUTER[this.blockchain];
+    if (!address) throw new Error("RouterAddress:address is undefined");
+    return address
   }
 }

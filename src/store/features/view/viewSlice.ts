@@ -2,12 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
 export const enum ViewVariant {
-  SELECT,
+  EVM,
   PROCESS_BLOCK,
-  TRON,
-  BITCOIN,
-  LITECOIN,
-  DOGECOIN,
+  QRCODE,
 }
 
 export interface ViewState {
@@ -15,7 +12,7 @@ export interface ViewState {
 }
 
 const initialState: ViewState = {
-  currentView: ViewVariant.SELECT,
+  currentView: ViewVariant.EVM,
 };
 
 export const viewSlice = createSlice({

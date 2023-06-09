@@ -2,41 +2,38 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 
 import {
   AppRoot,
-  SplitLayout,
-  SplitCol,
-  View,
-  ModalRoot,
+  Card,
+  CardGrid,
+  Div,
   ModalPage,
   ModalPageHeader,
-  PanelHeaderButton,
-  Div,
-  ScreenSpinner,
+  ModalRoot,
   PanelHeader,
-  CardGrid,
-  Card,
+  PanelHeaderButton,
+  ScreenSpinner,
   SimpleCell,
+  SplitCol,
+  SplitLayout,
+  View
 } from "@vkontakte/vkui";
 import { Route, Routes } from "react-router-dom";
 
 import { Icon24Dismiss, Icon28DoneOutline } from "@vkontakte/icons";
 
 import { useNetwork, useSwitchNetwork } from "wagmi";
-import { Web3Button, useWeb3Modal } from "@web3modal/react";
+import { useWeb3Modal, Web3Button } from "@web3modal/react";
 
 import "@vkontakte/vkui/dist/vkui.css";
 import "./style.css";
 
-import { fullListTokens } from "./logic/tokens";
-
 import logo from "./img/logo.svg";
-import { ListToken, PolusChainId } from "./logic/payment";
 import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
 import { useTour } from "@reactour/tour";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
 import { getParameterByName } from "./logic/utils";
 import { ChainId, ChainIdToName } from "./store/api/endpoints/types";
-import { ViewVariant, setView } from "./store/features/view/viewSlice";
+import { setView, ViewVariant } from "./store/features/view/viewSlice";
 import { setCurrentBlockchain } from "./store/features/connection/connectionSlice";
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
@@ -67,7 +64,6 @@ export const App: React.FC = () => {
   const [popout, setPopout] = React.useState<any>(null);
   const { chain } = useNetwork();
 
-  const { switchNetwork } = useSwitchNetwork();
 
   const { open } = useWeb3Modal();
 
@@ -132,20 +128,11 @@ export const App: React.FC = () => {
                         ) : null
                       }
                       onClick={() => {
-                        // REFACTOR
-                        if (chainLocal === "tron") {
-                          dispatch(setView(ViewVariant.TRON));
-                          dispatch(setCurrentBlockchain(chainLocal));
-                        } else if (chainLocal === "bitcoin") {
-                          dispatch(setView(ViewVariant.BITCOIN));
-                          dispatch(setCurrentBlockchain(chainLocal));
-                        } else if (switchNetwork) {
-                          switchNetwork(ChainId[chainLocal]);
-                        } else if (chainLocal === "litecoin") {
-                          dispatch(setView(ViewVariant.LITECOIN));
-                          dispatch(setCurrentBlockchain(chainLocal));
-                        } else if (chainLocal === "dogecoin") {
-                          dispatch(setView(ViewVariant.DOGECOIN));
+                        if (chainLocal === "bitcoin" ||  chainLocal === "tron" ||  chainLocal === "litecoin" ||  chainLocal === "dogecoin") {
+                          dispatch(setView(ViewVariant.QRCODE))
+                          dispatch(setCurrentBlockchain(chainLocal))
+                        } else if (chainLocal === "bsc" || chainLocal === "polygon" || chainLocal === "ethereum" || chainLocal === "arbitrum") {
+                          dispatch(setView(ViewVariant.EVM))
                           dispatch(setCurrentBlockchain(chainLocal));
                         } else {
                           open();

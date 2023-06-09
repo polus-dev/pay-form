@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Button, Panel, PanelHeader, Spinner } from "@vkontakte/vkui";
+import { Button, Panel, PanelHeader, Spinner, Text} from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -51,6 +51,7 @@ import { usePaymentInfo } from "./hooks/usePaymentInfo";
 import { useAvailableTokens } from "./hooks/useAvailableTokens";
 import { Token } from "../../store/api/types";
 import { QRCodePayment } from "../../components/QRCodePayment";
+import { useTokenPrice } from "./hooks/useTokenPrice";
 
 interface MainProps {
   id: string;
@@ -69,11 +70,17 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   );
 
   /// NEW CODE START
-  const { error, isExpired, isLoading, info, timer } = usePaymentInfo(
+  const { error, isExpired, isLoading, info, timer, merchantToken , amountInMerchantToken} = usePaymentInfo(
     getParameterByName("uuid")
   );
+  const {amount, isLoading: isTokenPriceLoading} = useTokenPrice(props.userToken, merchantToken, amountInMerchantToken)
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
   /// NEW CODE END
+
+
+  useEffect(() => {
+    console.log(isTokenPriceLoading)
+  }, [isTokenPriceLoading])
 
   const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
   const currentView = useAppSelector((state) => state.view.currentView);
@@ -88,7 +95,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const [cheatCode, setCheatCode] = React.useState(false);
 
-  const [reRender, setRerender] = React.useState<boolean>(false);
   const smartLineStatus = useAppSelector(
     (state) => state.smartLine.smartLineStatus
   );
@@ -176,7 +182,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [isConnected]);
 
   return (
-    <Panel id={reRender ? props.id : "render"}>
+    <Panel id="render">
       <PanelHeader separator={false} />
 
       {!error && info && assets ? (
@@ -186,8 +192,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  {/* {NtoStr(coin.amountIn)} */}
-                  {/* <span>{coin.name.toUpperCase()}</span> */}
+                  {isTokenPriceLoading ? <span className="animate__animated animate__flash animate__infinite">calculate</span>  :
+                  <span>{`${amount} ${props.userToken?.name.toUpperCase() ?? ""}`}</span>}
                 </div>
               </div>
               <span
@@ -200,7 +206,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           </div>
           <ProgressBar value={progress} />
           <div>
-            {currentView === ViewVariant.SELECT ? (
+            {currentView === ViewVariant.EVM ? (
               <div>
                 <div className="text-one">Choose network</div>
 
@@ -400,20 +406,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     </div>
                   )} */}
 
-                {currentView === ViewVariant.TRON && (
-                  <Tron
-                    id="tron1"
-                    address={info.payment.assets.tron.usdt.address}
-                    uuid={info.payment.id}
-                    amount={info.payment.assets.tron.usdt.amount}
-                    log={props.consoleLog}
-                  />
-                )}
 
-                {(currentView === ViewVariant.BITCOIN ||
-                  currentView === ViewVariant.TRON ||
-                  currentView === ViewVariant.DOGECOIN ||
-                  currentView === ViewVariant.LITECOIN) && (
+                {currentView === ViewVariant.QRCODE && (
                   <QRCodePayment
                     id="qrcode"
                     payment={info.payment}
@@ -440,7 +434,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     onClick={() => {
                       abortRef.current();
                       dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT));
-                      dispatch(setView(ViewVariant.SELECT));
+                      dispatch(setView(ViewVariant.EVM));
                     }}
                   >
                     Cancel

@@ -1,14 +1,16 @@
 import {
-  useGetPaymentByPaymentIdQuery,
   useLazyGetPaymentByPaymentIdQuery,
 } from "../../../store/api/endpoints/payment/Payment";
 import { useEffect, useState } from "react";
-import { getParameterByName } from "../../../logic/utils";
 import { ResponseApiCode } from "../../../store/api/responseApiCode";
 import { useLazyGetMerchantByIdQuery } from "../../../store/api/endpoints/merchant/Merchant";
 import { IGetMerchantByIdResponse } from "../../../store/api/endpoints/merchant/Merchant.interface";
 import { IGetPaymentsResponse } from "../../../store/api/endpoints/payment/Payment.interface";
 import { useTimer } from "./useTimer";
+import { Token } from "../../../store/api/types";
+import { useAppSelector } from "../../../store/hooks";
+import { Asset_t } from "../../../store/api/endpoints/types";
+import { useAvailableTokens } from "./useAvailableTokens";
 
 interface IError {
   message: string;
@@ -25,11 +27,27 @@ export const usePaymentInfo = (uuid: string | null) => {
   const [error, setError] = useState<IError>();
   const [getPaymentInfo] = useLazyGetPaymentByPaymentIdQuery();
   const [getMerchantInfo] = useLazyGetMerchantByIdQuery();
+  const currentBlockchain = useAppSelector(state => state.connection.currentBlockchain)
+
+  const { availableTokens } = useAvailableTokens();
+  const [merchantToken, setMerchantToken] = useState<Token>();
 
   const [expiresAt, setExpiresAt] = useState("0");
   const { isExpired, timer } = useTimer(expiresAt);
 
   const [info, setInfo] = useState<IPaymentInfo>();
+  const [amountInMerchantToken, setAmountInMerchantToken] = useState("0");
+
+
+  useEffect(() => {
+    if (!info || !availableTokens.length) return;
+    const assetKey = Object.keys(info.payment.assets[currentBlockchain])[0] as Asset_t;
+    const token =  availableTokens.find(token => token.name === assetKey)
+    const payment = info.payment.assets[currentBlockchain][Object.keys(info.payment.assets[currentBlockchain])[0] as Asset_t]
+    setAmountInMerchantToken((BigInt(payment.amount) + BigInt(payment.fee)).toString())
+    if (!token) throw new Error("usePaymentInfo: Token not found")
+    setMerchantToken(token)
+  }, [currentBlockchain, info]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -69,5 +87,5 @@ export const usePaymentInfo = (uuid: string | null) => {
     setIsLoading(false);
   }, []);
 
-  return { isLoading, error, info, isExpired, timer };
+  return { isLoading, error, info, isExpired, timer, merchantToken,  amountInMerchantToken};
 };
