@@ -12,7 +12,6 @@ import {
   UniswapTrade,
 } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
-import { ETHToWei, weiToEthNum } from "../../../logic/utils";
 import { PaymentHelper } from "../../../logic/payment";
 import token_abi from "../../../token_abi.json";
 import {
@@ -90,11 +89,13 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
 
       const currentStage = () => getState().transaction.currentStage;
 
+      const amount = getState().transaction.pathTrade.amount;
+
       const checkAndApprove = async (
         contractType: Parameters<typeof helper.checkAllowanceToUserToken>[0],
         allowance: BigNumber
       ) => {
-        if (allowance.lt(BigNumber.from(payload.amount))) {
+        if (allowance.lt(BigNumber.from(amount))) {
           needApproveDispatch(getState().transaction.currentStage);
           const preparedTransaction = await prepareWriteContract({
             address: payload.userToken.contract as `0x${string}`,
@@ -124,7 +125,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         })
       );
       const balance = await helper.getBalance();
-      if (balance.lt(BigNumber.from(payload.amount))) {
+      if (balance.lt(BigNumber.from(amount))) {
         throw new TransactionError("Not enough balance", currentStage());
       }
 
@@ -174,7 +175,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const allowancePermit = await helper.checkPermit("router");
         if (
           !allowancePermit ||
-          allowancePermit.amount < BigInt(payload.amount) ||
+          allowancePermit.amount < BigInt(amount) ||
           allowancePermit.expiration < Date.now() / 1000
         ) {
           dispatch(
@@ -227,22 +228,21 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       const feeData = await helper.fetchFeeData();
 
       if (helper.Context === "universal router") {
-        dispatch(
-          setStage({
-            stageId: currentStage(),
-            text: "Searching route",
-            status: StageStatus.LOADING,
-          })
-        );
+        // dispatch(
+        //   setStage({
+        //     stageId: currentStage(),
+        //     text: "Searching route",
+        //     status: StageStatus.LOADING,
+        //   })
+        // );
 
-        debugger;
-        const path = await helper.getSwapPath(payload.amount);
-        if (!path) {
-          throw new TransactionError("Route not found", currentStage());
-        }
-        dispatch(
-          setStageText({ stageId: currentStage(), text: "Route found" })
-        );
+        // const path = await helper.getSwapPath(payload.amount);
+        // if (!path) {
+        //   throw new TransactionError("Route not found", currentStage());
+        // }
+        // dispatch(
+        //   setStageText({ stageId: currentStage(), text: "Route found" })
+        // );
 
         const deadline = ~~(Date.now() / 1000) + 60 * 32;
         const swapOptions: SwapOptions = {
@@ -253,9 +253,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         if (permitSign) {
           swapOptions.inputTokenPermit = permitSign;
         }
-        debugger;
         const { calldata } = SwapRouter.swapERC20CallParameters(
-          path.trade,
+          getState().transaction.pathTrade.path,
           swapOptions
         );
         const isContextFromNative = helper.userToken.is_native;
@@ -283,10 +282,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const { data, path: universalRouterPath } = encodePay(encodePayParams);
         let value = BigNumber.from(0);
         if (universalRouterPath && isContextFromNative) {
-          value = await helper.getValueForSwap(
-            universalRouterPath,
-            payload.amount
-          );
+          value = BigNumber.from(amount);
         }
         const preparedTransaction = await prepareSendTransaction({
           request: {

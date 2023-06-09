@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { CustomRouter } from "../../../logic/router";
 import { ChainId } from "../../../store/api/endpoints/types";
 import { Token } from "../../../store/api/types";
-import { useAppSelector } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { Percent, Token as ERC20 } from "@uniswap/sdk-core";
-import { CustomProvider, Payment } from "../../../logic/payment";
+import { CustomProvider } from "../../../logic/payment";
 import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
 import { getPathFromCallData } from "../../../logic/utils";
 import { ethers } from "ethers";
+import { setPathTrade } from "../../../store/features/transaction/transactionSlice";
 
 export const useTokenPrice = (
   userToken: Token | undefined,
@@ -19,6 +20,7 @@ export const useTokenPrice = (
   const currentBlockchain = useAppSelector(
     (state) => state.connection.currentBlockchain
   );
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!userToken || !merchantToken || !amountOut || isLoading) return;
@@ -43,9 +45,8 @@ export const useTokenPrice = (
         merchantToken.contract,
         merchantToken.decimals
       );
-      router.getRouter(amountOut, tokenA, tokenB).then((res) => {
-        if (res) {
-          debugger;
+      router.getRouter(amountOut, tokenA, tokenB).then((response1) => {
+        if (response1) {
           const provider = new CustomProvider(currentBlockchain);
           const deadline = ~~(Date.now() / 1000) + 60 * 32;
           const swapOptions: SwapOptions = {
@@ -55,16 +56,25 @@ export const useTokenPrice = (
           };
 
           const { calldata } = SwapRouter.swapERC20CallParameters(
-            res.trade,
+            response1.trade,
             swapOptions
           );
 
           const path = getPathFromCallData(calldata);
 
-          provider.getValueForSwap(path, amountOut).then((res) => {
+          provider.getValueForSwap(path, amountOut).then((response2) => {
+            dispatch(
+              setPathTrade({
+                amount: response2.toString(),
+                path: response1.trade,
+              })
+            );
             setAmount(
               ethers.utils.commify(
-                ethers.utils.formatUnits(res.toString(), userToken.decimals)
+                ethers.utils.formatUnits(
+                  response2.toString(),
+                  userToken.decimals
+                )
               )
             );
             setIsLoading(false);

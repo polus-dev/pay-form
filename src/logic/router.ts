@@ -265,7 +265,6 @@ export class CustomRouter {
             amountOut,
             tokenTo
         )
-        debugger
 
         console.log("start get route")
         const resp = await this._router.route(
