@@ -223,7 +223,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
 
           const valueSigned = {
             signature,
-            value: dataForSign.value,
+            ...dataForSign.value,
           } as any as Permit2Permit;
           permitSign = valueSigned;
 
