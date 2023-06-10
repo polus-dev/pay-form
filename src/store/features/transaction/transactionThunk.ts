@@ -57,7 +57,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   "transaction/pay",
   async (payload, { dispatch, rejectWithValue, getState, signal }) => {
     try {
-      debugger;
       signal.addEventListener("abort", () => {
         return rejectWithValue("Aborted");
       });
@@ -91,7 +90,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       const currentStage = () => getState().transaction.currentStage;
       const sendAmount =
         getState().transaction.pathTrade.amount ?? payload.amount;
-      debugger;
       const checkAndApprove = async (
         contractType: Parameters<typeof helper.checkAllowanceToUserToken>[0],
         allowance: BigNumber
@@ -250,12 +248,10 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const encodePayParams: Parameters<typeof encodePay>[0] = {
           uuid: payload.uuid.replaceAll("-", ""),
           fee: payload.fee,
-          merchantAmount: payload.amount,
+          merchantAmount: payload.merchantAmount,
           tokenAddress: helper.userToken.contract,
           merchant: payload.merchantAddress,
-          asset_amount_decimals: (
-            BigInt(payload.amount) + BigInt(payload.fee)
-          ).toString(),
+          asset_amount_decimals: payload.amount,
           feeRecipient: payload.feeAddress,
           txData: calldata,
           context: {
@@ -274,7 +270,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           request: {
             to: helper.RouterAddress,
             data,
-            value: ethers.utils.parseEther("2"),
+            value,
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,
           },

@@ -43,6 +43,7 @@ export const usePaymentInfo = (uuid: string | null) => {
 
   useEffect(() => {
     if (!info || !availableTokens.length) return;
+    debugger;
     const assetKey = Object.keys(
       info.payment.assets[currentBlockchain]
     )[0] as Asset_t;
@@ -109,6 +110,6 @@ export const usePaymentInfo = (uuid: string | null) => {
     amountInMerchantToken,
     fee,
     merchantAmount,
-    merchantAddress
+    merchantAddress,
   };
 };

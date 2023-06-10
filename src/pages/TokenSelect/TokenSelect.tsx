@@ -133,6 +133,15 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     }
   }
 
+  useEffect(() => {
+    if (error) {
+      dispatch(setVisibleGuideButton(false));
+    }
+    if (currentView === ViewVariant.QRCODE) {
+      dispatch(setVisibleGuideButton(false));
+    }
+  }, [error, currentView]);
+
   async function startPay() {
     if (!ready) {
       console.error("not ready");
