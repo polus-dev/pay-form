@@ -49,9 +49,12 @@ export const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
 
-  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery({
-    payment_id: getParameterByName("uuid")!,
-  });
+  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
+    {
+      payment_id: getParameterByName("uuid")!,
+    },
+    { pollingInterval: 1000 }
+  );
   const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
 
@@ -143,6 +146,7 @@ export const App: React.FC = () => {
                             chainLocal === "arbitrum") &&
                           switchNetwork
                         ) {
+                          debugger;
                           switchNetwork(ChainId[chainLocal]);
                           dispatch(setView(ViewVariant.EVM));
                           dispatch(setCurrentBlockchain(chainLocal));

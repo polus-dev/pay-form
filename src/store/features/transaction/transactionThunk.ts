@@ -268,14 +268,14 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           merchantAmount: (
             BigInt(payload.amount) - BigInt(payload.fee)
           ).toString(),
-          tokenAddress: helper.userToken.address,
+          tokenAddress: helper.userToken.contract,
           merchant: payload.merchantAddress,
           asset_amount_decimals: payload.amount,
           feeRecipient: payload.feeAddress,
           txData: calldata,
           context: {
             from: isContextFromNative ? "native" : "erc20",
-            to: helper.merchantToken.isNative ? "native" : "erc20",
+            to: helper.merchantToken.is_native ? "native" : "erc20",
           },
           universalRouterAddress: helper.RouterAddress,
         };
@@ -312,11 +312,11 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         );
       } else if (helper.Context === "polus contract") {
         const isNative =
-          helper.userToken.isNative && helper.merchantToken.isNative;
+          helper.userToken.is_native && helper.merchantToken.is_native;
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: helper.PolusAddress,
-            value: helper.userToken.isNative ? payload.amount : 0,
+            value: helper.userToken.is_native ? payload.amount : 0,
             data: doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeAddress,

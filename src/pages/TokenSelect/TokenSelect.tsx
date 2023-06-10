@@ -76,7 +76,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     timer,
     merchantToken,
     amountInMerchantToken,
-    fee, merchantAmount, merchantAddress
+    fee,
+    merchantAmount,
+    merchantAddress,
   } = usePaymentInfo(getParameterByName("uuid"));
   const { amount, isLoading: isTokenPriceLoading } = useTokenPrice(
     props.userToken,
@@ -325,7 +327,13 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
-                    {isTokenPriceLoading ? <Spinner  size="regular"/> : `Pay ${amount} ${props.userToken?.name.toUpperCase() ?? ""}`}
+                    {isTokenPriceLoading ? (
+                      <Spinner size="regular" />
+                    ) : (
+                      `Pay ${amount} ${
+                        props.userToken?.name.toUpperCase() ?? ""
+                      }`
+                    )}
                   </Button>
                 ) : (
                   <Button
@@ -350,28 +358,32 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : (
               <div className="proccess-block">
                 {address &&
-                  chain &&
-                  merchantToken &&
-                  props.userToken &&
-                  currentView === ViewVariant.PROCESS_BLOCK ? (
-                    <div>
-                      <ProcessBlock
-                        id={"all1"}
-                        consoleLog={props.consoleLog}
-                        fee={fee}
-                        amount={+fee + +merchantAmount + ""}
-                        merchantAmount={merchantAmount}
-                        feeAddress={info.payment.evm_fee_address}
-                        merchantAddress={merchantAddress}
-                        merchantToken={merchantToken}
-                        userToken={props.userToken}
-                        uuid={info.payment.id}
-                        blockchain={currentBlockchain}
-                        userAddress={address}
-                        setAbortTransaction={abortRef}
-                      />
-                    </div>
-                  ) : <Text>Something went wrong</Text>}
+                chain &&
+                merchantToken &&
+                props.userToken &&
+                currentView === ViewVariant.PROCESS_BLOCK ? (
+                  <div>
+                    <ProcessBlock
+                      id={"all1"}
+                      consoleLog={props.consoleLog}
+                      fee={fee}
+                      amount={+fee + +merchantAmount + ""}
+                      merchantAmount={merchantAmount}
+                      feeAddress={info.payment.evm_fee_address}
+                      merchantAddress={merchantAddress}
+                      merchantToken={merchantToken}
+                      userToken={props.userToken}
+                      uuid={info.payment.id}
+                      blockchain={currentBlockchain}
+                      userAddress={address}
+                      setAbortTransaction={abortRef}
+                    />
+                  </div>
+                ) : (
+                  !(currentView === ViewVariant.QRCODE) && (
+                    <Text>Something went wrong</Text>
+                  )
+                )}
 
                 {currentView === ViewVariant.QRCODE && (
                   <QRCodePayment
