@@ -45,11 +45,6 @@ export const useAvailableTokens = () => {
                   name.includes("dai")
                 ? "Stable"
                 : "Other",
-              wrapped: WrappedToken[name]
-                ? assets[WrappedToken[name]][currentBlockchain]
-                : WrappedTokenToToken[name]
-                ? assets[WrappedTokenToToken[name]][currentBlockchain]
-                : undefined,
             };
           })
       );

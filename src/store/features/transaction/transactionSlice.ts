@@ -7,7 +7,7 @@ export interface TransactionState {
   currentStage: StageId;
   pathTrade: {
     path: any; // TODO
-    amount: string;
+    amount?: string;
   };
 }
 
@@ -44,7 +44,6 @@ const initialState: TransactionState = {
   currentStage: 0,
   pathTrade: {
     path: "",
-    amount: "",
   },
 };
 

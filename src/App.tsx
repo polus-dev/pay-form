@@ -38,7 +38,6 @@ import { setCurrentBlockchain } from "./store/features/connection/connectionSlic
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
 import { Token } from "./store/api/types";
-import { switchNetwork } from "wagmi/dist/actions";
 
 const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
 const isDesktop = window.innerWidth >= 800;
@@ -146,7 +145,6 @@ export const App: React.FC = () => {
                             chainLocal === "arbitrum") &&
                           switchNetwork
                         ) {
-                          debugger;
                           switchNetwork(ChainId[chainLocal]);
                           dispatch(setView(ViewVariant.EVM));
                           dispatch(setCurrentBlockchain(chainLocal));

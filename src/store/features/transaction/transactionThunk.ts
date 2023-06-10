@@ -57,6 +57,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
   "transaction/pay",
   async (payload, { dispatch, rejectWithValue, getState, signal }) => {
     try {
+      debugger;
       signal.addEventListener("abort", () => {
         return rejectWithValue("Aborted");
       });
@@ -88,14 +89,14 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         dispatch(setStageText({ stageId, text: "Send transaction ..." }));
 
       const currentStage = () => getState().transaction.currentStage;
-
-      const amount = getState().transaction.pathTrade.amount;
-
+      const sendAmount =
+        getState().transaction.pathTrade.amount ?? payload.amount;
+      debugger;
       const checkAndApprove = async (
         contractType: Parameters<typeof helper.checkAllowanceToUserToken>[0],
         allowance: BigNumber
       ) => {
-        if (allowance.lt(BigNumber.from(amount))) {
+        if (allowance.lt(BigNumber.from(sendAmount))) {
           needApproveDispatch(getState().transaction.currentStage);
           const preparedTransaction = await prepareWriteContract({
             address: payload.userToken.contract as `0x${string}`,
@@ -125,7 +126,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         })
       );
       const balance = await helper.getBalance();
-      if (balance.lt(BigNumber.from(amount))) {
+      if (balance.lt(BigNumber.from(sendAmount))) {
         throw new TransactionError("Not enough balance", currentStage());
       }
 
@@ -175,7 +176,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const allowancePermit = await helper.checkPermit("router");
         if (
           !allowancePermit ||
-          allowancePermit.amount < BigInt(amount) ||
+          allowancePermit.amount < BigInt(sendAmount) ||
           allowancePermit.expiration < Date.now() / 1000
         ) {
           dispatch(
@@ -228,22 +229,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       const feeData = await helper.fetchFeeData();
 
       if (helper.Context === "universal router") {
-        // dispatch(
-        //   setStage({
-        //     stageId: currentStage(),
-        //     text: "Searching route",
-        //     status: StageStatus.LOADING,
-        //   })
-        // );
-
-        // const path = await helper.getSwapPath(payload.amount);
-        // if (!path) {
-        //   throw new TransactionError("Route not found", currentStage());
-        // }
-        // dispatch(
-        //   setStageText({ stageId: currentStage(), text: "Route found" })
-        // );
-
         const deadline = ~~(Date.now() / 1000) + 60 * 32;
         const swapOptions: SwapOptions = {
           slippageTolerance: new Percent("90", "100"),
@@ -265,12 +250,12 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const encodePayParams: Parameters<typeof encodePay>[0] = {
           uuid: payload.uuid.replaceAll("-", ""),
           fee: payload.fee,
-          merchantAmount: (
-            BigInt(payload.amount) - BigInt(payload.fee)
-          ).toString(),
+          merchantAmount: payload.amount,
           tokenAddress: helper.userToken.contract,
           merchant: payload.merchantAddress,
-          asset_amount_decimals: payload.amount,
+          asset_amount_decimals: (
+            BigInt(payload.amount) + BigInt(payload.fee)
+          ).toString(),
           feeRecipient: payload.feeAddress,
           txData: calldata,
           context: {
@@ -282,13 +267,14 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const { data, path: universalRouterPath } = encodePay(encodePayParams);
         let value = BigNumber.from(0);
         if (universalRouterPath && isContextFromNative) {
-          value = BigNumber.from(amount);
+          value = BigNumber.from(sendAmount);
         }
+        debugger;
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: helper.RouterAddress,
             data,
-            value,
+            value: ethers.utils.parseEther("2"),
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             maxFeePerGas: feeData.maxFeePerGas!,
           },
@@ -316,15 +302,13 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: helper.PolusAddress,
-            value: helper.userToken.is_native ? payload.amount : 0,
+            value: BigNumber.from(helper.userToken.is_native ? sendAmount : 0),
             data: doPayThroughPolusContract({
               uuid: payload.uuid,
               feeRecipient: payload.feeAddress,
               fee: payload.fee,
               merchant: payload.merchantAddress,
-              merchantAmount: (
-                BigInt(payload.amount) - BigInt(payload.fee)
-              ).toString(),
+              merchantAmount: payload.merchantAmount,
               tokenAddress: isNative ? "" : payload.userToken.contract,
             }),
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,

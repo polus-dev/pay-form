@@ -3,8 +3,8 @@ import { CustomRouter } from "../../../logic/router";
 import { ChainId } from "../../../store/api/endpoints/types";
 import { Token } from "../../../store/api/types";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { Percent, Token as ERC20 } from "@uniswap/sdk-core";
-import { CustomProvider } from "../../../logic/payment";
+import { Percent, Token as ERC20, WETH9 } from "@uniswap/sdk-core";
+import { CustomProvider, WrapAltToken } from "../../../logic/payment";
 import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
 import { getPathFromCallData } from "../../../logic/utils";
 import { ethers } from "ethers";
@@ -35,16 +35,21 @@ export const useTokenPrice = (
       }
       setIsLoading(true);
       const router = new CustomRouter(ChainId[currentBlockchain]);
-      const tokenA = new ERC20(
-        ChainId[currentBlockchain],
-        userToken.contract,
-        userToken.decimals
-      );
-      const tokenB = new ERC20(
-        ChainId[currentBlockchain],
-        merchantToken.contract,
-        merchantToken.decimals
-      );
+      const tokenA = userToken.is_native
+        ? WrapAltToken.wrap(ChainId[currentBlockchain])
+        : new ERC20(
+            ChainId[currentBlockchain],
+            userToken.contract,
+            userToken.decimals
+          );
+      const tokenB = merchantToken.is_native
+        ? WrapAltToken.wrap(ChainId[currentBlockchain])
+        : new ERC20(
+            ChainId[currentBlockchain],
+            merchantToken.contract,
+            merchantToken.decimals
+          );
+      console.log("amountOut ", amountOut);
       router.getRouter(amountOut, tokenA, tokenB).then((response1) => {
         if (response1) {
           const provider = new CustomProvider(currentBlockchain);
@@ -63,6 +68,7 @@ export const useTokenPrice = (
           const path = getPathFromCallData(calldata);
 
           provider.getValueForSwap(path, amountOut).then((response2) => {
+            console.log(response2);
             dispatch(
               setPathTrade({
                 amount: response2.toString(),
