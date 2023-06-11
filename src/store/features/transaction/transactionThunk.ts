@@ -249,7 +249,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           uuid: payload.uuid.replaceAll("-", ""),
           fee: payload.fee,
           merchantAmount: payload.merchantAmount,
-          tokenAddress: helper.userToken.contract,
+          tokenAddress: helper.merchantToken.contract,
           merchant: payload.merchantAddress,
           asset_amount_decimals: payload.amount,
           feeRecipient: payload.feeAddress,
@@ -261,11 +261,10 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           universalRouterAddress: helper.RouterAddress,
         };
         const { data, path: universalRouterPath } = encodePay(encodePayParams);
-        let value = BigNumber.from(0);
+        let value;
         if (universalRouterPath && isContextFromNative) {
           value = BigNumber.from(sendAmount);
         }
-        debugger;
         const preparedTransaction = await prepareSendTransaction({
           request: {
             to: helper.RouterAddress,
