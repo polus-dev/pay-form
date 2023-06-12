@@ -108,11 +108,11 @@ export const App: React.FC = () => {
 
   // }, [paymentInfo])
 
-  useEffect(() => {
-    if (availableTokens) {
-      setUserToken(availableTokens[0]);
-    }
-  }, [userToken]);
+  // useEffect(() => {
+  //   if (availableTokens) {
+  //     setUserToken(availableTokens[0]);
+  //   }
+  // }, [userToken]);
 
   useEffect(() => {
     if (paymentInfo) {
