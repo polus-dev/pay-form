@@ -186,3 +186,17 @@ export const getPathFromCallData = (calldata: string) => {
   return coder.decode(types[1], coder.decode(types[0], Buffer.from(calldata.slice(10), "hex"))[1][0])[3]
   // 🤡
 }
+
+
+// TODO: make better
+export const roundCryptoAmount = (amount: string) => {
+  if (amount.startsWith("0.")) {
+    let index = 2;
+    while (amount[index] === "0" && index < amount.length - 1 && index < 6) {
+      index++;
+    }
+    return amount.slice(0, index + 1);
+  } else {
+    return Number(amount).toFixed(2);
+  }
+}

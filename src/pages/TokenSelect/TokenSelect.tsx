@@ -26,7 +26,7 @@ import wc from "../../img/wc.svg";
 import {supportedChain } from "../../logic/tokens";
 
 import { ListToken, ListTokens, PolusChainId } from "../../logic/payment";
-import { getParameterByName, getAsset } from "../../logic/utils";
+import { getParameterByName, getAsset, roundCryptoAmount } from "../../logic/utils";
 import { CheatCodeListener } from "../../components/CheatCodeListener";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { ProgressBar } from "../../components/ui/ProgressBar";
@@ -208,7 +208,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                    <span>{`${ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals)} ${
+                    <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals).toString())} ${
                       merchantToken?.name.toUpperCase() ?? ""
                     }`}</span>
                 </div>
@@ -340,7 +340,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     {isTokenPriceLoading ? (
                       <Spinner size="regular" />
                     ) : (
-                      `Pay ${amount} ${
+                      `Pay ${roundCryptoAmount(amount)} ${
                         props.userToken?.name.toUpperCase() ?? ""
                       }`
                     )}
