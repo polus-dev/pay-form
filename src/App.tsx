@@ -54,7 +54,7 @@ export const App: React.FC = () => {
     },
     { pollingInterval: 1000 }
   );
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchNetwork} = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
 
   const [userToken, setUserToken] = useState<Token>();

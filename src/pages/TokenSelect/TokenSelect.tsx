@@ -110,7 +110,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const abortRef = useRef(() => {});
 
-  const { open, close } = useWeb3Modal();
+
+  const { open, close, setDefaultChain} = useWeb3Modal();
   const { address, isConnected } = useAccount();
 
   const { chain } = useNetwork();
@@ -123,6 +124,13 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const { data: assets, isLoading: isAssetsLoading } = useGetAssetsQuery();
 
   const [progress, setProgress] = React.useState<number>(0);
+
+
+  useEffect(() => {
+    if (info) {
+      setDefaultChain(ChainId[Object.keys(info.payment.assets)[0]])
+    }
+  }, [info])
 
   useEffect(() => {
     if (address && props.userToken) {
