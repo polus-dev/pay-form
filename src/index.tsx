@@ -18,16 +18,15 @@ import {
 import { Web3Modal } from "@web3modal/react";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { mainnet, polygon, arbitrum } from "wagmi/chains";
+import { mainnet, polygon, arbitrum, bsc} from "wagmi/chains";
 
 import { App } from "./App";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { steps } from "./guid/steps";
 
-const chains = [polygon, mainnet, arbitrum];
+const chains = [polygon, mainnet, arbitrum, bsc];
 const projectId = import.meta.env.VITE_REACT_APP_PROJECT_ID;
-console.log(projectId);
 
 const { provider } = configureChains(chains, [
   walletConnectProvider({ projectId }),

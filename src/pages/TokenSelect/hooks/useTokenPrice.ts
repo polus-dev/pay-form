@@ -84,8 +84,14 @@ export const useTokenPrice = (
               )
             );
             setIsLoading(false);
+          })
+          .catch(() => {
+            setIsLoading(false)
           });
         }
+      })
+      .catch(() => {
+        setIsLoading(false);
       });
     } catch (error) {
       setIsLoading(false);

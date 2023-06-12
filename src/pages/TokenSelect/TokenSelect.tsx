@@ -23,11 +23,10 @@ import arbitrumLogo from "../../img/arbitrum.svg";
 import btn from "../../img/btn.jpg";
 import wc from "../../img/wc.svg";
 
-import { fullListTokens, supportedChain } from "../../logic/tokens";
+import {supportedChain } from "../../logic/tokens";
 
 import { ListToken, ListTokens, PolusChainId } from "../../logic/payment";
 import { getParameterByName, getAsset } from "../../logic/utils";
-import { REACT_APP_TURN_OFF_TIMER } from "../../constants";
 import { CheatCodeListener } from "../../components/CheatCodeListener";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { ProgressBar } from "../../components/ui/ProgressBar";
@@ -125,13 +124,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const [progress, setProgress] = React.useState<number>(0);
 
-  if (isActiveConnection && !cheatCode) {
-    dispatch(deactivateConnection());
-    if (!isActiveConnection && !cheatCode) {
-      dispatch(activateConnection());
-      dispatch(setVisibleGuideButton(true));
+  useEffect(() => {
+    if (address && props.userToken) {
+      dispatch(activateConnection())
     }
-  }
+  }, [address, props.userToken])
+
 
   useEffect(() => {
     if (error) {
@@ -201,15 +199,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  {isTokenPriceLoading ? (
-                    <span className="animate__animated animate__flash animate__infinite">
-                      calculate
-                    </span>
-                  ) : (
-                    <span>{`${amount} ${
-                      props.userToken?.name.toUpperCase() ?? ""
+                    <span>{`${+amountInMerchantToken * 10 ** -merchantToken?.decimals} ${
+                      merchantToken?.name.toUpperCase() ?? ""
                     }`}</span>
-                  )}
                 </div>
               </div>
               <span
@@ -352,13 +344,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     style={{ backgroundImage: `url(${btn})` }}
                     before={<img src={wc} />}
                     onClick={() => open()}
-                    disabled={
-                      !isActiveConnection ||
-                      isTokenPriceLoading ||
-                      !Object.keys(info.payment.assets).some(
-                        (c) => ChainId[c] === chain?.id
-                      )
-                    }
                   >
                     Connect Wallet
                   </Button>
