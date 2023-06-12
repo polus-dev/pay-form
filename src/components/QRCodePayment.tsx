@@ -28,6 +28,7 @@ interface AllType {
 }
 
 const getPaymentAssetInfo = (payment: Payment, blockchain: Blockchain_t) => {
+  debugger
   const assetName = Object.keys(payment.assets[blockchain])[0] as Asset_t;
   const paymentInfo = payment.assets[blockchain][assetName];
   return { assetName, paymentInfo };

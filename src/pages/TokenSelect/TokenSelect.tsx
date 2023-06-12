@@ -4,7 +4,7 @@ import { Button, Panel, PanelHeader, Spinner, Text } from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 
-import { useWeb3Modal } from "@web3modal/react";
+import { Web3NetworkSwitch, useWeb3Modal } from "@web3modal/react";
 
 import { useAccount, useNetwork, useSwitchNetwork } from "wagmi";
 import {
@@ -49,6 +49,7 @@ import { Token } from "../../store/api/types";
 import { QRCodePayment } from "../../components/QRCodePayment";
 import { useTokenPrice } from "./hooks/useTokenPrice";
 import { ProcessBlock } from "../../components/ProcessBlock";
+import { ethers } from "ethers";
 
 interface MainProps {
   id: string;
@@ -207,7 +208,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                    <span>{`${+amountInMerchantToken * 10 ** -merchantToken?.decimals} ${
+                    <span>{`${ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals)} ${
                       merchantToken?.name.toUpperCase() ?? ""
                     }`}</span>
                 </div>

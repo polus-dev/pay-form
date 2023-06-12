@@ -20,8 +20,8 @@ import { Route, Routes } from "react-router-dom";
 
 import { Icon24Dismiss, Icon28DoneOutline } from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork } from "wagmi";
-import { useWeb3Modal, Web3Button } from "@web3modal/react";
+import { useNetwork, useSwitchNetwork} from "wagmi";
+import { useWeb3Modal, Web3Button , Web3NetworkSwitch} from "@web3modal/react";
 
 import "@vkontakte/vkui/dist/vkui.css";
 import "./style.css";
@@ -32,7 +32,7 @@ import { useTour } from "@reactour/tour";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
 import { getParameterByName } from "./logic/utils";
-import { ChainId, ChainIdToName } from "./store/api/endpoints/types";
+import { Blockchain_t, ChainId, ChainIdToName } from "./store/api/endpoints/types";
 import { setView, ViewVariant } from "./store/features/view/viewSlice";
 import { setCurrentBlockchain } from "./store/features/connection/connectionSlice";
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
@@ -95,6 +95,35 @@ export const App: React.FC = () => {
       dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]));
     }
   }, [chain]);
+
+
+  // useEffect(() => {
+  //   if (paymentInfo) {
+  //     if (paymentInfo.status === "success") {
+  //       dispatch(setView(ViewVariant.SUCCESS));
+  //     } else if (paymentInfo.status === "failed") {
+  //       dispatch(setView(ViewVariant.ERROR));
+  //     }
+  //   }
+
+  // }, [paymentInfo])
+
+  useEffect(() => {
+    if (availableTokens) {
+      setUserToken(availableTokens[0]);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    if (paymentInfo) {
+      const h = (blockchain: Blockchain_t) => paymentInfo.blockchains.includes(blockchain);
+      if ((h("bitcoin") || h("dogecoin") || h("litecoin") || h("tron")) && paymentInfo.blockchains.length === 1) {
+        dispatch(setView(ViewVariant.QRCODE));
+        dispatch(setCurrentBlockchain(paymentInfo.blockchains[0]));
+      }
+    }
+
+  }, [paymentInfo]);
 
   const modalRoot = (
     <ModalRoot activeModal={activeModal}>
