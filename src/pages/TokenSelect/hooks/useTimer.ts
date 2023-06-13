@@ -7,6 +7,7 @@ export const useTimer = (expiresAt: string) => {
   const currentTime = Date.now() / 1000;
   let diffTime = eventTime - currentTime - 1;
   useEffect(() => {
+    if (!expiresAt) return;
     const id = setInterval(() => {
       if (diffTime <= 0) {
         setIsExpired(true);
@@ -17,8 +18,7 @@ export const useTimer = (expiresAt: string) => {
       const seconds = Math.floor(diffTime % 60);
 
       setTimer(
-        `${minutes < 10 ? "0" + minutes : minutes}:${
-          seconds < 10 ? "0" + seconds : seconds
+        `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds
         }`
       );
       diffTime--;

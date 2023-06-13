@@ -32,7 +32,7 @@ export const usePaymentInfo = (uuid: string | null) => {
   const { availableTokens } = useAvailableTokens();
   const [merchantToken, setMerchantToken] = useState<Token>();
 
-  const [expiresAt, setExpiresAt] = useState("0");
+  const [expiresAt, setExpiresAt] = useState("");
   const { isExpired, timer } = useTimer(expiresAt);
 
   const [info, setInfo] = useState<IPaymentInfo>();
@@ -49,7 +49,7 @@ export const usePaymentInfo = (uuid: string | null) => {
     const token = availableTokens.find((token) => token.name === assetKey);
     const payment =
       info.payment.assets[currentBlockchain][
-        Object.keys(info.payment.assets[currentBlockchain])[0] as Asset_t
+      Object.keys(info.payment.assets[currentBlockchain])[0] as Asset_t
       ];
     setAmountInMerchantToken(
       (BigInt(payment.amount) + BigInt(payment.fee)).toString()
