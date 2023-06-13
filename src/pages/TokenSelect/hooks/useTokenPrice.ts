@@ -38,17 +38,17 @@ export const useTokenPrice = (
       const tokenA = userToken.is_native
         ? WrapAltToken.wrap(ChainId[currentBlockchain])
         : new ERC20(
-            ChainId[currentBlockchain],
-            userToken.contract,
-            userToken.decimals
-          );
+          ChainId[currentBlockchain],
+          userToken.contract,
+          userToken.decimals
+        );
       const tokenB = merchantToken.is_native
         ? WrapAltToken.wrap(ChainId[currentBlockchain])
         : new ERC20(
-            ChainId[currentBlockchain],
-            merchantToken.contract,
-            merchantToken.decimals
-          );
+          ChainId[currentBlockchain],
+          merchantToken.contract,
+          merchantToken.decimals
+        );
       console.log("amountOut ", amountOut);
       router.getRouter(amountOut, tokenA, tokenB).then((response1) => {
         if (response1) {
@@ -85,14 +85,17 @@ export const useTokenPrice = (
             );
             setIsLoading(false);
           })
-          .catch(() => {
-            setIsLoading(false)
-          });
+            .catch(() => {
+              setIsLoading(false)
+            });
+        } else {
+          setIsLoading(false);
+          setAmount("error");
         }
       })
-      .catch(() => {
-        setIsLoading(false);
-      });
+        .catch(() => {
+          setIsLoading(false);
+        });
     } catch (error) {
       setIsLoading(false);
       setAmount("error");
