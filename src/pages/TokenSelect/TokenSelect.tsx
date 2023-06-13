@@ -205,6 +205,17 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     console.log("error", error);
   }, [error, info, assets, merchantToken])
 
+
+  if (info?.payment.status === PaymentStatus.success) {
+    return <StatusComponent status="succsess" message="payment succsess" />
+  } else if (info?.payment.status === PaymentStatus.failed) {
+    return <StatusComponent status="error" message="error" />
+  } else if (info?.payment.status === PaymentStatus.inProgress) {
+    return <StatusComponent status="loading" message="in progress" />
+  } else if (isExpired) {
+    return <StatusComponent status="error" message=" payment expired" />
+  }
+
   return (
     <Panel id="render">
       <PanelHeader separator={false} />
@@ -462,20 +473,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       )}
 
 
-      {info?.payment.status === PaymentStatus.success && (
-        <StatusComponent status="succsess" message="payment succsess" />
-      )}
-
-      {info?.payment.status === PaymentStatus.failed && (
-        <StatusComponent status="error" message="error" />
-      )}
-
-      {info?.payment.status === PaymentStatus.inProgress && (
-        <StatusComponent status="loading" message="in progress" />
-      )}
-      {isExpired && (
-        <StatusComponent status="error" message=" payment expired" />
-      )}
 
 
       <CheatCodeListener
