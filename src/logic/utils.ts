@@ -153,5 +153,5 @@ export const roundCryptoAmount = (amount: string) => {
     floatIndex++
   }
   while (floatIndex < amount.length && amount[floatIndex] === "0")
-  return parseFloat(amount).toFixed(floatIndex - index - 1)
+  return (parseFloat(amount).toFixed(floatIndex - index) ?? "calculation error")
 }
