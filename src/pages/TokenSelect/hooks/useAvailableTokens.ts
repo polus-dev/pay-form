@@ -4,7 +4,6 @@ import {
   Asset_t,
   Blockchain_t,
   WrappedToken,
-  WrappedTokenToToken,
 } from "../../../store/api/endpoints/types";
 import { useAppSelector } from "../../../store/hooks";
 import { IAssets } from "../../../store/api/endpoints/asset/Asset.interface";
@@ -25,7 +24,7 @@ export const useAvailableTokens = () => {
   const { data: assets, isLoading } = useGetAssetsQuery();
 
   useEffect(() => {
-    if (assets) {
+    if (assets && currentBlockchain) {
       const f = (key: string) => predicate(key, assets, currentBlockchain);
       setAvailableTokens(
         Object.keys(assets)
@@ -39,12 +38,12 @@ export const useAvailableTokens = () => {
               type: assets[name][currentBlockchain].is_native
                 ? "Native"
                 : WrappedToken[name]
-                ? "Wrapped"
-                : name.includes("usdc") ||
-                  name.includes("usdt") ||
-                  name.includes("dai")
-                ? "Stable"
-                : "Other",
+                  ? "Wrapped"
+                  : name.includes("usdc") ||
+                    name.includes("usdt") ||
+                    name.includes("dai")
+                    ? "Stable"
+                    : "Other",
             };
           })
       );

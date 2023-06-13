@@ -51,6 +51,12 @@ export const QRCodePayment = (props: AllType) => {
   });
 
   useEffect(() => {
+
+    if (!currentBlockchain) {
+      throw new Error("currentBlockchain is not defined");
+    }
+
+
     if (availableAssets) {
       const {
         assetName,

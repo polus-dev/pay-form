@@ -198,18 +198,24 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       setProgress(0);
     }
   }, [isConnected]);
+  useEffect(() => {
+    console.log("assets", assets);
+    console.log("merchantToken", merchantToken);
+    console.log("info", info);
+    console.log("error", error);
+  }, [error, info, assets, merchantToken])
 
   return (
     <Panel id="render">
       <PanelHeader separator={false} />
-      {!isExpired && !error && info && assets && merchantToken ? (
+      {!isExpired && !error && info && assets ? (
         <div className={`pay-block smart-line ${smartLineStatus}`}>
           <div className="slide-in-bck-center">
             <div className="domain-block">
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString())} ${merchantToken.name.toUpperCase() ?? ""
+                  <span>{`${merchantToken ? roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString()) : "select"} ${merchantToken ? merchantToken.name.toUpperCase() : "network"
                     }`}</span>
                 </div>
               </div>
@@ -364,7 +370,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   chain &&
                   merchantToken &&
                   props.userToken &&
-                  currentView === ViewVariant.PROCESS_BLOCK ? (
+                  currentView === ViewVariant.PROCESS_BLOCK && currentBlockchain ? (
                   <div>
                     <ProcessBlock
                       id={"all1"}

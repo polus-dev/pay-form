@@ -42,7 +42,9 @@ export const usePaymentInfo = (uuid: string | null) => {
   const [merchantAddress, setMerchantAddress] = useState("");
 
   useEffect(() => {
+    debugger
     if (!info || !availableTokens.length) return;
+    if (!currentBlockchain) throw new Error("usePaymentInfo: No blockchain");
     const assetKey = Object.keys(
       info.payment.assets[currentBlockchain]
     )[0] as Asset_t;
@@ -59,7 +61,7 @@ export const usePaymentInfo = (uuid: string | null) => {
     setMerchantAddress(payment.address);
     if (!token) throw new Error("usePaymentInfo: Token not found");
     setMerchantToken(token);
-  }, [currentBlockchain, info]);
+  }, [currentBlockchain, info, availableTokens]);
 
   useEffect(() => {
     setIsLoading(true);

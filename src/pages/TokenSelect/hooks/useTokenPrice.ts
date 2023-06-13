@@ -24,6 +24,7 @@ export const useTokenPrice = (
 
   useEffect(() => {
     if (!userToken || !merchantToken || !amountOut || isLoading) return;
+    if (!currentBlockchain) throw new Error("useTokenPrice: No blockchain");
     try {
       if (userToken.contract === merchantToken.contract) {
         setAmount(

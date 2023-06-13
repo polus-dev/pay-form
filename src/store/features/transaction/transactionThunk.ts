@@ -9,7 +9,6 @@ import {
 import {
   SwapOptions,
   SwapRouter,
-  UniswapTrade,
 } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
 import { PaymentHelper } from "../../../logic/payment";
@@ -104,8 +103,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
               contractType === "permit"
                 ? helper.PermitAddress
                 : contractType === "router"
-                ? helper.RouterAddress
-                : helper.PolusAddress,
+                  ? helper.RouterAddress
+                  : helper.PolusAddress,
               ethers.constants.MaxUint256,
             ],
           });
