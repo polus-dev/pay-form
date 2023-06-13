@@ -340,7 +340,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     {isTokenPriceLoading ? (
                       <Spinner size="regular" />
                     ) : (
-                      `Pay ${roundCryptoAmount(amount)} ${
+                      `Pay ${amount ? roundCryptoAmount(amount) : ""} ${
                         props.userToken?.name.toUpperCase() ?? ""
                       }`
                     )}
