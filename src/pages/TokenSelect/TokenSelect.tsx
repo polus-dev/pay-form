@@ -37,12 +37,13 @@ import {
 import {
   activateConnection,
   deactivateConnection,
+  setCurrentBlockchain,
 } from "../../store/features/connection/connectionSlice";
 import { useTour } from "@reactour/tour";
 import { setVisibleGuideButton } from "../../store/features/guide/guideSlice";
 import { ViewVariant, setView } from "../../store/features/view/viewSlice";
 import { useGetAssetsQuery } from "../../store/api/endpoints/asset/Asset";
-import { ChainId } from "../../store/api/endpoints/types";
+import { ChainId, ChainIdToName } from "../../store/api/endpoints/types";
 import { usePaymentInfo } from "./hooks/usePaymentInfo";
 import { useAvailableTokens } from "./hooks/useAvailableTokens";
 import { Token } from "../../store/api/types";
@@ -50,6 +51,8 @@ import { QRCodePayment } from "../../components/QRCodePayment";
 import { useTokenPrice } from "./hooks/useTokenPrice";
 import { ProcessBlock } from "../../components/ProcessBlock";
 import { ethers } from "ethers";
+import { PaymentStatus } from "../../store/api/endpoints/payment/Payment.interface";
+import { StatusComponent } from "../../components/StatusComponent";
 
 interface MainProps {
   id: string;
@@ -101,7 +104,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const { setCurrentStep } = useTour();
 
   const [ready, setReady] = React.useState<boolean>(false);
-  const [payed, setPayed] = React.useState<boolean>(false);
 
   const [cheatCode, setCheatCode] = React.useState(false);
 
@@ -127,11 +129,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   const [progress, setProgress] = React.useState<number>(0);
 
 
-  useEffect(() => {
-    if (info) {
-      setDefaultChain(ChainId[Object.keys(info.payment.assets)[0]])
-    }
-  }, [info])
+  // useEffect(() => {
+  //   if (info) {
+  //     setDefaultChain(ChainId[Object.keys(info.payment.assets)[0]])
+  //   }
+  // }, [info])
 
   useEffect(() => {
     if (address && info && Object.keys(info.payment.assets).some(c => ChainId[c] === chain?.id)) {
@@ -200,15 +202,14 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   return (
     <Panel id="render">
       <PanelHeader separator={false} />
-
-      {!error && info && assets ? (
+      {!isExpired && !error && info && assets && merchantToken ? (
         <div className={`pay-block smart-line ${smartLineStatus}`}>
           <div className="slide-in-bck-center">
             <div className="domain-block">
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals).toString())} ${merchantToken?.name.toUpperCase() ?? ""
+                  <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString())} ${merchantToken.name.toUpperCase() ?? ""
                     }`}</span>
                 </div>
               </div>
@@ -263,7 +264,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   <Icon28ChevronDownOutline />
                 </div>
 
-                {isActiveConnection && (
+                {isConnected && (
                   <>
                     <div className="text-one">Choose currency</div>
                     <span className="guid__step--3">
@@ -395,7 +396,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   />
                 )}
 
-                {payed ? (
+                {info.payment.status === PaymentStatus.success ? (
                   <Button
                     stretched
                     size="l"
@@ -415,6 +416,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                       abortRef.current();
                       dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT));
                       dispatch(setView(ViewVariant.EVM));
+                      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id] ?? "polygon"))
                     }}
                   >
                     Cancel
@@ -453,46 +455,23 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
         </div>
       )}
 
-      {error ? (
-        <div
-          className={`pay-block smart-line ${error.code === 1005 || error.code === 1002
-            ? "smart-line-error-color"
-            : error.code === 1003
-              ? "smart-line-succsess-color"
-              : "smart-line-loading-color"
-            } `}
-        >
-          <div
-            className="slide-in-bck-center"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "column",
-            }}
-          >
-            {error.code === 1003 ? <Icon28CheckCircleFill /> : null}
 
-            {error.code === 1004 ? (
-              <Spinner size="large" style={{ margin: "20px 0" }} />
-            ) : null}
-            {error.code !== 1004 && error.code !== 1003 ? (
-              <Icon28WarningTriangleOutline fill="var(--vkui--color_background_negative)" />
-            ) : null}
-            <span style={{ margin: "16px 0" }}>{error.message}</span>
-          </div>
-          {info?.payment ? (
-            <Button
-              stretched
-              size="l"
-              className="btn-connect"
-              style={{ backgroundImage: `url(${btn})` }}
-              href={info.merchant.success_redirect_url}
-            >
-              Back to store
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
+      {info?.payment.status === PaymentStatus.success && (
+        <StatusComponent status="succsess" message="payment succsess" />
+      )}
+
+      {info?.payment.status === PaymentStatus.failed && (
+        <StatusComponent status="error" message="error" />
+      )}
+
+      {info?.payment.status === PaymentStatus.inProgress && (
+        <StatusComponent status="loading" message="in progress" />
+      )}
+      {isExpired && (
+        <StatusComponent status="error" message=" payment expired" />
+      )}
+
+
       <CheatCodeListener
         code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {

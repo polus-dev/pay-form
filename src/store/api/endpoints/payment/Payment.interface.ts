@@ -15,7 +15,7 @@ export interface IPayment {
   created_at: string;
 }
 
-enum PaymentStatus {
+export enum PaymentStatus {
   pending = "pending",
   success = "success",
   failed = "failed",
