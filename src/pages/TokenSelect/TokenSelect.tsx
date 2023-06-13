@@ -333,7 +333,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     className="btn-connect"
                     disabled={
                       !isActiveConnection ||
-                      isTokenPriceLoading
+                      isTokenPriceLoading || !props.userToken
                     }
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
