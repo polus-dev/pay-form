@@ -8,6 +8,9 @@ export const useTimer = (expiresAt: string) => {
   let diffTime = eventTime - currentTime - 1;
   useEffect(() => {
     if (!expiresAt) return;
+    if (diffTime <= 0) {
+      setIsExpired(true);
+    }
     const id = setInterval(() => {
       if (diffTime <= 0) {
         setIsExpired(true);
