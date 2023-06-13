@@ -20,8 +20,8 @@ import { Route, Routes } from "react-router-dom";
 
 import { Icon24Dismiss, Icon28DoneOutline } from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork} from "wagmi";
-import { useWeb3Modal, Web3Button , Web3NetworkSwitch} from "@web3modal/react";
+import { useNetwork, useSwitchNetwork } from "wagmi";
+import { useWeb3Modal, Web3Button } from "@web3modal/react";
 
 import "@vkontakte/vkui/dist/vkui.css";
 import "./style.css";
@@ -38,6 +38,7 @@ import { setCurrentBlockchain } from "./store/features/connection/connectionSlic
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
 import { Token } from "./store/api/types";
+import { ChainForWeb3Modal } from "./types/ChainForWeb3Modal";
 
 const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
 const isDesktop = window.innerWidth >= 800;
@@ -52,9 +53,9 @@ export const App: React.FC = () => {
     {
       payment_id: getParameterByName("uuid")!,
     },
-    { pollingInterval: 1000 }
+    // { pollingInterval: 1000 }
   );
-  const { switchNetwork} = useSwitchNetwork();
+  const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
 
   const [userToken, setUserToken] = useState<Token>();
@@ -67,7 +68,7 @@ export const App: React.FC = () => {
   const [popout, setPopout] = React.useState<any>(null);
   const { chain } = useNetwork();
 
-  const { open } = useWeb3Modal();
+  const { open, setDefaultChain } = useWeb3Modal();
 
   const consoleLog = (data: string, type?: boolean) =>
     setSnackbar(
@@ -90,7 +91,6 @@ export const App: React.FC = () => {
   }
 
   useEffect(() => {
-    // @ts-ignore
     if (chain) {
       dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]));
     }
@@ -176,8 +176,8 @@ export const App: React.FC = () => {
                         ) {
                           switchNetwork(ChainId[chainLocal]);
                           dispatch(setView(ViewVariant.EVM));
-                          dispatch(setCurrentBlockchain(chainLocal));
                         } else {
+                          setDefaultChain(ChainForWeb3Modal[chainLocal]);
                           open();
                         }
                         setActiveModal(null);

@@ -23,7 +23,7 @@ import arbitrumLogo from "../../img/arbitrum.svg";
 import btn from "../../img/btn.jpg";
 import wc from "../../img/wc.svg";
 
-import {supportedChain } from "../../logic/tokens";
+import { supportedChain } from "../../logic/tokens";
 
 import { ListToken, ListTokens, PolusChainId } from "../../logic/payment";
 import { getParameterByName, getAsset, roundCryptoAmount } from "../../logic/utils";
@@ -109,10 +109,10 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     (state) => state.smartLine.smartLineStatus
   );
 
-  const abortRef = useRef(() => {});
+  const abortRef = useRef(() => { });
 
 
-  const { open, close, setDefaultChain} = useWeb3Modal();
+  const { open, close, setDefaultChain } = useWeb3Modal();
   const { address, isConnected } = useAccount();
 
   const { chain } = useNetwork();
@@ -134,10 +134,10 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [info])
 
   useEffect(() => {
-    if (address && props.userToken) {
+    if (address && info && Object.keys(info.payment.assets).some(c => ChainId[c] === chain?.id)) {
       dispatch(activateConnection())
     }
-  }, [address, props.userToken])
+  }, [address, info, chain])
 
 
   useEffect(() => {
@@ -208,8 +208,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                    <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals).toString())} ${
-                      merchantToken?.name.toUpperCase() ?? ""
+                  <span>{`${roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken?.decimals).toString())} ${merchantToken?.name.toUpperCase() ?? ""
                     }`}</span>
                 </div>
               </div>
@@ -264,58 +263,62 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   <Icon28ChevronDownOutline />
                 </div>
 
-                <div className="text-one">Choose currency</div>
-                <span className="guid__step--3">
-                  <div className="btn-block">
-                    {availableTokens.slice(0, 3).map((token, key) => (
-                      <Button
-                        key={key}
-                        size="l"
-                        stretched
-                        className="fix-forpadding"
-                        onClick={() => props.setUserToken(token)}
-                        mode={
-                          props.userToken?.name === token.name
-                            ? "primary"
-                            : "outline"
-                        }
-                        before={<img src={token.image} className="logo-cur" />}
-                      >
-                        {token.name.toUpperCase()}
-                      </Button>
-                    ))}
-                  </div>
+                {isActiveConnection && (
+                  <>
+                    <div className="text-one">Choose currency</div>
+                    <span className="guid__step--3">
+                      <div className="btn-block">
+                        {availableTokens.slice(0, 3).map((token, key) => (
+                          <Button
+                            key={key}
+                            size="l"
+                            stretched
+                            className="fix-forpadding"
+                            onClick={() => props.setUserToken(token)}
+                            mode={
+                              props.userToken?.name === token.name
+                                ? "primary"
+                                : "outline"
+                            }
+                            before={<img src={token.image} className="logo-cur" />}
+                          >
+                            {token.name.toUpperCase()}
+                          </Button>
+                        ))}
+                      </div>
 
-                  <div className="btn-block">
-                    {availableTokens.slice(3, 5).map((token, key) => (
-                      <Button
-                        key={key}
-                        size="l"
-                        stretched
-                        className="fix-forpadding"
-                        onClick={() => props.setUserToken(token)}
-                        mode={
-                          props.userToken?.name === token.name
-                            ? "primary"
-                            : "outline"
-                        }
-                        before={<img src={token.image} className="logo-cur" />}
-                      >
-                        {token.name.toUpperCase()}
-                      </Button>
-                    ))}
-                    <Button
-                      size="l"
-                      className="guid__step--4"
-                      stretched
-                      onClick={() => props.setActiveModal("coins")}
-                      mode={"outline"}
-                      before={<img src={otherLogo} width={24} />}
-                    >
-                      Other
-                    </Button>
-                  </div>
-                </span>
+                      <div className="btn-block">
+                        {availableTokens.slice(3, 5).map((token, key) => (
+                          <Button
+                            key={key}
+                            size="l"
+                            stretched
+                            className="fix-forpadding"
+                            onClick={() => props.setUserToken(token)}
+                            mode={
+                              props.userToken?.name === token.name
+                                ? "primary"
+                                : "outline"
+                            }
+                            before={<img src={token.image} className="logo-cur" />}
+                          >
+                            {token.name.toUpperCase()}
+                          </Button>
+                        ))}
+                        <Button
+                          size="l"
+                          className="guid__step--4"
+                          stretched
+                          onClick={() => props.setActiveModal("coins")}
+                          mode={"outline"}
+                          before={<img src={otherLogo} width={24} />}
+                        >
+                          Other
+                        </Button>
+                      </div>
+                    </span>
+                  </>
+                )}
                 <span className="timer-block">
                   The invoice is active in {timer}
                 </span>
@@ -329,10 +332,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     className="btn-connect"
                     disabled={
                       !isActiveConnection ||
-                      isTokenPriceLoading ||
-                      !Object.keys(info.payment.assets).some(
-                        (c) => ChainId[c] === chain?.id
-                      )
+                      isTokenPriceLoading
                     }
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
@@ -340,8 +340,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     {isTokenPriceLoading ? (
                       <Spinner size="regular" />
                     ) : (
-                      `Pay ${amount ? roundCryptoAmount(amount) : ""} ${
-                        props.userToken?.name.toUpperCase() ?? ""
+                      `Pay ${amount ? roundCryptoAmount(amount) : ""} ${props.userToken?.name.toUpperCase() ?? ""
                       }`
                     )}
                   </Button>
@@ -361,10 +360,10 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : (
               <div className="proccess-block">
                 {address &&
-                chain &&
-                merchantToken &&
-                props.userToken &&
-                currentView === ViewVariant.PROCESS_BLOCK ? (
+                  chain &&
+                  merchantToken &&
+                  props.userToken &&
+                  currentView === ViewVariant.PROCESS_BLOCK ? (
                   <div>
                     <ProcessBlock
                       id={"all1"}
@@ -456,13 +455,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
       {error ? (
         <div
-          className={`pay-block smart-line ${
-            error.code === 1005 || error.code === 1002
-              ? "smart-line-error-color"
-              : error.code === 1003
+          className={`pay-block smart-line ${error.code === 1005 || error.code === 1002
+            ? "smart-line-error-color"
+            : error.code === 1003
               ? "smart-line-succsess-color"
               : "smart-line-loading-color"
-          } `}
+            } `}
         >
           <div
             className="slide-in-bck-center"
