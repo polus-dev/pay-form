@@ -190,10 +190,12 @@ export const getPathFromCallData = (calldata: string) => {
 
 // TODO: make better
 export const roundCryptoAmount = (amount: string) => {
-  let index = amount.indexOf(".");
+  const index = amount.indexOf(".");
+  let floatIndex = index + 1;
+  // debugger
   do {
-    index++
+    floatIndex++
   }
-  while (++index < amount.length && amount[index] === "0")
-  return parseFloat(amount).toFixed(index - 1)
+  while (floatIndex < amount.length && amount[floatIndex] === "0")
+  return parseFloat(amount).toFixed(floatIndex - index - 1)
 }
