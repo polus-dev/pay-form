@@ -1,49 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 
-import { ListToken, ListTokens } from "./payment";
-import { fullListTokens } from "./tokens";
-
-export async function getPriceToken(token: string): Promise<ListTokens> {
-  const _listTokens = fullListTokens;
-  const listNamed = [];
-
-  try {
-    const data = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${token}&vs_currencies=usd`
-    );
-    debugger;
-    if (!data) return _listTokens;
-    if (!data.data) return _listTokens;
-
-    window.localStorage.setItem("price", JSON.stringify(data.data));
-
-    for (let i = 0; i < _listTokens.length; i++) {
-      if (data.data[_listTokens[i].namePrice]) {
-        _listTokens[i].price = data.data[_listTokens[i].namePrice].usd;
-      } else {
-        console.log("not found coin ", _listTokens[i].namePrice);
-      }
-    }
-  } catch (err) {
-    const data = JSON.parse(window.localStorage.getItem("price") ?? "[]");
-    if (!data) {
-      return _listTokens;
-    }
-
-    for (let i = 0; i < _listTokens.length; i++) {
-      // console.log(data.data[_listTokens[i][i2].namePrice])
-      if (data[_listTokens[i].namePrice]) {
-        _listTokens[i].price = data[_listTokens[i].namePrice].usd;
-      } else {
-        console.log("not found coin ", _listTokens[i].namePrice);
-      }
-    }
-  }
-
-  return _listTokens;
-}
 
 export function getParameterByName(
   name: string,
@@ -192,7 +149,6 @@ export const getPathFromCallData = (calldata: string) => {
 export const roundCryptoAmount = (amount: string) => {
   const index = amount.indexOf(".");
   let floatIndex = index + 1;
-  // debugger
   do {
     floatIndex++
   }

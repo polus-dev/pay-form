@@ -416,7 +416,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                       abortRef.current();
                       dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT));
                       dispatch(setView(ViewVariant.EVM));
-                      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id] ?? "polygon"))
+                      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]))
                     }}
                   >
                     Cancel

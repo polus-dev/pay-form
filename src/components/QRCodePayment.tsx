@@ -28,7 +28,6 @@ interface AllType {
 }
 
 const getPaymentAssetInfo = (payment: Payment, blockchain: Blockchain_t) => {
-  debugger
   const assetName = Object.keys(payment.assets[blockchain])[0] as Asset_t;
   const paymentInfo = payment.assets[blockchain][assetName];
   return { assetName, paymentInfo };
@@ -103,12 +102,12 @@ export const QRCodePayment = (props: AllType) => {
             paymentInfoState.assetName === "usdt"
               ? usdtLogo
               : paymentInfoState.assetName === "btc"
-              ? bitcoin
-              : paymentInfoState.assetName === "ltc"
-              ? litecoin
-              : paymentInfoState.assetName === "doge"
-              ? dogecoin
-              : ""
+                ? bitcoin
+                : paymentInfoState.assetName === "ltc"
+                  ? litecoin
+                  : paymentInfoState.assetName === "doge"
+                    ? dogecoin
+                    : ""
           }
         />
       </h2>
