@@ -88,7 +88,13 @@ const ADDRESS_POLUS = {
   arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda",
 };
 
-const QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
+const QUOTER_ADDRESS = {
+  polygon: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+  ethereum: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+  bsc: "0x78D78E420Da98ad378D7799bE8f4AF69033EB077",
+  arbitrum: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+
+};
 
 export class CustomProvider {
   protected provider: ethers.providers.JsonRpcProvider;
@@ -123,7 +129,8 @@ export class CustomProvider {
       "0x2f80bb1d" +
       coder.encode(["bytes", "uint256"], [path, amountOut]).replace("0x", "");
     const result = await this.provider.call({
-      to: QUOTER_ADDRESS,
+      // @ts-ignore
+      to: QUOTER_ADDRESS[this.blockchain],
       data,
     });
     return BigNumber.from(result);
