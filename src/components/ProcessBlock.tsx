@@ -20,9 +20,10 @@ interface ProcessBlockProps {
   feeAddress: string;
   merchantAddress: string;
   merchantAmount: string;
+  expireAt: string;
 }
 
-export const ProcessBlock = ({merchantToken, userToken, consoleLog, uuid, userAddress, blockchain, amount, feeAddress,fee, merchantAddress,merchantAmount, ...props}: ProcessBlockProps) => {
+export const ProcessBlock = ({ merchantToken, userToken, consoleLog, uuid, userAddress, blockchain, amount, feeAddress, fee, merchantAddress, merchantAmount, expireAt, ...props }: ProcessBlockProps) => {
   const stages = useAppSelector((state) => state.transaction.stages);
   const dispatch = useAppDispatch();
   useEffect(() => {
@@ -38,7 +39,8 @@ export const ProcessBlock = ({merchantToken, userToken, consoleLog, uuid, userAd
         fee,
         feeAddress,
         merchantAddress,
-        merchantAmount
+        merchantAmount,
+        expireAt,
       })
     );
     props.setAbortTransaction.current = abortPromise.abort;
@@ -54,7 +56,7 @@ export const ProcessBlock = ({merchantToken, userToken, consoleLog, uuid, userAd
           isLoading={stage.status === StageStatus.LOADING}
           isSuccsess={stage.status === StageStatus.SUCCESS}
           isPending={stage.status === StageStatus.PENDING}
-          onClick={() => {}}
+          onClick={() => { }}
         />
       ))}
     </div>

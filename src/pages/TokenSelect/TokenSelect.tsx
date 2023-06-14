@@ -82,6 +82,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     fee,
     merchantAmount,
     merchantAddress,
+    expireAt
   } = usePaymentInfo(getParameterByName("uuid"));
   const { amount, isLoading: isTokenPriceLoading } = useTokenPrice(
     props.userToken,
@@ -397,6 +398,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                       blockchain={currentBlockchain}
                       userAddress={address}
                       setAbortTransaction={abortRef}
+                      expireAt={expireAt}
                     />
                   </div>
                 ) : (

@@ -32,8 +32,8 @@ export const usePaymentInfo = (uuid: string | null) => {
   const { availableTokens } = useAvailableTokens();
   const [merchantToken, setMerchantToken] = useState<Token>();
 
-  const [expiresAt, setExpiresAt] = useState("");
-  const { isExpired, timer } = useTimer(expiresAt);
+  const [expireAt, setExpireAt] = useState("");
+  const { isExpired, timer } = useTimer(expireAt);
 
   const [info, setInfo] = useState<IPaymentInfo>();
   const [amountInMerchantToken, setAmountInMerchantToken] = useState("0");
@@ -74,7 +74,7 @@ export const usePaymentInfo = (uuid: string | null) => {
     }
     getPaymentInfo({ payment_id: uuid }).then((paymentResponse) => {
       if (paymentResponse.data && !paymentResponse.error) {
-        setExpiresAt(paymentResponse.data.expires_at);
+        setExpireAt(paymentResponse.data.expires_at);
         getMerchantInfo({ merchant_id: paymentResponse.data.merchant_id }).then(
           (merchantResponse) => {
             if (merchantResponse.data && !merchantResponse.error) {
@@ -111,5 +111,6 @@ export const usePaymentInfo = (uuid: string | null) => {
     fee,
     merchantAmount,
     merchantAddress,
+    expireAt,
   };
 };
