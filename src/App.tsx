@@ -39,6 +39,8 @@ import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
 import { Token } from "./store/api/types";
 import { ChainForWeb3Modal } from "./types/ChainForWeb3Modal";
+import { PaymentStatus } from "./store/api/endpoints/payment/Payment.interface";
+import { StatusComponent } from "./components/StatusComponent";
 
 const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
 const isDesktop = window.innerWidth >= 800;
@@ -53,7 +55,7 @@ export const App: React.FC = () => {
     {
       payment_id: getParameterByName("uuid")!,
     },
-    // { pollingInterval: 1000 }
+    { pollingInterval: 1000 }
   );
   const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
@@ -338,6 +340,16 @@ export const App: React.FC = () => {
       </ModalPage>
     </ModalRoot>
   );
+
+
+
+  if (paymentInfo?.status === PaymentStatus.success) {
+    return <StatusComponent status="succsess" message="payment succsess" />
+  } else if (paymentInfo?.status === PaymentStatus.failed) {
+    return <StatusComponent status="error" message="error" />
+  } else if (paymentInfo?.status === PaymentStatus.inProgress) {
+    return <StatusComponent status="loading" message="in progress" />
+  }
 
   return (
     <AppRoot>

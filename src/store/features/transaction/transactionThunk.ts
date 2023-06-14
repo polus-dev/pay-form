@@ -46,6 +46,7 @@ interface IPayload {
   merchantAddress: string;
   feeAddress: string;
   merchantAmount: string;
+  expireAt: string;
 }
 
 export interface ThunkConfig {
@@ -226,7 +227,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
       const feeData = await helper.fetchFeeData();
 
       if (helper.Context === "universal router") {
-        const deadline = ~~(Date.now() / 1000) + 60 * 32;
+        const deadline = Math.round(new Date(payload.expireAt).getTime() / 1000);
         const swapOptions: SwapOptions = {
           slippageTolerance: new Percent("90", "100"),
           deadlineOrPreviousBlockhash: deadline.toString(),

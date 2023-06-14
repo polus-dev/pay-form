@@ -52,7 +52,6 @@ export const useTokenPrice = (
         );
       console.log("amountOut ", amountOut);
       router.getRouter(amountOut, tokenA, tokenB).then((response1) => {
-        debugger
         if (response1) {
           const provider = new CustomProvider(currentBlockchain);
           const deadline = ~~(Date.now() / 1000) + 60 * 32;

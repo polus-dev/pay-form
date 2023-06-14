@@ -207,13 +207,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [error, info, assets, merchantToken])
 
 
-  if (info?.payment.status === PaymentStatus.success) {
-    return <StatusComponent status="succsess" message="payment succsess" />
-  } else if (info?.payment.status === PaymentStatus.failed) {
-    return <StatusComponent status="error" message="error" />
-  } else if (info?.payment.status === PaymentStatus.inProgress) {
-    return <StatusComponent status="loading" message="in progress" />
-  } else if (isExpired) {
+  if (isExpired) {
     return <StatusComponent status="error" message=" payment expired" />
   }
 
