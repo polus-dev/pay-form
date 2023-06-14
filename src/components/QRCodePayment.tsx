@@ -136,7 +136,7 @@ export const QRCodePayment = (props: AllType) => {
             borderRadius: "16px",
             background: "#fff",
           }}
-          value={`tron:${paymentInfoState.address}?value=${paymentInfoState.amount}`}
+          value={`${currentBlockchain}:${paymentInfoState.address}?value=${paymentInfoState.amount}`}
         />
 
         <div>
