@@ -53,7 +53,7 @@ export const RPCprovider: RPCproviderType[] = [
   },
   {
     name: "bsc",
-    url: "https://rpc.ankr.com/bsc",
+    url: "https://bsc-dataseed1.binance.org/",
     id: 56,
     coin: "BNB",
     nano: 8,
@@ -117,6 +117,7 @@ export class CustomProvider {
     path: string,
     amountOut: string
   ): Promise<BigNumber> {
+    debugger
     const coder = new ethers.utils.AbiCoder();
     const data =
       "0x2f80bb1d" +
@@ -187,8 +188,8 @@ export class PaymentHelper extends CustomProvider {
       type === "permit"
         ? this.PermitAddress
         : type === "polus"
-        ? this.PolusAddress
-        : this.RouterAddress;
+          ? this.PolusAddress
+          : this.RouterAddress;
 
     if (!to) throw new Error("checkAllowance:to address is undefined");
 

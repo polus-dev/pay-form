@@ -42,7 +42,6 @@ export const usePaymentInfo = (uuid: string | null) => {
   const [merchantAddress, setMerchantAddress] = useState("");
 
   useEffect(() => {
-    debugger
     if (!info || !availableTokens.length) return;
     if (!currentBlockchain) throw new Error("usePaymentInfo: No blockchain");
     const assetKey = Object.keys(

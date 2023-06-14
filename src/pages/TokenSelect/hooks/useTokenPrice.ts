@@ -52,6 +52,7 @@ export const useTokenPrice = (
         );
       console.log("amountOut ", amountOut);
       router.getRouter(amountOut, tokenA, tokenB).then((response1) => {
+        debugger
         if (response1) {
           const provider = new CustomProvider(currentBlockchain);
           const deadline = ~~(Date.now() / 1000) + 60 * 32;
@@ -86,7 +87,8 @@ export const useTokenPrice = (
             );
             setIsLoading(false);
           })
-            .catch(() => {
+            .catch((e) => {
+              console.error(e)
               setIsLoading(false)
             });
         } else {
@@ -94,10 +96,12 @@ export const useTokenPrice = (
           setAmount("error");
         }
       })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e)
           setIsLoading(false);
         });
     } catch (error) {
+      console.error(error)
       setIsLoading(false);
       setAmount("error");
     }

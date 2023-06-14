@@ -323,7 +323,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                             {token.name.toUpperCase()}
                           </Button>
                         ))}
-                        <Button
+                        {availableTokens.length ? <Button
                           size="l"
                           className="guid__step--4"
                           stretched
@@ -332,7 +332,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                           before={<img src={otherLogo} width={24} />}
                         >
                           Other
-                        </Button>
+                        </Button> : null}
                       </div>
                     </span>
                   </>

@@ -91,10 +91,12 @@ export const App: React.FC = () => {
   }
 
   useEffect(() => {
-    if (chain) {
+    if (chain && paymentInfo && paymentInfo.blockchains.some((blockchain) => ChainId[blockchain] === chain.id)) {
       dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]));
+    } else {
+      dispatch(setCurrentBlockchain(null));
     }
-  }, [chain]);
+  }, [chain, paymentInfo]);
 
 
   // useEffect(() => {

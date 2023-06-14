@@ -22,7 +22,7 @@ export const connectionSlice = createSlice({
         deactivateConnection: (state) => {
             state.isActive = false;
         },
-        setCurrentBlockchain: (state, action: PayloadAction<Blockchain_t>) => {
+        setCurrentBlockchain: (state, action: PayloadAction<Blockchain_t | null>) => {
             state.currentBlockchain = action.payload
         }
     },
