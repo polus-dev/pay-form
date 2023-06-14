@@ -105,7 +105,7 @@ export const useTokenPrice = (
       setIsLoading(false);
       setAmount("error");
     }
-  }, [currentBlockchain, userToken, merchantToken, amountOut]);
+  }, [userToken, merchantToken, amountOut]);
 
   return { amount, isLoading };
 };
