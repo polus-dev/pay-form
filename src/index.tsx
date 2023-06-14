@@ -16,9 +16,10 @@ import {
 } from "@web3modal/ethereum";
 
 import { Web3Modal } from "@web3modal/react";
+import btn from "./img/btn.jpg";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { mainnet, polygon, arbitrum, bsc} from "wagmi/chains";
+import { mainnet, polygon, arbitrum, bsc } from "wagmi/chains";
 
 import { App } from "./App";
 import { Provider } from "react-redux";
@@ -82,7 +83,37 @@ ReactDOM.render(
                   popover: (base) => ({
                     ...base,
                     backgroundColor: "#18181e",
+                    borderRadius: 8,
+                    boxShadow: "0 0 20px rgba(0, 0, 0, 0.2)",
+                    color: "#fff",
+                    justifyContent: "center",
+
+
                   }),
+                  button: (base) => ({
+                    ...base,
+                    // background: "linear-gradient(235deg, #5ddcff, #3c67e3 43%, #4e00c2)",
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    padding: "8px 16px",
+                    textTransform: "uppercase",
+                    border: "none",
+                    boxShadow: "0 0 20px rgba(0, 0, 0, 0.2)",
+                    color: "#fff",
+                  }),
+                  close: (base) => ({
+                    ...base,
+                    // color: "#fff",
+                    display: "none",
+                  }),
+                  dot: (base) => ({
+                    ...base,
+                  }),
+                  arrow: (base) => ({
+                    ...base,
+                  }),
+
                 }}
               >
                 <App />
