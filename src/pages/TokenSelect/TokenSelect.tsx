@@ -433,7 +433,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                       abortRef.current();
                       dispatch(setSmartLineStatus(SmartLineStatus.DEFAULT));
                       dispatch(setView(ViewVariant.EVM));
-                      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]))
+                      dispatch(setCurrentBlockchain(chain ? ChainIdToName[chain?.id] : null))
                     }}
                   >
                     Cancel
