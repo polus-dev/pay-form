@@ -224,7 +224,7 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
           text: "Calculate fee",
         })
       );
-      const feeData = await helper.fetchFeeData();
+      // const feeData = await helper.fetchFeeData();
 
       if (helper.Context === "universal router") {
         const deadline = Math.round(new Date(payload.expireAt).getTime() / 1000);
@@ -270,8 +270,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
             to: helper.RouterAddress,
             data,
             value,
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
-            maxFeePerGas: feeData.maxFeePerGas!,
+            // maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
+            // maxFeePerGas: feeData.maxFeePerGas!,
           },
         });
 
@@ -306,8 +306,8 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
               merchantAmount: payload.merchantAmount,
               tokenAddress: isNative ? "" : payload.userToken.contract,
             }),
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
-            maxFeePerGas: feeData.maxFeePerGas!,
+            // maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
+            // maxFeePerGas: feeData.maxFeePerGas!,
           },
         });
 
