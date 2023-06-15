@@ -1,52 +1,67 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 
 import {
   AppRoot,
-  SplitLayout,
-  SplitCol,
-  View,
-  ModalRoot,
+  Card,
+  CardGrid,
+  Div,
   ModalPage,
   ModalPageHeader,
-  PanelHeaderButton,
-  Div,
-  Snackbar,
-  ScreenSpinner,
+  ModalRoot,
   PanelHeader,
-  CardGrid,
-  Card,
+  PanelHeaderButton,
+  ScreenSpinner,
   SimpleCell,
+  SplitCol,
+  SplitLayout,
+  View,
 } from "@vkontakte/vkui";
 import { Route, Routes } from "react-router-dom";
 
-import {
-  Icon24Dismiss,
-  Icon28CancelCircleFillRed,
-  Icon28CheckCircleFill,
-  Icon28DoneOutline,
-} from "@vkontakte/icons";
+import { Icon24Dismiss, Icon28DoneOutline } from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork, useDisconnect, mainnet } from "wagmi";
-import { Web3Button, useWeb3Modal } from "@web3modal/react";
-import { polygon, bsc, arbitrum } from "wagmi/chains";
+import { useNetwork, useSwitchNetwork } from "wagmi";
+import { useWeb3Modal, Web3Button } from "@web3modal/react";
 
 import "@vkontakte/vkui/dist/vkui.css";
 import "./style.css";
 
-import { fullListTokens } from "./logic/tokens";
-
 import logo from "./img/logo.svg";
-import { ListToken, PolusChainId } from "./logic/payment";
 import { QuestionButton } from "./components/ui/QuestionButton/QuestionButton";
 import { useTour } from "@reactour/tour";
-import { useAppSelector } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { useGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
+import { getParameterByName } from "./logic/utils";
+import { Blockchain_t, ChainId, ChainIdToName } from "./store/api/endpoints/types";
+import { setView, ViewVariant } from "./store/features/view/viewSlice";
+import { setCurrentBlockchain } from "./store/features/connection/connectionSlice";
+import { ConsoleLog } from "./components/modals/consoleLog.ts";
+import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
+import { Token } from "./store/api/types";
+import { ChainForWeb3Modal } from "./types/ChainForWeb3Modal";
+import { PaymentStatus } from "./store/api/endpoints/payment/Payment.interface";
+import { StatusComponent } from "./components/StatusComponent";
 
-const MainLazyComponent = lazy(() => import("./pages/main"));
+const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
+const isDesktop = window.innerWidth >= 800;
 
 export const App: React.FC = () => {
   const [activeModal, setActiveModal] = React.useState<any>(null);
   const { setIsOpen } = useTour();
+  const dispatch = useAppDispatch();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
+
+
+
+  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
+    {
+      payment_id: getParameterByName("uuid")!,
+    }
+  );
+  const { switchNetwork } = useSwitchNetwork();
+  const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
+
+  const [userToken, setUserToken] = useState<Token>();
 
   const isActiveConnection = useAppSelector(
     (state) => state.connection.isActive
@@ -56,25 +71,12 @@ export const App: React.FC = () => {
   const [popout, setPopout] = React.useState<any>(null);
   const { chain } = useNetwork();
 
-  const [firstRender, setFirstRender] = React.useState<boolean>(false);
-
-  const chainsA = [polygon, mainnet, arbitrum];
-
-  const { switchNetwork } = useSwitchNetwork();
-
-  const [tron, setTron] = React.useState<boolean>(false);
-
-  const [allowTron, setAllowTron] = React.useState<boolean>(true);
-
-  const { disconnect } = useDisconnect();
-
-  const [seletcToken, setSelectToken] = React.useState<ListToken | undefined>(
-    undefined
-  );
-
   const { open, setDefaultChain } = useWeb3Modal();
 
-  const isDesktop = window.innerWidth >= 800;
+  const consoleLog = (data: string, type?: boolean) =>
+    setSnackbar(
+      <ConsoleLog data={data} type={type} onClose={() => setSnackbar(null)} />
+    );
 
   function openPop() {
     setPopout(<ScreenSpinner state="loading" />);
@@ -91,43 +93,42 @@ export const App: React.FC = () => {
     }
   }
 
-  function consoleLog(data: string, type: boolean = false) {
-    setSnackbar(
-      <Snackbar
-        before={
-          type ? <Icon28CheckCircleFill /> : <Icon28CancelCircleFillRed />
-        }
-        onClose={() => setSnackbar(null)}
-      >
-        {data}
-      </Snackbar>
-    );
-  }
+  useEffect(() => {
+    if (chain && paymentInfo && paymentInfo.blockchains.some((blockchain) => ChainId[blockchain] === chain.id)) {
+      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]));
+    } else {
+      dispatch(setCurrentBlockchain(null));
+    }
+  }, [chain, paymentInfo]);
 
-  function fullFilter(type: "stable" | "native" | "wrap" | "other") {
-    const list = fullListTokens.filter((token) => {
-      if (chain) {
-        return token.address[chain.id as PolusChainId] !== "0";
+
+  // useEffect(() => {
+  //   if (paymentInfo) {
+  //     if (paymentInfo.status === "success") {
+  //       dispatch(setView(ViewVariant.SUCCESS));
+  //     } else if (paymentInfo.status === "failed") {
+  //       dispatch(setView(ViewVariant.ERROR));
+  //     }
+  //   }
+
+  // }, [paymentInfo])
+
+  // useEffect(() => {
+  //   if (availableTokens) {
+  //     setUserToken(availableTokens[0]);
+  //   }
+  // }, [userToken]);
+
+  useEffect(() => {
+    if (paymentInfo) {
+      const h = (blockchain: Blockchain_t) => paymentInfo.blockchains.includes(blockchain);
+      if ((h("bitcoin") || h("dogecoin") || h("litecoin") || h("tron")) && paymentInfo.blockchains.length === 1) {
+        dispatch(setView(ViewVariant.QRCODE));
+        dispatch(setCurrentBlockchain(paymentInfo.blockchains[0]));
       }
-      return true;
-    });
-
-    return list.filter((token) => token.category === type);
-  }
-
-  useEffect(() => {
-    if (!firstRender) {
-      setFirstRender(true);
-
-      // checkAuth()
     }
-  }, []);
 
-  useEffect(() => {
-    if (tron) {
-      disconnect();
-    }
-  }, [tron]);
+  }, [paymentInfo]);
 
   const modalRoot = (
     <ModalRoot activeModal={activeModal}>
@@ -136,7 +137,6 @@ export const App: React.FC = () => {
         className="polus"
         onClose={() => setActiveModal(null)}
         dynamicContentHeight
-        // settlingHeight={100}
         header={
           <ModalPageHeader
             after={
@@ -153,39 +153,46 @@ export const App: React.FC = () => {
       >
         <Div>
           <CardGrid size="l">
-            {chainsA.map((chainLocal, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  after={
-                    chain?.id === chainLocal.id ? <Icon28DoneOutline /> : null
-                  }
-                  onClick={() => {
-                    if (switchNetwork) {
-                      switchNetwork(chainLocal.id);
-                    } else {
-                      setDefaultChain(chainLocal);
-                      open();
-                    }
-                    setActiveModal(null);
-                  }}
-                >
-                  {chainLocal.name}
-                </SimpleCell>
-              </Card>
-            ))}
-            {allowTron ? (
-              <Card>
-                <SimpleCell
-                  after={tron ? <Icon28DoneOutline /> : null}
-                  onClick={() => {
-                    setTron(true);
-                    setActiveModal(null);
-                  }}
-                >
-                  Tron
-                </SimpleCell>
-              </Card>
-            ) : null}
+            {paymentInfo &&
+              paymentInfo.blockchains.map((chainLocal, key) => {
+                return (
+                  <Card key={key}>
+                    <SimpleCell
+                      after={
+                        chain?.id === ChainId[chainLocal] ? (
+                          <Icon28DoneOutline />
+                        ) : null
+                      }
+                      onClick={() => {
+                        if (
+                          chainLocal === "bitcoin" ||
+                          chainLocal === "tron" ||
+                          chainLocal === "litecoin" ||
+                          chainLocal === "dogecoin"
+                        ) {
+                          dispatch(setView(ViewVariant.QRCODE));
+                          dispatch(setCurrentBlockchain(chainLocal));
+                        } else if (
+                          (chainLocal === "bsc" ||
+                            chainLocal === "polygon" ||
+                            chainLocal === "ethereum" ||
+                            chainLocal === "arbitrum") &&
+                          switchNetwork
+                        ) {
+                          switchNetwork(ChainId[chainLocal]);
+                          dispatch(setView(ViewVariant.EVM));
+                        } else {
+                          setDefaultChain(ChainForWeb3Modal[chainLocal]);
+                          open();
+                        }
+                        setActiveModal(null);
+                      }}
+                    >
+                      {chainLocal}
+                    </SimpleCell>
+                  </Card>
+                );
+              })}
           </CardGrid>
         </Div>
       </ModalPage>
@@ -213,119 +220,129 @@ export const App: React.FC = () => {
         <Div>
           <h3>Stable Coin</h3>
           <CardGrid size="m">
-            {fullFilter("stable").map((token, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  onClick={() => {
-                    setSelectToken(token);
-                    setActiveModal(null);
-                  }}
-                  after={
-                    seletcToken?.name === token.name ? (
-                      <Icon28DoneOutline />
-                    ) : null
-                  }
-                  before={
-                    <img
-                      src={token.icon}
-                      style={{ marginRight: "12px" }}
-                      className="logo-cur"
-                    />
-                  }
-                >
-                  {token.name.toUpperCase()}
-                </SimpleCell>
-              </Card>
-            ))}
+            {availableTokens
+              .filter((token) => token.type === "Stable")
+              .map((token, key) => (
+                <Card key={key}>
+                  <SimpleCell
+                    onClick={() => {
+                      setUserToken(token);
+                      setActiveModal(null);
+                    }}
+                    after={
+                      userToken?.name === token.name ? (
+                        <Icon28DoneOutline />
+                      ) : null
+                    }
+                    before={
+                      <img
+                        src={token.image}
+                        style={{ marginRight: "12px" }}
+                        className="logo-cur"
+                      />
+                    }
+                  >
+                    {token.name.toUpperCase()}
+                  </SimpleCell>
+                </Card>
+              ))}
           </CardGrid>
 
           <h3>Native Coin</h3>
           <CardGrid size="m">
-            {fullFilter("native").map((token, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  onClick={() => {
-                    setSelectToken(token);
-                    setActiveModal(null);
-                  }}
-                  after={
-                    seletcToken?.name === token.name ? (
-                      <Icon28DoneOutline />
-                    ) : null
-                  }
-                  before={
-                    <img
-                      src={token.icon}
-                      style={{ marginRight: "12px" }}
-                      className="logo-cur"
-                    />
-                  }
-                >
-                  {token.name.toUpperCase()}
-                </SimpleCell>
-              </Card>
-            ))}
+            {availableTokens
+              .filter((token) => token.type === "Native")
+              .map((token, key) => (
+                <Card key={key}>
+                  <SimpleCell
+                    onClick={() => {
+                      setUserToken(token);
+                      setActiveModal(null);
+                    }}
+                    after={
+                      userToken?.name === token.name ? (
+                        <Icon28DoneOutline />
+                      ) : null
+                    }
+                    before={
+                      <img
+                        src={token.image}
+                        style={{ marginRight: "12px" }}
+                        className="logo-cur"
+                      />
+                    }
+                  >
+                    {token.name.toUpperCase()}
+                  </SimpleCell>
+                </Card>
+              ))}
           </CardGrid>
 
           <h3>Wrapped Coin</h3>
           <CardGrid size="m">
-            {fullFilter("wrap").map((token, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  onClick={() => {
-                    setSelectToken(token);
-                    setActiveModal(null);
-                  }}
-                  after={
-                    seletcToken?.name === token.name ? (
-                      <Icon28DoneOutline />
-                    ) : null
-                  }
-                  before={
-                    <img
-                      src={token.icon}
-                      style={{ marginRight: "12px" }}
-                      className="logo-cur"
-                    />
-                  }
-                >
-                  {token.name.toUpperCase()}
-                </SimpleCell>
-              </Card>
-            ))}
+            {availableTokens
+              .filter((token) => token.type === "Wrapped")
+              .map((token, key) => (
+                <Card key={key}>
+                  <SimpleCell
+                    onClick={() => {
+                      setUserToken(token);
+                      setActiveModal(null);
+                    }}
+                    after={
+                      userToken?.name === token.name ? (
+                        <Icon28DoneOutline />
+                      ) : null
+                    }
+                    before={
+                      <img
+                        src={token.image}
+                        style={{ marginRight: "12px" }}
+                        className="logo-cur"
+                      />
+                    }
+                  >
+                    {token.name.toUpperCase()}
+                  </SimpleCell>
+                </Card>
+              ))}
           </CardGrid>
 
           <h3>Other Coin</h3>
           <CardGrid size="m">
-            {fullFilter("other").map((token, key) => (
-              <Card key={key}>
-                <SimpleCell
-                  onClick={() => {
-                    setSelectToken(token);
-                    setActiveModal(null);
-                  }}
-                  after={
-                    seletcToken?.name === token.name ? (
-                      <Icon28DoneOutline />
-                    ) : null
-                  }
-                  before={
-                    <img
-                      src={token.icon}
-                      style={{ marginRight: "12px" }}
-                      className="logo-cur"
-                    />
-                  }
-                >
-                  {token.name.toUpperCase()}
-                </SimpleCell>
-              </Card>
-            ))}
+            {availableTokens
+              .filter((token) => token.type === "Other")
+              .map((token, key) => (
+                <Card key={key}>
+                  <SimpleCell
+                    onClick={() => {
+                      setUserToken(token);
+                      setActiveModal(null);
+                    }}
+                    after={
+                      userToken?.name === token.name ? (
+                        <Icon28DoneOutline />
+                      ) : null
+                    }
+                    before={
+                      <img
+                        src={token.image}
+                        style={{ marginRight: "12px" }}
+                        className="logo-cur"
+                      />
+                    }
+                  >
+                    {token.name.toUpperCase()}
+                  </SimpleCell>
+                </Card>
+              ))}
           </CardGrid>
         </Div>
       </ModalPage>
     </ModalRoot>
   );
+
+
 
   return (
     <AppRoot>
@@ -339,7 +356,7 @@ export const App: React.FC = () => {
             separator={false}
             before={
               <a href="https://poluspay.com" target="_blank">
-                <img src={logo} />
+                <img src={logo} alt="logo" />
               </a>
             }
             after={isActiveConnection && <Web3Button balance="show" />}
@@ -368,11 +385,8 @@ export const App: React.FC = () => {
                           isDesktop={isDesktop}
                           openPop={openPop}
                           closePop={closePop}
-                          setTron={setTron}
-                          tron={tron}
-                          seletcToken={seletcToken}
-                          setSelectToken={setSelectToken}
-                          setAllowTron={setAllowTron}
+                          setUserToken={setUserToken}
+                          userToken={userToken}
                         />
                       </Suspense>
                     </span>

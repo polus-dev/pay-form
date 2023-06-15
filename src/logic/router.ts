@@ -289,7 +289,6 @@ export class CustomRouter {
             console.error("resp.route.length === 0")
             return undefined
         }
-
         const path = resp?.trade.swaps[0].route.path
         if (!path) {
             return undefined

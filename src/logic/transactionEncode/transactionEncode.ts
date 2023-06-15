@@ -1,5 +1,5 @@
 import { NULL_ADDRESS } from "../../constants";
-import { ethers} from "ethers";
+import { ethers } from "ethers";
 import { Command } from "./types/Command";
 import { IEncodeTransfer } from "./types/IEncodeTransfer";
 import { WrapStatus } from "./types/WrapStatus";
@@ -30,7 +30,6 @@ function wrapper(address: string, amount: any): string {
   return encoded;
 }
 
-
 interface IReturnType {
   data: string;
   path?: string;
@@ -46,11 +45,10 @@ export function encodePay({
   asset_amount_decimals,
   fee,
   feeRecipient,
-  universalRouterAddress
+  universalRouterAddress,
 }: IEncodeTransfer): IReturnType {
   // assertAmount(amoun);
-  if (!tokenAddress)
-    tokenAddress = NULL_ADDRESS
+  if (!tokenAddress) tokenAddress = NULL_ADDRESS;
   const data = txData.slice(10);
   let path: string | undefined;
   const types = ["bytes", "bytes[]", "uint256"];
@@ -60,7 +58,8 @@ export function encodePay({
 
   if (context.from === "native" && context.to === "erc20") {
     commands =
-      '0x' + Command.WRAP +
+      "0x" +
+      Command.WRAP +
       (<string>decoded[0]).slice(2) +
       Command.TRANSFER +
       Command.TRANSFER +
@@ -74,10 +73,7 @@ export function encodePay({
       Command.TRANSFER +
       Command.FAKE;
     wrapStatus = WrapStatus.UNWRAP;
-  }
-
-  else {
-
+  } else {
     commands = decoded[0] + Command.TRANSFER + Command.TRANSFER + Command.FAKE;
   }
 
@@ -89,7 +85,10 @@ export function encodePay({
     path = data[3];
     // @ts-ignore
     data[4] = false;
-    const wrap = wrapper('0x0000000000000000000000000000000000000002', "0x8000000000000000000000000000000000000000000000000000000000000000");
+    const wrap = wrapper(
+      "0x0000000000000000000000000000000000000002",
+      "0x8000000000000000000000000000000000000000000000000000000000000000"
+    );
     const encodedData = coder.encode(types, data);
     inputs = [];
     inputs.unshift(wrap, encodedData);
