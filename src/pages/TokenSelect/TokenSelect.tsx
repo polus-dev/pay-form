@@ -53,6 +53,7 @@ import { ProcessBlock } from "../../components/ProcessBlock";
 import { ethers } from "ethers";
 import { PaymentStatus } from "../../store/api/endpoints/payment/Payment.interface";
 import { StatusComponent } from "../../components/StatusComponent";
+import { useGetPaymentByPaymentIdQuery } from "../../store/api/endpoints/payment/Payment";
 
 interface MainProps {
   id: string;
@@ -90,6 +91,16 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     amountInMerchantToken
   );
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
+
+
+  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
+    {
+      payment_id: getParameterByName("uuid")!,
+    },
+    { pollingInterval: 1000 }
+  );
+
+
   /// NEW CODE END
 
   useEffect(() => {
@@ -206,6 +217,15 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     console.log("error", error);
   }, [error, info, assets, merchantToken])
 
+
+
+  if (paymentInfo?.status === PaymentStatus.success) {
+    return <StatusComponent status="succsess" message="payment succsess" />
+  } else if (paymentInfo?.status === PaymentStatus.failed) {
+    return <StatusComponent status="error" message="error" />
+  } else if (paymentInfo?.status === PaymentStatus.inProgress) {
+    return <StatusComponent status="loading" message="in progress" />
+  }
 
   if (isExpired) {
     return <StatusComponent status="error" message=" payment expired" />

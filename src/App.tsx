@@ -51,11 +51,12 @@ export const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
 
+
+
   const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
     {
       payment_id: getParameterByName("uuid")!,
-    },
-    { pollingInterval: 1000 }
+    }
   );
   const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
@@ -342,14 +343,6 @@ export const App: React.FC = () => {
   );
 
 
-
-  if (paymentInfo?.status === PaymentStatus.success) {
-    return <StatusComponent status="succsess" message="payment succsess" />
-  } else if (paymentInfo?.status === PaymentStatus.failed) {
-    return <StatusComponent status="error" message="error" />
-  } else if (paymentInfo?.status === PaymentStatus.inProgress) {
-    return <StatusComponent status="loading" message="in progress" />
-  }
 
   return (
     <AppRoot>
