@@ -130,46 +130,7 @@ export class CustomProvider {
       coder.encode(["bytes", "uint256"], [path, amountOut]).replace("0x", "");
     const result = await this.provider.call({
       // @ts-ignore
-      to: QUOTER_ADDRESS[this.blockchain],
-      data,
-    });
-    return BigNumber.from(result);
-  }
 
-  get RouterAddress() {
-    // @ts-ignore
-    const address = UNIVERSAL_ROUTER[this.blockchain];
-    if (!address) throw new Error("RouterAddress:address is undefined");
-    return address;
-  }
-
-  get PolusAddress() {
-    // @ts-ignore
-    const address = ADDRESS_POLUS[this.blockchain];
-    if (!address) throw new Error("PolusAddress:address is undefined");
-    return address;
-  }
-
-  get PermitAddress() {
-    return PERMIT2_ADDRESS;
-  }
-
-  public async fetchFeeData() {
-    return this.provider.getFeeData();
-  }
-}
-
-export class PaymentHelper extends CustomProvider {
-  // ???
-  time1 = BigInt(~~(Date.now() / 1000) + 60 * 30).toString();
-  time2 = BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString();
-
-  constructor(
-    blockchain: Blockchain_t,
-    public userToken: Token,
-    public merchantToken: Token,
-    public userAddress: string
-  ) {
     super(blockchain);
   }
 

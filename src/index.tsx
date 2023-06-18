@@ -16,10 +16,9 @@ import {
 } from "@web3modal/ethereum";
 
 import { Web3Modal } from "@web3modal/react";
-import btn from "./img/btn.jpg";
 
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { mainnet, polygon, arbitrum, bsc } from "wagmi/chains";
+import { mainnet, polygon, arbitrum, bsc, optimism } from "wagmi/chains";
 
 import { App } from "./App";
 import { Provider } from "react-redux";

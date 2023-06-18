@@ -3,6 +3,7 @@ export type Blockchain_t =
   | "bsc"
   | "ethereum"
   | "polygon"
+  | "optimism"
   | "tron"
   | "bitcoin"
   | "dogecoin"
@@ -23,13 +24,14 @@ export type Asset_t =
   | "ltc"
   | "doge";
 
-type ChainIdEnumUnion = 1 | 56 | 137 | 42161 | -1 | -2;
+type ChainIdEnumUnion = 1 | 56 | 137 | 42161 | -1 | -2 | 10;
 
 export const ChainId: { [key in Blockchain_t]: number } = {
   ethereum: 1,
   bsc: 56,
   polygon: 137,
   arbitrum: 42161,
+  optimism: 10,
   tron: -2,
   bitcoin: -1,
   litecoin: -1,
@@ -41,6 +43,7 @@ export const ChainIdToName: { [key in ChainIdEnumUnion]: Blockchain_t } = {
   56: "bsc",
   137: "polygon",
   42161: "arbitrum",
+  10: "optimism",
   "-2": "tron",
   "-1": "bitcoin",
 };

@@ -6,6 +6,8 @@ import matic from "./matic.svg";
 import usdc from "./usdc.svg";
 import usdt from "./usdt.svg";
 import weth from "./weth.svg";
+import ltc from "./litecoin.svg";
+import doge from "./Dogecoin.svg";
 import { Asset_t } from "../store/api/endpoints/types";
 
 export type TokenImagesType = {
@@ -25,4 +27,6 @@ export const TokenImages: Readonly<TokenImagesType> = {
   wbtc: btc,
   weth,
   wmatic: matic,
+  ltc,
+  doge
 };
