@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   AppRoot,
@@ -39,10 +39,8 @@ import { ConsoleLog } from "./components/modals/consoleLog.ts";
 import { useAvailableTokens } from "./pages/TokenSelect/hooks/useAvailableTokens";
 import { Token } from "./store/api/types";
 import { ChainForWeb3Modal } from "./types/ChainForWeb3Modal";
-import { PaymentStatus } from "./store/api/endpoints/payment/Payment.interface";
-import { StatusComponent } from "./components/StatusComponent";
+import Main from "./pages/TokenSelect/TokenSelect";
 
-const MainLazyComponent = lazy(() => import("./pages/TokenSelect/TokenSelect"));
 const isDesktop = window.innerWidth >= 800;
 
 export const App: React.FC = () => {
@@ -93,39 +91,14 @@ export const App: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    if (chain && paymentInfo && paymentInfo.blockchains.some((blockchain) => ChainId[blockchain] === chain.id)) {
-      dispatch(setCurrentBlockchain(ChainIdToName[chain?.id]));
-    } else {
-      dispatch(setCurrentBlockchain(null));
-    }
-  }, [chain, paymentInfo]);
-
-
-  // useEffect(() => {
-  //   if (paymentInfo) {
-  //     if (paymentInfo.status === "success") {
-  //       dispatch(setView(ViewVariant.SUCCESS));
-  //     } else if (paymentInfo.status === "failed") {
-  //       dispatch(setView(ViewVariant.ERROR));
-  //     }
-  //   }
-
-  // }, [paymentInfo])
-
-  // useEffect(() => {
-  //   if (availableTokens) {
-  //     setUserToken(availableTokens[0]);
-  //   }
-  // }, [userToken]);
 
   useEffect(() => {
     if (paymentInfo) {
       const h = (blockchain: Blockchain_t) => paymentInfo.blockchains.includes(blockchain);
       if ((h("bitcoin") || h("dogecoin") || h("litecoin") || h("tron")) && paymentInfo.blockchains.length === 1) {
         dispatch(setView(ViewVariant.QRCODE));
-        dispatch(setCurrentBlockchain(paymentInfo.blockchains[0]));
       }
+      dispatch(setCurrentBlockchain(paymentInfo.blockchains[0]));
     }
 
   }, [paymentInfo]);
@@ -176,13 +149,15 @@ export const App: React.FC = () => {
                           (chainLocal === "bsc" ||
                             chainLocal === "polygon" ||
                             chainLocal === "ethereum" ||
-                            chainLocal === "arbitrum") &&
-                          switchNetwork
+                            chainLocal === "arbitrum" ||
+                            chainLocal === "optimism"
+                          )
                         ) {
-                          switchNetwork(ChainId[chainLocal]);
+                          // switchNetwork(ChainId[chainLocal]);
+                          dispatch(setCurrentBlockchain(chainLocal));
                           dispatch(setView(ViewVariant.EVM));
-                        } else {
                           setDefaultChain(ChainForWeb3Modal[chainLocal]);
+                        } else {
                           open();
                         }
                         setActiveModal(null);
@@ -377,18 +352,16 @@ export const App: React.FC = () => {
                 element={
                   <View activePanel={"main1"} id="view">
                     <span id="main1">
-                      <Suspense fallback={<ScreenSpinner state="loading" />}>
-                        <MainLazyComponent
-                          id="main1"
-                          setActiveModal={setActiveModal}
-                          consoleLog={consoleLog}
-                          isDesktop={isDesktop}
-                          openPop={openPop}
-                          closePop={closePop}
-                          setUserToken={setUserToken}
-                          userToken={userToken}
-                        />
-                      </Suspense>
+                      <Main
+                        id="main1"
+                        setActiveModal={setActiveModal}
+                        consoleLog={consoleLog}
+                        isDesktop={isDesktop}
+                        openPop={openPop}
+                        closePop={closePop}
+                        setUserToken={setUserToken}
+                        userToken={userToken}
+                      />
                     </span>
                   </View>
                 }
