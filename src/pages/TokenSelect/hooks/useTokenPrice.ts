@@ -69,7 +69,6 @@ export const useTokenPrice = (
           const path = getPathFromCallData(calldata);
 
           provider.getValueForSwap(path, amountOut).then((response2) => {
-            debugger
             console.log(response2);
             dispatch(
               setPathTrade({
@@ -77,7 +76,6 @@ export const useTokenPrice = (
                 path: response1.trade,
               })
             );
-            debugger
             setAmount(
               ethers.utils.commify(
                 ethers.utils.formatUnits(

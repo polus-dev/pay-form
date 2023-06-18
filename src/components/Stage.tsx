@@ -15,7 +15,7 @@ export const Stage = (props: StageProps) => {
   return (
     <SimpleCell
       disabled={props.disabled}
-      onClick={props.onClick}
+      onClick={() => props.isError && props.onClick()}
       style={props.isPending ? { opacity: 0.5 } : {}}
       after={props.isError ? <Icon28RefreshOutline /> : null}
       before={

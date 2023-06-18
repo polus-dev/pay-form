@@ -1,12 +1,13 @@
 import { BigNumber, ethers } from "ethers";
 import { AllowanceTransfer, PermitSingle } from "@uniswap/permit2-sdk";
+import { erc20ABI } from '@wagmi/core'
 
 import permit2 from "../permit_abi.json";
-import token_abi from "../token_abi.json";
 import { CustomRouter } from "./router";
-import { Asset_t, Blockchain_t, ChainId } from "../store/api/endpoints/types";
+import { Blockchain_t, ChainId } from "../store/api/endpoints/types";
 import { Token as ERC20, WETH9 } from "@uniswap/sdk-core";
 import { Token } from "../store/api/types";
+import { ADDRESS_POLUS, PERMIT2_ADDRESS, RPCprovider, UNIVERSAL_ROUTER, QUOTER_ADDRESS } from "./config";
 
 export type Permit2AllowanceType = {
   amount: bigint;
@@ -20,98 +21,13 @@ interface DataSign {
   value: any;
 }
 
-export interface ListToken {
-  name: Asset_t;
-  icon: any;
-  decimals: number;
-  address: string;
-  amountIn: number;
-  namePrice: string;
-  isNative: boolean;
-  category: "stable" | "native" | "wrap" | "other";
-}
-
-export type PolusChainId = keyof ListToken["address"];
-
-export type ListTokens = ListToken[];
-
-export interface RPCproviderType {
-  url: string;
-  id: number;
-  name: string;
-  coin: string;
-  nano: number;
-}
-
-export const RPCprovider: RPCproviderType[] = [
-  {
-    name: "mainnet",
-    url: "https://eth-mainnet.g.alchemy.com/v2/Q59fIJ1Y_uMFPE2Zg7cCdI182EgN9rvD",
-    id: 1,
-    coin: "ETH",
-    nano: 8,
-  },
-  {
-    name: "bsc",
-    url: "https://bsc-dataseed1.binance.org/",
-    id: 56,
-    coin: "BNB",
-    nano: 8,
-  },
-  {
-    name: "polygon",
-    url: "https://polygon-mainnet.g.alchemy.com/v2/jIKi9Sm2Wr8kjGissTbEQlRu_-aWaFM5",
-    id: 137,
-    coin: "MATIC",
-    nano: 18,
-  },
-  {
-    name: "arbitrum",
-    url: "https://arb-mainnet.g.alchemy.com/v2/IbMFg1XQzi-eyshgzQ3hTD338aylLB4g",
-    id: 42161,
-    coin: "ETH",
-    nano: 18,
-  },
-];
-
-const PERMIT2_ADDRESS = "0x000000000022d473030f116ddee9f6b43ac78ba3";
-const UNIVERSAL_ROUTER = {
-  polygon: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
-  ethereum: "0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B",
-  bsc: "0x5Dc88340E1c5c6366864Ee415d6034cadd1A9897",
-  arbitrum: "0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5",
-};
-const ADDRESS_POLUS = {
-  polygon: "0x377f05e398e14f2d2efd9332cdb17b27048ab266",
-  ethereum: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
-  bsc: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
-  arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda",
-};
-
-const QUOTER_ADDRESS = {
-  polygon: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
-  ethereum: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
-  bsc: "0x78D78E420Da98ad378D7799bE8f4AF69033EB077",
-  arbitrum: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
-
-};
 
 export class CustomProvider {
   protected provider: ethers.providers.JsonRpcProvider;
 
   constructor(protected blockchain: Blockchain_t) {
-    let networkRpcUrl: string;
-    if (blockchain === "polygon") {
-      networkRpcUrl = RPCprovider[2].url;
-    } else if (blockchain === "ethereum") {
-      networkRpcUrl = RPCprovider[0].url;
-    } else if (blockchain === "bsc") {
-      networkRpcUrl = RPCprovider[1].url;
-    } else if (blockchain === "arbitrum") {
-      networkRpcUrl = RPCprovider[3].url;
-    } else {
-      throw new Error("CustomProvider:networkRpcUrl is undefined");
-    }
+    let networkRpcUrl = RPCprovider.find(el => el.name === blockchain)?.url;
+    if (!networkRpcUrl) throw new Error("networkRpcUrl is undefined");
     this.provider = new ethers.providers.JsonRpcProvider(networkRpcUrl);
   }
 
@@ -123,21 +39,59 @@ export class CustomProvider {
     path: string,
     amountOut: string
   ): Promise<BigNumber> {
-    debugger
     const coder = new ethers.utils.AbiCoder();
     const data =
       "0x2f80bb1d" +
       coder.encode(["bytes", "uint256"], [path, amountOut]).replace("0x", "");
     const result = await this.provider.call({
       // @ts-ignore
+      to: QUOTER_ADDRESS[this.blockchain],
+      data,
+    });
+    return BigNumber.from(result);
+  }
 
+  get RouterAddress() {
+    // @ts-ignore
+    const address = UNIVERSAL_ROUTER[this.blockchain];
+    if (!address) throw new Error("RouterAddress:address is undefined");
+    return address;
+  }
+
+  get PolusAddress() {
+    // @ts-ignore
+    const address = ADDRESS_POLUS[this.blockchain];
+    if (!address) throw new Error("PolusAddress:address is undefined");
+    return address;
+  }
+
+  get PermitAddress() {
+    return PERMIT2_ADDRESS;
+  }
+
+  public async fetchFeeData() {
+    return this.provider.getFeeData();
+  }
+}
+
+export class PaymentHelper extends CustomProvider {
+  // ???
+  time1 = BigInt(~~(Date.now() / 1000) + 60 * 30).toString();
+  time2 = BigInt(~~(Date.now() / 1000) + 60 * 60 * 24 * 30).toString();
+
+  constructor(
+    blockchain: Blockchain_t,
+    public userToken: Token,
+    public merchantToken: Token,
+    public userAddress: string
+  ) {
     super(blockchain);
   }
 
   get userTokenContract() {
     return new ethers.Contract(
       this.userToken.contract,
-      token_abi,
+      erc20ABI,
       this.provider
     );
   }
@@ -211,12 +165,6 @@ export class CustomProvider {
 
   public async getSwapPath(amount: string) {
     const router = new CustomRouter(this.networkId);
-    const userToken = this.userToken.is_native
-      ? WETH9[this.networkId]
-      : this.userToken;
-    const merchantToken = this.merchantToken.is_native
-      ? WETH9[this.networkId]
-      : this.merchantToken;
     return await router.getRouter(
       amount,
       new ERC20(

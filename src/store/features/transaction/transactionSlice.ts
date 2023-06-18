@@ -1,6 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { startPay } from "./transactionThunk";
+import { PaymentHelper } from "../../../logic/payment";
+import { Token } from "../../api/types";
+import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
+import { Blockchain_t } from "../../api/endpoints/types";
 
 export interface TransactionState {
   stages: [IApproveStage, ISignStage, ISendStage];
@@ -9,13 +13,46 @@ export interface TransactionState {
     path: any; // TODO
     amount?: string;
   };
+  helper?: PaymentHelper;
+  consoleLog?: (message: any, type?: boolean) => void;
+  amount?: string;
 }
 
-export type StageId = 0 | 1 | 2;
+export const enum StageId {
+  APPROVE,
+  SIGN,
+  SEND,
+}
 
-interface IApproveStage extends IStage {}
-interface ISignStage extends IStage {}
-interface ISendStage extends IStage {}
+
+interface IApproveStage extends IStage { }
+interface ISignStage extends IStage { }
+interface ISendStage extends IStage {
+  uuid?: string;
+  fee?: string;
+  merchantAddress?: string;
+  feeAddress?: string;
+  merchantAmount?: string;
+  expireAt?: string;
+  signature?: Permit2Permit
+}
+
+
+export interface IPayload {
+  userToken: Token;
+  merchantToken: Token;
+  consoleLog: (message: any, type?: boolean) => void;
+  blockchain: Blockchain_t;
+  uuid: string;
+  userAddress: string;
+  amount: string;
+  fee: string;
+  merchantAddress: string;
+  feeAddress: string;
+  merchantAmount: string;
+  expireAt: string;
+  targetStages?: StageId[];
+}
 
 export const enum StageStatus {
   PENDING,
@@ -51,28 +88,41 @@ export const transactionSlice = createSlice({
   name: "transaction",
   initialState,
   reducers: {
+    initTransactionState: (state, action: PayloadAction<IPayload>) => {
+      // TODO: refactor
+      state.amount = action.payload.amount;
+      const h = new PaymentHelper(action.payload.blockchain, action.payload.userToken, action.payload.merchantToken, action.payload.userAddress)
+      // @ts-ignore
+      state.helper = h
+      state.consoleLog = action.payload.consoleLog;
+      state.stages[StageId.SEND].uuid = action.payload.uuid;
+      state.stages[StageId.SEND].fee = action.payload.fee;
+      state.stages[StageId.SEND].merchantAddress = action.payload.merchantAddress;
+      state.stages[StageId.SEND].feeAddress = action.payload.feeAddress;
+      state.stages[StageId.SEND].merchantAmount = action.payload.merchantAmount;
+      state.stages[StageId.SEND].expireAt = action.payload.expireAt;
+    },
     setStageText: (
       state,
-      action: PayloadAction<{ stageId: StageId; text: string }>
+      action: PayloadAction<string>
     ) => {
-      state.stages[action.payload.stageId].statusText = action.payload.text;
+      state.stages[state.currentStage].statusText = action.payload;
     },
     setStageStatus: (
       state,
-      action: PayloadAction<{ stageId: StageId; status: StageStatus }>
+      action: PayloadAction<StageStatus>
     ) => {
-      state.stages[action.payload.stageId].status = action.payload.status;
+      state.stages[state.currentStage].status = action.payload;
     },
     setStage: (
       state,
       action: PayloadAction<{
-        stageId: StageId;
         status: StageStatus;
         text: string;
       }>
     ) => {
-      state.stages[action.payload.stageId].status = action.payload.status;
-      state.stages[action.payload.stageId].statusText = action.payload.text;
+      state.stages[state.currentStage].status = action.payload.status;
+      state.stages[state.currentStage].statusText = action.payload.text;
     },
     nextStage: (state) => {
       state.currentStage += 1;
@@ -83,14 +133,19 @@ export const transactionSlice = createSlice({
     ) => {
       state.pathTrade = action.payload;
     },
+
+    setPermitSignature: (state, action: PayloadAction<Permit2Permit>) => {
+      state.stages[StageId.SEND].signature = action.payload;
+    },
+
   },
   extraReducers: (builder) => {
     builder
-      .addCase(startPay.pending, (state) => {
+      .addCase(startPay.pending, (state, action) => {
+        if (action.meta.arg.targetStages) return;
         state.currentStage = initialState.currentStage;
         state.stages = initialState.stages;
       })
-      // .addCase(startPay.fulfilled, state => { })
       .addCase(startPay.rejected, (state, action) => {
         if (action.error.name === "AbortError") {
           return;
@@ -109,5 +164,7 @@ export const {
   setStage,
   nextStage,
   setPathTrade,
+  setPermitSignature,
+  initTransactionState,
 } = transactionSlice.actions;
 export default transactionSlice.reducer;

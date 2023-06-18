@@ -9,7 +9,7 @@ import { BigNumber, ethers } from "ethers"
 import JSBI from "jsbi"
 import { AbiType, Address, Bool, Byts, Uint } from "./uwm/types"
 import { Builder, Command } from "./uwm/builder"
-import { RPCprovider } from "./payment"
+import { RPCprovider } from "./config"
 
 type PathArray = (string | number)[]
 
@@ -42,11 +42,8 @@ export class CustomRouter {
     private _builder: Builder
 
     constructor(chainId: number = 137) {
-        let rpc = chainId === 1 ? RPCprovider[0] : null
-        if (!rpc) rpc = chainId === 56 ? RPCprovider[1] : null
-        if (!rpc) rpc = chainId === 137 ? RPCprovider[2] : null // TODO
-        if (!rpc) rpc = chainId === 42161 ? RPCprovider[3] : RPCprovider[2] // TODO
-        // это просто пиздец
+        const rpc = RPCprovider.find(el => el.chainId === chainId)?.url
+        if (!rpc) throw new Error("rpc is undefined")
         this._provider = new Provider(
             rpc,
             chainId
