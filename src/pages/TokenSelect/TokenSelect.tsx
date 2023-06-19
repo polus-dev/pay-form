@@ -1,13 +1,11 @@
-import { Button, Panel, PanelHeader, Spinner, Text, } from "@vkontakte/vkui";
+import { Button, Panel, PanelHeader, Spinner, Text } from "@vkontakte/vkui";
 
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { Web3NetworkSwitch, useWeb3Modal } from "@web3modal/react";
 
 import { useAccount, useNetwork, useSwitchNetwork } from "wagmi";
-import {
-  Icon28ChevronDownOutline,
-} from "@vkontakte/icons";
+import { Icon28ChevronDownOutline } from "@vkontakte/icons";
 
 import logo from "../../img/logo.svg";
 import maticLogo from "../../img/matic.svg";
@@ -19,7 +17,6 @@ import optimismLogo from "../../img/optimism.svg";
 
 import btn from "../../img/btn.jpg";
 import wc from "../../img/wc.svg";
-
 
 import { getParameterByName, roundCryptoAmount } from "../../logic/utils";
 import { CheatCodeListener } from "../../components/CheatCodeListener";
@@ -75,15 +72,14 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     fee,
     merchantAmount,
     merchantAddress,
-    expireAt
+    expireAt,
   } = usePaymentInfo(getParameterByName("uuid"));
-  const { amount, isLoading: isTokenPairPriceLoading, assetName } = useTokenPairPrice(
-    props.userToken,
-    merchantToken,
-    amountInMerchantToken
-  );
+  const {
+    amount,
+    isLoading: isTokenPairPriceLoading,
+    assetName,
+  } = useTokenPairPrice(props.userToken, merchantToken, amountInMerchantToken);
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
-
 
   const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
     {
@@ -91,7 +87,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     },
     { pollingInterval: isExpired ? 0 : 1000 }
   );
-
 
   /// NEW CODE END
 
@@ -101,10 +96,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     (state) => state.connection.currentBlockchain
   );
 
-  const prevBlockchain = useAppSelector(state => state.connection.prevBlockchain);
+  const prevBlockchain = useAppSelector(
+    (state) => state.connection.prevBlockchain
+  );
   const dispatch = useAppDispatch();
   const { setCurrentStep } = useTour();
-
 
   const [cheatCode, setCheatCode] = React.useState(false);
 
@@ -114,7 +110,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
   const abortRef = useRef(() => { });
 
-
   const { open, close } = useWeb3Modal();
   const { address, isConnected } = useAccount();
 
@@ -123,13 +118,12 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     error: switchNetworkError,
     isLoading: isSwitchNetworkLoading,
     pendingChainId,
-    switchNetworkAsync
+    switchNetworkAsync,
   } = useSwitchNetwork();
 
   const { data: assets, isLoading: isAssetsLoading } = useGetAssetsQuery();
 
   const [progress, setProgress] = React.useState<number>(0);
-
 
   useEffect(() => {
     if (error) {
@@ -141,7 +135,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
   }, [error, currentView]);
 
   async function startPay() {
-
     if (!info?.payment) {
       throw new Error("not paymentInfo");
     }
@@ -162,7 +155,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
     dispatch(setView(ViewVariant.PROCESS_BLOCK));
   }
-
 
   useEffect(() => {
     if (!isSwitchNetworkLoading) {
@@ -191,19 +183,18 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     }
   }, [isConnected]);
 
-
   if (!getParameterByName("uuid")) {
-    return <StatusComponent status="error" message="payment uuid not found" />
+    return <StatusComponent status="error" message="payment uuid not found" />;
   } else if (paymentInfo?.status === PaymentStatus.success) {
-    return <StatusComponent status="succsess" message="payment successful" />
+    return <StatusComponent status="succsess" message="payment successful" />;
   } else if (paymentInfo?.status === PaymentStatus.failed) {
-    return <StatusComponent status="error" message="error" />
+    return <StatusComponent status="error" message="error" />;
   } else if (paymentInfo?.status === PaymentStatus.inProgress) {
-    return <StatusComponent status="loading" message="in progress" />
+    return <StatusComponent status="loading" message="in progress" />;
   }
 
   if (isExpired) {
-    return <StatusComponent status="error" message=" payment expired" />
+    return <StatusComponent status="error" message=" payment expired" />;
   }
 
   return (
@@ -212,11 +203,22 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       {!isExpired && !error && info && assets ? (
         <div className={`pay-block smart-line ${smartLineStatus}`}>
           <div className="slide-in-bck-center">
-            < div className="domain-block" >
+            <div className="domain-block">
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  <span>{`${merchantToken ? roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString()) : ""} ${merchantToken ? merchantToken.name.toUpperCase() : ""}`}</span>
+                  <span>{`${merchantToken
+                      ? roundCryptoAmount(
+                        ethers.utils
+                          .formatUnits(
+                            amountInMerchantToken,
+                            merchantToken.decimals
+                          )
+                          .toString()
+                      )
+                      : ""
+                    } ${merchantToken ? merchantToken.name.toUpperCase() : ""
+                    }`}</span>
                 </div>
               </div>
               <span
@@ -225,8 +227,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               >
                 {info.payment.description}
               </span>
-            </div >
-          </div >
+            </div>
+          </div>
           <ProgressBar value={progress} />
           <div>
             {currentView === ViewVariant.EVM ? (
@@ -285,7 +287,9 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                               ? "primary"
                               : "outline"
                           }
-                          before={<img src={token.image} className="logo-cur" />}
+                          before={
+                            <img src={token.image} className="logo-cur" />
+                          }
                         >
                           {token.name.toUpperCase()}
                         </Button>
@@ -305,21 +309,25 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                               ? "primary"
                               : "outline"
                           }
-                          before={<img src={token.image} className="logo-cur" />}
+                          before={
+                            <img src={token.image} className="logo-cur" />
+                          }
                         >
                           {token.name.toUpperCase()}
                         </Button>
                       ))}
-                      {availableTokens.length ? <Button
-                        size="l"
-                        className="guid__step--4"
-                        stretched
-                        onClick={() => props.setActiveModal("coins")}
-                        mode={"outline"}
-                        before={<img src={otherLogo} width={24} />}
-                      >
-                        Other
-                      </Button> : null}
+                      {availableTokens.length ? (
+                        <Button
+                          size="l"
+                          className="guid__step--4"
+                          stretched
+                          onClick={() => props.setActiveModal("coins")}
+                          mode={"outline"}
+                          before={<img src={otherLogo} width={24} />}
+                        >
+                          Other
+                        </Button>
+                      ) : null}
                     </div>
                   </span>
                 </>
@@ -334,16 +342,16 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     stretched
                     size="l"
                     className="btn-connect"
-                    disabled={
-                      isTokenPairPriceLoading || !props.userToken
-                    }
+                    disabled={isTokenPairPriceLoading || !props.userToken}
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
                     {isTokenPairPriceLoading ? (
                       <Spinner size="regular" />
+                    ) : isSwitchNetworkLoading ? (
+                      "switching network..."
                     ) : (
-                      isSwitchNetworkLoading ? "swithing network..." : `Pay ${amount ?? ""} ${assetName ?? ""}`
+                      `Pay ${amount ?? ""} ${assetName ?? ""}`
                     )}
                   </Button>
                 ) : (
@@ -365,7 +373,8 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                   chain &&
                   merchantToken &&
                   props.userToken &&
-                  currentView === ViewVariant.PROCESS_BLOCK && currentBlockchain ? (
+                  currentView === ViewVariant.PROCESS_BLOCK &&
+                  currentBlockchain ? (
                   <div>
                     <ProcessBlock
                       id={"all1"}
@@ -428,9 +437,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
             )}
 
             <small className="small-block">
-              By making a payment, you agree to the <a href="">Terms of Use</a>
+              By making a payment, you agree to the{" "}
+              <a href="https://poluspay.com/terms-of-use">Terms of Use</a>
               <br />
-              and <a href="">Privacy Policy</a>
+              and{" "}
+              <a href="https://poluspay.com/privacy-policy">Privacy Policy</a>
             </small>
 
             <div className="logo-block">
@@ -440,24 +451,22 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               </a>
             </div>
           </div>
-        </div >
+        </div>
       ) : null}
-      {
-        (isLoading || isAvailalbeTokensLoading || isAssetsLoading) && (
-          <div className={`pay-block  smart-line ${smartLineStatus}`}>
-            <div
-              className="slide-in-bck-center"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: "column",
-              }}
-            >
-              <Spinner size="large" style={{ margin: "20px 0" }} />
-            </div>
+      {(isLoading || isAvailalbeTokensLoading || isAssetsLoading) && (
+        <div className={`pay-block  smart-line ${smartLineStatus}`}>
+          <div
+            className="slide-in-bck-center"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <Spinner size="large" style={{ margin: "20px 0" }} />
           </div>
-        )
-      }
+        </div>
+      )}
       <CheatCodeListener
         code={import.meta.env.VITE_REACT_APP_CHEAT_CODE}
         onCheatCodeEntered={() => {
@@ -466,7 +475,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
           props.consoleLog("Cheat code entered", true);
         }}
       />
-    </Panel >
+    </Panel>
   );
 });
 
