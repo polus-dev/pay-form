@@ -163,9 +163,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     dispatch(setView(ViewVariant.PROCESS_BLOCK));
   }
 
-  useEffect(() => {
-    console.log(isSwitchNetworkLoading, pendingChainId, switchNetworkError);
-  }, [isSwitchNetworkLoading, pendingChainId, switchNetworkError]);
 
   useEffect(() => {
     if (!isSwitchNetworkLoading) {
@@ -193,12 +190,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
       setProgress(0);
     }
   }, [isConnected]);
-  useEffect(() => {
-    console.log("assets", assets);
-    console.log("merchantToken", merchantToken);
-    console.log("info", info);
-    console.log("error", error);
-  }, [error, info, assets, merchantToken])
 
 
   if (!getParameterByName("uuid")) {
