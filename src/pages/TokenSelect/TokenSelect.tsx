@@ -89,7 +89,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     {
       payment_id: getParameterByName("uuid")!,
     },
-    { pollingInterval: isExpired ? 0 : 0 }
+    { pollingInterval: isExpired ? 0 : 1000 }
   );
 
 
