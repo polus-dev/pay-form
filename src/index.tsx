@@ -25,7 +25,7 @@ import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { steps } from "./guid/steps";
 
-const chains = [polygon, mainnet, arbitrum, bsc];
+const chains = [polygon, mainnet, arbitrum, bsc, optimism];
 const projectId = import.meta.env.VITE_REACT_APP_PROJECT_ID;
 
 const { provider } = configureChains(chains, [
