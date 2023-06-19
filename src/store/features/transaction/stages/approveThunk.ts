@@ -1,7 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { BigNumber, ethers } from "ethers";
 import { nextStage, setStage, setStageText, StageId, StageStatus } from "../transactionSlice";
-import { ThunkConfig } from "../transactionThunk";
 import { erc20ABI } from '@wagmi/core'
 
 
@@ -10,6 +9,7 @@ import {
   writeContract,
 } from "wagmi/actions";
 import { TransactionError } from "../TransactionError";
+import { ThunkConfig } from "../../../store";
 
 export const approveThunk = createAsyncThunk<any, void, ThunkConfig>(
   "transaction/approveThunk",
@@ -22,7 +22,6 @@ export const approveThunk = createAsyncThunk<any, void, ThunkConfig>(
     const helper = getState().transaction.helper;
 
     if (!helper || !sendAmount || !currentStage) {
-      debugger
       return;
     }
 

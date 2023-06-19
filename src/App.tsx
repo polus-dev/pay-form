@@ -20,7 +20,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { Icon24Dismiss, Icon28DoneOutline } from "@vkontakte/icons";
 
-import { useNetwork, useSwitchNetwork } from "wagmi";
+import { useNetwork } from "wagmi";
 import { useWeb3Modal, Web3Button } from "@web3modal/react";
 
 import "@vkontakte/vkui/dist/vkui.css";
@@ -32,7 +32,7 @@ import { useTour } from "@reactour/tour";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
 import { getParameterByName } from "./logic/utils";
-import { Blockchain_t, ChainId, ChainIdToName } from "./store/api/endpoints/types";
+import { Blockchain_t, ChainId } from "./store/api/endpoints/types";
 import { setView, ViewVariant } from "./store/features/view/viewSlice";
 import { setCurrentBlockchain } from "./store/features/connection/connectionSlice";
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
@@ -56,8 +56,8 @@ export const App: React.FC = () => {
       payment_id: getParameterByName("uuid")!,
     }
   );
-  const { switchNetwork } = useSwitchNetwork();
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
+  const currentBlockchain = useAppSelector(state => state.connection.currentBlockchain)
 
   const [userToken, setUserToken] = useState<Token>();
 
@@ -132,7 +132,7 @@ export const App: React.FC = () => {
                   <Card key={key}>
                     <SimpleCell
                       after={
-                        chain?.id === ChainId[chainLocal] ? (
+                        currentBlockchain === chainLocal ? (
                           <Icon28DoneOutline />
                         ) : null
                       }

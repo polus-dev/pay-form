@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { setStage, setStageText, StageId, StageStatus } from "../transactionSlice";
-import { ThunkConfig } from "../transactionThunk";
 import {
   prepareSendTransaction,
   sendTransaction,
@@ -14,10 +13,10 @@ import { Percent } from "@uniswap/sdk-core";
 import { encodePay } from "../../../../logic/transactionEncode/transactionEncode";
 import { BigNumber } from "ethers";
 import { doPayThroughPolusContract } from "../../../../logic/transactionEncode/doPayThroughPolusContract";
+import { ThunkConfig } from "../../../store";
 export const sendThunk = createAsyncThunk<any, void, ThunkConfig>(
   "transaction/sendThunk",
   async (_, { getState, dispatch, rejectWithValue }) => {
-    debugger
     const currentStage = () => getState().transaction.currentStage;
     const sendAmount =
       getState().transaction.pathTrade.amount || getState().transaction.amount;

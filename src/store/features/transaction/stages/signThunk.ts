@@ -1,12 +1,12 @@
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { nextStage, setPermitSignature, setStage, setStageText, StageStatus } from "../transactionSlice";
-import { ThunkConfig } from "../transactionThunk";
 import { Permit2Permit } from "@uniswap/universal-router-sdk/dist/utils/permit2";
 
 import {
   signTypedData,
 } from "wagmi/actions";
+import { ThunkConfig } from "../../../store";
 
 export const signThunk = createAsyncThunk<any, void, ThunkConfig>(
 

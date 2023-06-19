@@ -7,6 +7,7 @@ import { paymentApi } from "./api/endpoints/payment/Payment";
 import { merchantApi } from "./api/endpoints/merchant/Merchant";
 import viewSlice from "./features/view/viewSlice";
 import { assetApi } from "./api/endpoints/asset/Asset";
+import tokenPairPriceSlice from "./features/tokenPairPrice/tokenPairPriceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     connection: connectionSlice,
     guide: guideSlice,
     view: viewSlice,
+    tokenPairPrice: tokenPairPriceSlice,
     [paymentApi.reducerPath]: paymentApi.reducer,
     [merchantApi.reducerPath]: merchantApi.reducer,
     [assetApi.reducerPath]: assetApi.reducer,
@@ -26,6 +28,10 @@ export const store = configureStore({
       assetApi.middleware
     ),
 });
+
+export interface ThunkConfig {
+  state: RootState;
+}
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

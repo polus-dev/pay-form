@@ -7,7 +7,6 @@ import {
   StageStatus,
 } from "./transactionSlice";
 import { TransactionError } from "./TransactionError";
-import { RootState } from "../../../store/store";
 import {
   setSmartLineStatus,
   SmartLineStatus,
@@ -15,10 +14,8 @@ import {
 import { approveThunk } from "./stages/approveThunk";
 import { signThunk } from "./stages/signThunk";
 import { sendThunk } from "./stages/sendThunk";
+import { ThunkConfig } from "../../store";
 
-export interface ThunkConfig {
-  state: RootState;
-}
 
 
 const thunks = [approveThunk, signThunk, sendThunk] as const;
@@ -31,7 +28,6 @@ export const startPay = createAsyncThunk<any, IPayload, ThunkConfig>(
         return rejectWithValue("Aborted");
       });
       if (payload.targetStages) {
-        debugger
         for (const stageId of payload.targetStages) {
           await dispatch(thunks[stageId]()).unwrap();
           return

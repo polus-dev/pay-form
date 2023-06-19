@@ -42,13 +42,14 @@ import { usePaymentInfo } from "./hooks/usePaymentInfo";
 import { useAvailableTokens } from "./hooks/useAvailableTokens";
 import { Token } from "../../store/api/types";
 import { QRCodePayment } from "../../components/QRCodePayment";
-import { useTokenPrice } from "./hooks/useTokenPrice";
 import { ProcessBlock } from "../../components/ProcessBlock";
 import { ethers } from "ethers";
 import { PaymentStatus } from "../../store/api/endpoints/payment/Payment.interface";
 import { StatusComponent } from "../../components/StatusComponent";
 import { useGetPaymentByPaymentIdQuery } from "../../store/api/endpoints/payment/Payment";
 import { ChainId } from "../../store/api/endpoints/types";
+import { userTokenPairPriceSlice } from "../../store/features/tokenPairPrice/tokenPairPriceSlice";
+import { useTokenPairPrice } from "./hooks/useTokenPairPrice";
 
 interface MainProps {
   id: string;
@@ -76,7 +77,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     merchantAddress,
     expireAt
   } = usePaymentInfo(getParameterByName("uuid"));
-  const { amount, isLoading: isTokenPriceLoading } = useTokenPrice(
+  const { amount, isLoading: isTokenPairPriceLoading, assetName } = useTokenPairPrice(
     props.userToken,
     merchantToken,
     amountInMerchantToken
@@ -93,10 +94,6 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
 
 
   /// NEW CODE END
-
-  useEffect(() => {
-    console.log(isTokenPriceLoading);
-  }, [isTokenPriceLoading]);
 
   const isVisibleGuideButton = useAppSelector((state) => state.guide.isVisible);
   const currentView = useAppSelector((state) => state.view.currentView);
@@ -228,8 +225,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  <span>{`${merchantToken ? roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString()) : "select"} ${merchantToken ? merchantToken.name.toUpperCase() : "network"
-                    }`}</span>
+                  <span>{`${merchantToken ? roundCryptoAmount(ethers.utils.formatUnits(amountInMerchantToken, merchantToken.decimals).toString()) : ""} ${merchantToken ? merchantToken.name.toUpperCase() : ""}`}</span>
                 </div>
               </div>
               <span
@@ -348,16 +344,15 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     size="l"
                     className="btn-connect"
                     disabled={
-                      isTokenPriceLoading || !props.userToken
+                      isTokenPairPriceLoading || !props.userToken
                     }
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
-                    {isTokenPriceLoading ? (
+                    {isTokenPairPriceLoading ? (
                       <Spinner size="regular" />
                     ) : (
-                      isSwitchNetworkLoading ? "swithing network..." : `Pay ${amount ? roundCryptoAmount(amount) : ""} ${props.userToken?.name.toUpperCase() ?? ""
-                        }`
+                      isSwitchNetworkLoading ? "swithing network..." : `Pay ${amount ?? ""} ${assetName ?? ""}`
                     )}
                   </Button>
                 ) : (
