@@ -23,7 +23,7 @@
     "@ethersproject/providers": "^5.7.2",
     "@reactour/tour": "^3.4.0",
     "@reduxjs/toolkit": "^1.9.5",
-    "@sentry/react": "^7.50.0",
+    "@sentry/react": "^7.55.2",
     "@types/react-copy-to-clipboard": "^5.0.4",
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/sdk-core": "^3.1.1",
