@@ -10,22 +10,27 @@ export const RPCprovider: RPCproviderType[] = [
   {
     name: "ethereum",
     url: "https://eth-mainnet.g.alchemy.com/v2/Q59fIJ1Y_uMFPE2Zg7cCdI182EgN9rvD",
-    chainId: ChainId.ethereum
+    chainId: ChainId.ethereum,
   },
   {
     name: "bsc",
     url: "https://bsc-dataseed1.binance.org/",
-    chainId: ChainId.bsc
+    chainId: ChainId.bsc,
   },
   {
     name: "polygon",
     url: "https://polygon-mainnet.g.alchemy.com/v2/jIKi9Sm2Wr8kjGissTbEQlRu_-aWaFM5",
-    chainId: ChainId.polygon
+    chainId: ChainId.polygon,
   },
   {
     name: "arbitrum",
     url: "https://arb-mainnet.g.alchemy.com/v2/IbMFg1XQzi-eyshgzQ3hTD338aylLB4g",
-    chainId: ChainId.arbitrum
+    chainId: ChainId.arbitrum,
+  },
+  {
+    name: "optimism",
+    url: "https://rpc.optimism.gateway.fm",
+    chainId: ChainId.optimism,
   },
 ];
 
@@ -42,7 +47,7 @@ export const ADDRESS_POLUS = {
   ethereum: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
   bsc: "0x25adcda8324c7081b0f7eaa052df04e076694d62",
   arbitrum: "0x910e31052Ddc7A444b6B2a6A877dc71c9A021bda",
-  optimism: "0x2bd0a4277B94B3dA535419712433e135FA9273C1"
+  optimism: "0x2bd0a4277B94B3dA535419712433e135FA9273C1",
 };
 
 export const QUOTER_ADDRESS = {
@@ -50,5 +55,5 @@ export const QUOTER_ADDRESS = {
   ethereum: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
   bsc: "0x78D78E420Da98ad378D7799bE8f4AF69033EB077",
   arbitrum: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
-  optimism: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
+  optimism: "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
 };
