@@ -1,8 +1,8 @@
-import { createAsyncThunk } from "@reduxjs/toolkit"
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ethers } from "ethers";
 import { CustomRouter } from "../../../logic/router";
 import { ChainId } from "../../api/endpoints/types";
-import { Token } from "../../api/types"
+import { Token } from "../../api/types";
 import { Percent, Token as ERC20 } from "@uniswap/sdk-core";
 import { CustomProvider, WrapAltToken } from "../../../logic/payment";
 import { SwapOptions, SwapRouter } from "@uniswap/universal-router-sdk";
@@ -12,42 +12,55 @@ import { ITokenPairPriceState } from "./tokenPairPriceSlice";
 import { setPathTrade } from "../transaction/transactionSlice";
 
 interface IPayload {
-  userToken: Token,
-  merchantToken: Token,
-  amountOut: string
+  userToken: Token;
+  merchantToken: Token;
+  amountOut: string;
 }
 
-interface ITokenPairPriceReturnType extends Required<Omit<ITokenPairPriceState, "isLoading">> { }
+interface ITokenPairPriceReturnType
+  extends Required<Omit<ITokenPairPriceState, "isLoading">> {}
 
-export const tokenPairPriceThunk = createAsyncThunk<ITokenPairPriceReturnType, IPayload, ThunkConfig>(
-  'tokenPairPriceThunk/fetch',
+export const tokenPairPriceThunk = createAsyncThunk<
+  ITokenPairPriceReturnType,
+  IPayload,
+  ThunkConfig
+>(
+  "tokenPairPriceThunk/fetch",
   async (payload, { rejectWithValue, getState, dispatch }) => {
-
+    debugger;
     if (payload.userToken.contract === payload.merchantToken.contract) {
       return {
         assetName: payload.userToken.name.toUpperCase(),
-        amount: roundCryptoAmount(ethers.utils.commify(ethers.utils.formatUnits(payload.amountOut, payload.userToken.decimals)))
-      }
+        amount: roundCryptoAmount(
+          ethers.utils.commify(
+            ethers.utils.formatUnits(
+              payload.amountOut,
+              payload.userToken.decimals
+            )
+          )
+        ),
+      };
     }
     const currentBlockchain = getState().connection.currentBlockchain;
-    if (!currentBlockchain) return rejectWithValue("useTokenPrice: No blockchain") as any;
+    if (!currentBlockchain)
+      return rejectWithValue("useTokenPrice: No blockchain") as any;
 
     const router = new CustomRouter(ChainId[currentBlockchain]);
     const tokenA = payload.userToken.is_native
       ? WrapAltToken.wrap(ChainId[currentBlockchain])
       : new ERC20(
-        ChainId[currentBlockchain],
-        payload.userToken.contract,
-        payload.userToken.decimals
-      );
+          ChainId[currentBlockchain],
+          payload.userToken.contract,
+          payload.userToken.decimals
+        );
     const tokenB = payload.merchantToken.is_native
       ? WrapAltToken.wrap(ChainId[currentBlockchain])
       : new ERC20(
-        ChainId[currentBlockchain],
-        payload.merchantToken.contract,
-        payload.merchantToken.decimals
-      );
-    const response1 = await router.getRouter(payload.amountOut, tokenA, tokenB)
+          ChainId[currentBlockchain],
+          payload.merchantToken.contract,
+          payload.merchantToken.decimals
+        );
+    const response1 = await router.getRouter(payload.amountOut, tokenA, tokenB);
 
     if (!response1) {
       return rejectWithValue("No response from router");
@@ -66,9 +79,10 @@ export const tokenPairPriceThunk = createAsyncThunk<ITokenPairPriceReturnType, I
       swapOptions
     );
 
-    const path = getPathFromCallData(calldata);
-
-    const response2 = await provider.getValueForSwap(path, payload.amountOut)
+    const response2 = await provider.getValueForSwap(
+      getPathFromCallData(calldata),
+      payload.amountOut
+    );
     dispatch(
       setPathTrade({
         amount: response2.toString(),
@@ -76,15 +90,18 @@ export const tokenPairPriceThunk = createAsyncThunk<ITokenPairPriceReturnType, I
       })
     );
 
+    const l = ethers.utils.formatUnits(response2, 18);
 
     return {
       assetName: payload.userToken.name.toUpperCase(),
-      amount: roundCryptoAmount(ethers.utils.commify(
-        ethers.utils.formatUnits(
-          response2.toString(),
-          payload.userToken.decimals
+      amount: roundCryptoAmount(
+        ethers.utils.commify(
+          ethers.utils.formatUnits(
+            response2.toString(),
+            payload.userToken.decimals
+          )
         )
-      ))
-    }
+      ),
+    };
   }
 );

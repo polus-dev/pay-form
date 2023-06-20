@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { BigNumber, ethers } from "ethers";
 
-
 export function getParameterByName(
   name: string,
   url = window.location.href
@@ -136,22 +135,35 @@ export const getMerchantAddress = (payment: IPayment) =>
 
 export const getPaymentFee = (payment: IPayment) => getAsset(payment).fee;
 
-
 export const getPathFromCallData = (calldata: string) => {
   const coder = new ethers.utils.AbiCoder();
-  const types = [["bytes", "bytes[]", "uint256"], ["address", "uint256", "uint256", "bytes", "bool"]];
-  return coder.decode(types[1], coder.decode(types[0], Buffer.from(calldata.slice(10), "hex"))[1][0])[3]
+  const types = [
+    ["bytes", "bytes[]", "uint256"],
+    ["address", "uint256", "uint256", "bytes", "bool"],
+  ];
+  return coder.decode(
+    types[1],
+    coder.decode(types[0], Buffer.from(calldata.slice(10), "hex"))[1][0]
+  )[3];
   // 🤡
-}
+};
 
-
-// TODO: make better
 export const roundCryptoAmount = (amount: string) => {
-  const index = amount.indexOf(".");
-  let floatIndex = index + 1;
-  do {
-    floatIndex++
-  }
-  while (floatIndex < amount.length && amount[floatIndex] === "0")
-  return (parseFloat(amount).toFixed(floatIndex - index) ?? "calculation error")
-}
+  let z = "0",
+    p = ".",
+    isStartWithZero = amount.startsWith(z),
+    floatPointIndex = amount.indexOf(p);
+  while (
+    isStartWithZero
+      ? amount[++floatPointIndex] === z
+      : amount[++floatPointIndex] !== z && floatPointIndex < amount.length
+  );
+  return amount.slice(
+    0,
+    amount[floatPointIndex - 1] === p
+      ? floatPointIndex - 1
+      : isStartWithZero
+      ? floatPointIndex + 1
+      : floatPointIndex
+  );
+};
