@@ -1,4 +1,3 @@
-import { TokenImagesType } from "../../../../img/TokenImages";
 import { Asset_t, Blockchain_t } from "../types";
 
 export const enum Asset {

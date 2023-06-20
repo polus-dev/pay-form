@@ -32,7 +32,7 @@ import { useTour } from "@reactour/tour";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useGetPaymentByPaymentIdQuery } from "./store/api/endpoints/payment/Payment";
 import { getParameterByName } from "./logic/utils";
-import { Blockchain_t, ChainId } from "./store/api/endpoints/types";
+import { Blockchain_t } from "./store/api/endpoints/types";
 import { setView, ViewVariant } from "./store/features/view/viewSlice";
 import { setCurrentBlockchain } from "./store/features/connection/connectionSlice";
 import { ConsoleLog } from "./components/modals/consoleLog.ts";
@@ -49,15 +49,13 @@ export const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const isGuideButtonVisible = useAppSelector((state) => state.guide.isVisible);
 
-
-
-  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery(
-    {
-      payment_id: getParameterByName("uuid")!,
-    }
-  );
+  const { data: paymentInfo } = useGetPaymentByPaymentIdQuery({
+    payment_id: getParameterByName("uuid")!,
+  });
   const { availableTokens, isAvailalbeTokensLoading } = useAvailableTokens();
-  const currentBlockchain = useAppSelector(state => state.connection.currentBlockchain)
+  const currentBlockchain = useAppSelector(
+    (state) => state.connection.currentBlockchain
+  );
 
   const [userToken, setUserToken] = useState<Token>();
 
@@ -91,16 +89,24 @@ export const App: React.FC = () => {
     }
   }
 
-
   useEffect(() => {
     if (paymentInfo) {
-      const h = (blockchain: Blockchain_t) => paymentInfo.blockchains.includes(blockchain);
-      if ((h("bitcoin") || h("dogecoin") || h("litecoin") || h("tron")) && paymentInfo.blockchains.length === 1) {
+      const h = (blockchain: Blockchain_t) =>
+        paymentInfo.blockchains.includes(blockchain);
+      if (
+        (h("bitcoin") || h("dogecoin") || h("litecoin") || h("tron")) &&
+        paymentInfo.blockchains.length === 1
+      ) {
         dispatch(setView(ViewVariant.QRCODE));
       }
       dispatch(setCurrentBlockchain(paymentInfo.blockchains[0]));
-    }
 
+      const defaultBlockchain = ChainForWeb3Modal[paymentInfo.blockchains[0]];
+
+      if (defaultBlockchain) {
+        setDefaultChain(defaultBlockchain);
+      }
+    }
   }, [paymentInfo]);
 
   const modalRoot = (
@@ -146,12 +152,11 @@ export const App: React.FC = () => {
                           dispatch(setView(ViewVariant.QRCODE));
                           dispatch(setCurrentBlockchain(chainLocal));
                         } else if (
-                          (chainLocal === "bsc" ||
-                            chainLocal === "polygon" ||
-                            chainLocal === "ethereum" ||
-                            chainLocal === "arbitrum" ||
-                            chainLocal === "optimism"
-                          )
+                          chainLocal === "bsc" ||
+                          chainLocal === "polygon" ||
+                          chainLocal === "ethereum" ||
+                          chainLocal === "arbitrum" ||
+                          chainLocal === "optimism"
                         ) {
                           // switchNetwork(ChainId[chainLocal]);
                           dispatch(setCurrentBlockchain(chainLocal));
@@ -316,8 +321,6 @@ export const App: React.FC = () => {
       </ModalPage>
     </ModalRoot>
   );
-
-
 
   return (
     <AppRoot>

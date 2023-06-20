@@ -1,6 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
-import { Asset_t } from '../../api/endpoints/types';
-import { tokenPairPriceThunk } from './tokenPairPriceThunk';
+import { createSlice } from "@reduxjs/toolkit";
+import { Asset_t } from "../../api/endpoints/types";
+import { tokenPairPriceThunk } from "./tokenPairPriceThunk";
 
 export interface ITokenPairPriceState {
   amount?: string;
@@ -8,18 +8,17 @@ export interface ITokenPairPriceState {
   isLoading: boolean;
 }
 
-
 const initialState: ITokenPairPriceState = {
   isLoading: false,
-}
+};
 
 export const userTokenPairPriceSlice = createSlice({
-  name: 'tokenPairPrice',
+  name: "tokenPairPrice",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(tokenPairPriceThunk.pending, state => {
-      state.isLoading = true
+    builder.addCase(tokenPairPriceThunk.pending, (state) => {
+      state.isLoading = true;
     }),
       builder.addCase(tokenPairPriceThunk.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -27,16 +26,16 @@ export const userTokenPairPriceSlice = createSlice({
         state.assetName = action.payload.assetName;
       }),
       builder.addCase(tokenPairPriceThunk.rejected, (state, action) => {
+        debugger;
         if (action.error.name === "AbortError") {
           return;
         }
         state.isLoading = false;
         state.amount = "Unknown";
-      })
-  }
-}
-)
+      });
+  },
+});
 
-export const { } = userTokenPairPriceSlice.actions
+export const {} = userTokenPairPriceSlice.actions;
 
-export default userTokenPairPriceSlice.reducer
+export default userTokenPairPriceSlice.reducer;

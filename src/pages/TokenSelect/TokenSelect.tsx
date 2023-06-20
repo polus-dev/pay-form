@@ -108,7 +108,7 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
     (state) => state.smartLine.smartLineStatus
   );
 
-  const abortRef = useRef(() => { });
+  const abortRef = useRef(() => {});
 
   const { open, close } = useWeb3Modal();
   const { address, isConnected } = useAccount();
@@ -207,18 +207,20 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
               <div className="domain-amount-block">
                 <span>{info.merchant?.domain.replace("https://", "")}</span>
                 <div className="amount-block">
-                  <span>{`${merchantToken
+                  <span>{`${
+                    merchantToken
                       ? roundCryptoAmount(
-                        ethers.utils
-                          .formatUnits(
-                            amountInMerchantToken,
-                            merchantToken.decimals
-                          )
-                          .toString()
-                      )
+                          ethers.utils
+                            .formatUnits(
+                              amountInMerchantToken,
+                              merchantToken.decimals
+                            )
+                            .toString()
+                        )
                       : ""
-                    } ${merchantToken ? merchantToken.name.toUpperCase() : ""
-                    }`}</span>
+                  } ${
+                    merchantToken ? merchantToken.name.toUpperCase() : ""
+                  }`}</span>
                 </div>
               </div>
               <span
@@ -342,7 +344,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
                     stretched
                     size="l"
                     className="btn-connect"
-                    disabled={isTokenPairPriceLoading || !props.userToken}
+                    disabled={
+                      isTokenPairPriceLoading ||
+                      !props.userToken ||
+                      amount === "Unknown"
+                    }
                     style={{ backgroundImage: `url(${btn})` }}
                     onClick={() => startPay()}
                   >
@@ -370,11 +376,11 @@ const Main: React.FC<MainProps> = memo((props: MainProps) => {
             ) : (
               <div className="proccess-block">
                 {address &&
-                  chain &&
-                  merchantToken &&
-                  props.userToken &&
-                  currentView === ViewVariant.PROCESS_BLOCK &&
-                  currentBlockchain ? (
+                chain &&
+                merchantToken &&
+                props.userToken &&
+                currentView === ViewVariant.PROCESS_BLOCK &&
+                currentBlockchain ? (
                   <div>
                     <ProcessBlock
                       id={"all1"}
