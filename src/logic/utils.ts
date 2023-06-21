@@ -137,33 +137,14 @@ export const getPaymentFee = (payment: IPayment) => getAsset(payment).fee;
 
 export const getPathFromCallData = (calldata: string) => {
   const coder = new ethers.utils.AbiCoder();
-  const types = [
-    ["bytes", "bytes[]", "uint256"],
-    ["address", "uint256", "uint256", "bytes", "bool"],
-  ];
-  return coder.decode(
-    types[1],
-    coder.decode(types[0], Buffer.from(calldata.slice(10), "hex"))[1][0]
-  )[3];
+  const types = [["bytes", "bytes[]", "uint256"], ["address", "uint256", "uint256", "bytes", "bool"]];
+  return coder.decode(types[1], coder.decode(types[0], Buffer.from(calldata.slice(10), "hex"))[1][0])[3]
   // 🤡
-};
+}
+
 
 export const roundCryptoAmount = (amount: string) => {
-  let z = "0",
-    p = ".",
-    isStartWithZero = amount.startsWith(z),
-    floatPointIndex = amount.indexOf(p);
-  while (
-    isStartWithZero
-      ? amount[++floatPointIndex] === z
-      : amount[++floatPointIndex] !== z && floatPointIndex < amount.length
-  );
-  return amount.slice(
-    0,
-    amount[floatPointIndex - 1] === p
-      ? floatPointIndex - 1
-      : isStartWithZero
-      ? floatPointIndex + 1
-      : floatPointIndex
-  );
-};
+   let z = "0", o = 4, v = ".", isStartWithZero = amount.startsWith(z), floatPointIndex = amount.indexOf(v);
+   while (isStartWithZero ? amount[++floatPointIndex] === z : amount[++floatPointIndex] !== z && floatPointIndex < amount.length && floatPointIndex <= o);
+   return amount.slice(0, amount[floatPointIndex - 1] === v && !isStartWithZero ? floatPointIndex - 1 : isStartWithZero ? floatPointIndex + 1 : floatPointIndex);
+ };
